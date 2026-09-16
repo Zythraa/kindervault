@@ -1,0 +1,22 @@
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+.kindervault-mfa.key
+
+# Runtime and local infrastructure
+backup/*.sql
+testing/
+testing/sess_*
+scanner/resources/tessdata/*.traineddata
+scanner/resources/models/
+# Experimental scanner implementation is local-only; production keeps only
+# api/registration_scanner.php's disabled guard.
+scanner/
+pages/registration_scanner.jsx
+.vscode/
+
+# OS/editor artifacts
+.DS_Store
+Thumbs.db
+*.log

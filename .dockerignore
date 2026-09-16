@@ -1,0 +1,12 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+backup/
+testing/
+scanner/
+scanner/resources/
+pages/registration_scanner.jsx
+.vscode/
+*.log

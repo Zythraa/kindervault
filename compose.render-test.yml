@@ -1,0 +1,74 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: kindervault-mysql-test
+    environment:
+      MYSQL_DATABASE: kindervault
+      MYSQL_USER: kindervault_app
+      MYSQL_PASSWORD: ${KV_TEST_DB_PASSWORD:?Set KV_TEST_DB_PASSWORD before starting the test stack}
+      MYSQL_ROOT_PASSWORD: ${KV_TEST_ROOT_PASSWORD:?Set KV_TEST_ROOT_PASSWORD before starting the test stack}
+    volumes:
+      - kindervault_render_test_mysql:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    networks:
+      - kindervault-test
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kindervault-web-test
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      SCANNER_ENABLED: "false"
+      PORT: "10000"
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: kindervault
+      DB_USER: kindervault_app
+      DB_PASSWORD: ${KV_TEST_DB_PASSWORD:?Set KV_TEST_DB_PASSWORD before starting the test stack}
+      MFA_ENCRYPTION_KEY: ${KV_TEST_MFA_KEY:?Set KV_TEST_MFA_KEY before starting the test stack}
+    ports:
+      - "127.0.0.1:8080:10000"
+    networks:
+      - kindervault-test
+
+  seed:
+    profiles: ["seed"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SEED_DB_HOST: mysql
+      SEED_DB_PORT: "3306"
+      SEED_DB_NAME: kindervault
+      SEED_DB_USER: kindervault_app
+      SEED_DB_PASSWORD: ${KV_TEST_DB_PASSWORD:?Set KV_TEST_DB_PASSWORD before seeding}
+      SEED_ADMIN_PASSWORD: ${KV_TEST_ADMIN_PASSWORD:?Set KV_TEST_ADMIN_PASSWORD before seeding}
+      SEED_TEACHER_PASSWORD: ${KV_TEST_TEACHER_PASSWORD:?Set KV_TEST_TEACHER_PASSWORD before seeding}
+      SEED_STAFF_PASSWORD: ${KV_TEST_STAFF_PASSWORD:?Set KV_TEST_STAFF_PASSWORD before seeding}
+    volumes:
+      - ./testing:/seed:ro
+    entrypoint: ["php"]
+    command: ["/seed/render_synthetic_seed.php"]
+    networks:
+      - kindervault-test
+
+networks:
+  kindervault-test:
+    internal: true
+
+volumes:
+  kindervault_render_test_mysql:
