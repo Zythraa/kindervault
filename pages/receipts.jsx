@@ -13,6 +13,39 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
     setFilterType(navigationState.filterType || "");
   }, [navigationKey]);
 
+  const formatPaymentPeriod = (value) => {
+    const values = String(value || '').split(',').map(v => v.trim()).filter(Boolean);
+    if (!values.length) return {label: '', count: 0};
+    const parsed = values.map(v => {
+      const key = /^\d{4}$/.test(v) ? `${v}-01` : v;
+      const date = new Date(`${key}-01`);
+      return {key: v, date, time: date.getTime()};
+    }).filter(v => !Number.isNaN(v.time)).sort((a,b) => a.time - b.time);
+    const labels = parsed.map(v => window.kvDate(v.date, {month:'short', year:'numeric'}, v.key));
+    if (!labels.length) return {label: values.join(', '), count: values.length};
+    let label = labels.join(', ');
+    if (parsed.length > 1) {
+      const contiguous = parsed.every((item, index) => index === 0 || (item.date.getFullYear() * 12 + item.date.getMonth()) - (parsed[index - 1].date.getFullYear() * 12 + parsed[index - 1].date.getMonth()) === 1);
+      label = contiguous ? `${labels[0]} - ${labels[labels.length - 1]}` : labels.join(', ');
+    }
+    return {label, count: parsed.length};
+  };
+  const expandAdvanceMonths = (item, student) => {
+    const explicit = String(item?.month || '').split(',').map(value => value.trim()).filter(Boolean);
+    if (explicit.length !== 1 || item?.type !== 'Monthly Fee' || item?.status !== 'Advance') return explicit;
+    const start = explicit[0];
+    const monthlyFee = parseFloat(student?.fee || 0);
+    const amount = parseFloat(item?.amount || 0);
+    if (!/^\d{4}-(?:0[1-9]|1[0-2])$/.test(start) || !Number.isFinite(monthlyFee) || monthlyFee <= 0 || !Number.isFinite(amount) || amount <= monthlyFee) return explicit;
+    const count = Math.round(amount / monthlyFee);
+    if (count < 2 || count > 60 || Math.abs(amount - (count * monthlyFee)) > 0.01) return explicit;
+    const [year, month] = start.split('-').map(Number);
+    return Array.from({length: count}, (_, index) => {
+      const date = new Date(year, month - 1 + index, 1);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    });
+  };
+  const collectReceiptMonths = (items, student) => [...new Set(items.filter(item => item?.type === 'Monthly Fee').flatMap(item => expandAdvanceMonths(item, student)))];
   const allReceiptPayments = payments.filter(p=>p.receipt);
   const allReceipts = Object.values(allReceiptPayments.reduce((groups, payment) => {
     if (!groups[payment.receipt]) groups[payment.receipt] = [];
@@ -24,6 +57,7 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
       id: payment.id,
       type: payment.type,
       month: payment.month,
+      status: payment.status,
       desc: window.kvPaymentItemLabel(payment.type, payment.month),
       amount: parseFloat(payment.amount || 0),
     }));
@@ -89,9 +123,14 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
       return;
     }
     const amount = parseFloat(p.amount || 0).toFixed(2);
-    const months = (p.month || "").split(",").map(m=>m.trim()).filter(Boolean);
-    const formatMonth = m => window.kvDate(new Date(m+"-01"), {month:"short",year:"numeric"}, m);
-    const monthStr = months.length === 0 ? "" : months.length === 1 ? formatMonth(months[0]) : `${formatMonth(months[0])} - ${formatMonth(months[months.length-1])}`;
+    const receiptItems = p.items?.length ? p.items : [p];
+
+    const months = collectReceiptMonths(receiptItems, s);
+
+    const periodInfo = formatPaymentPeriod(months.join(","));
+    const monthStr = periodInfo.label
+      ? `${periodInfo.label}${periodInfo.count > 1 ? ` (${periodInfo.count} ${window.kvT("months")})` : ""}`
+      : "";
     const issuedDate = p.date
       ? window.kvDate(p.date, {day:'numeric', month:'short', year:'numeric'}, p.date)
       : window.kvDate(new Date(), {day:'numeric', month:'short', year:'numeric'});
@@ -113,12 +152,11 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
     const date = sel.date
       ? window.kvDate(sel.date, {day:'numeric', month:'short', year:'numeric'}, sel.date)
       : window.kvDate(new Date(), {day:'numeric', month:'short', year:'numeric'});
-    const months = sel.month ? sel.month.split(",").map(m=>m.trim()).filter(Boolean) : [];
-    const fmt = m => window.kvDate(new Date(m+"-01"), {month:"short",year:"numeric"}, m);
-    const monthStr = months.length === 0 ? ""
-      : months.length === 1 ? fmt(months[0])
-      : `${fmt(months[0])} - ${fmt(months[months.length-1])}`;
-    const receiptItems = sel.items?.length ? sel.items : [{type:sel.type, month:sel.month, amount:parseFloat(sel.amount || 0)}];
+    const receiptItems = sel.items?.length ? sel.items : [{type:sel.type, month:sel.month, status:sel.status, amount:parseFloat(sel.amount || 0)}];
+
+    const monthlyPeriods = collectReceiptMonths(receiptItems, s);
+
+    const overallPeriod = formatPaymentPeriod([...new Set(monthlyPeriods)].join(','));
     const receiptTotal = receiptItems.reduce((total, item) => total + parseFloat(item.amount || 0), 0);
 
     return (
@@ -165,24 +203,29 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
                   <div><div className="kv-receipt-field-label">{window.kvT('Student')}</div><div className="kv-receipt-field-value">{sel.student_name||s?.name}</div></div>
                   <div><div className="kv-receipt-field-label">{window.kvT('Class')}</div><div className="kv-receipt-field-value">{sel.student_class||s?.class}</div></div>
                   <div><div className="kv-receipt-field-label">{window.kvT('Parent / Guardian')}</div><div className="kv-receipt-field-value">{sel.student_parent||s?.parent}</div></div>
-                  <div><div className="kv-receipt-field-label">{window.kvT('Period')}</div><div className="kv-receipt-field-value">{monthStr || "—"}</div></div>
+                  <div><div className="kv-receipt-field-label">{window.kvT('Fee Period')}</div><div className="kv-receipt-field-value">{overallPeriod.label || "—"}{overallPeriod.count > 1 ? ` (${overallPeriod.count} ${window.kvT('months')})` : ""}</div></div>
                 </div>
               </section>
 
+              {overallPeriod.label && <div className="kv-receipt-period-banner" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,margin:'16px 0',padding:'14px 18px',borderRadius:12,background:'linear-gradient(135deg, #f3edff 0%, #faf8ff 100%)',border:'1px solid #dfd2f5'}}>
+                <div><div style={{fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#7750a8'}}>{window.kvT('Fee months covered')}</div><div style={{fontSize:17,fontWeight:700,color:'var(--color-text-primary)',marginTop:3}}>{overallPeriod.label}</div></div>
+                {overallPeriod.count > 1 && <div style={{fontSize:13,fontWeight:600,color:'#7750a8',whiteSpace:'nowrap'}}>{overallPeriod.count} {window.kvT('months')}</div>}
+              </div>}
               <section className="kv-receipt-payment-section">
                 <div className="kv-receipt-section-heading">
                   <div><span>{window.kvT('Payment Summary')}</span><small>{window.kvT('Official payment document')}</small></div>
                   <span className="kv-receipt-paid-badge"><i className="ti ti-circle-check-filled" aria-hidden="true"/> {window.kvT('Paid')}</span>
                 </div>
                 <table className="kv-receipt-items-table">
-                  <thead><tr><th>{window.kvT('Description')}</th><th>{window.kvT('Amount (RM)')}</th></tr></thead>
+                  <thead><tr><th>{window.kvT('Description')}</th><th>{window.kvT('Fee Period')}</th><th>{window.kvT('Amount (RM)')}</th></tr></thead>
                   <tbody>
-                    {receiptItems.map((item, index) => <tr key={item.id || `${item.type}-${index}`}>
+                    {receiptItems.map((item, index) => { const itemPeriod = item.type === 'Monthly Fee' ? formatPaymentPeriod(item.month) : {label: '', count: 0}; return <tr key={item.id || `${item.type}-${index}`}>
                       <td>{item.desc || window.kvPaymentItemLabel(item.type, item.month)}</td>
+                      <td>{itemPeriod.label ? `${itemPeriod.label}${itemPeriod.count > 1 ? ` (${itemPeriod.count} ${window.kvT('months')})` : ""}` : "—"}</td>
                       <td>{parseFloat(item.amount || 0).toFixed(2)}</td>
-                    </tr>)}
+                    </tr>})}
                   </tbody>
-                  <tfoot><tr><td>{window.kvT('Total Received')}</td><td>RM {receiptTotal.toFixed(2)}</td></tr></tfoot>
+                  <tfoot><tr><td colSpan="2">{window.kvT('Total Received')}</td><td>RM {receiptTotal.toFixed(2)}</td></tr></tfoot>
                 </table>
               </section>
 

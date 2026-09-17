@@ -23,11 +23,14 @@ define('SCANNER_ENABLED', envFlag('SCANNER_ENABLED', true)); // false on Render,
 define('DB_HOST',    (string)(getenv('DB_HOST')     ?: 'localhost'));
 // WampServer's bundled MariaDB uses port 3307 in this installation. Render
 // deployments should always provide DB_PORT explicitly through the dashboard.
-define('DB_PORT',    (string)(getenv('DB_PORT')     ?: '3307'));
+define('DB_PORT',    (string)(getenv('DB_PORT')     ?: '3306'));
 define('DB_NAME',    (string)(getenv('DB_NAME')     ?: 'kindervault'));
 define('DB_USER',    (string)(getenv('DB_USER')     ?: 'root'));
 define('DB_PASS',    (string)(getenv('DB_PASSWORD') ?: ''));  // Local WampServer default: empty
 define('DB_CHARSET', 'utf8mb4');
+// TLS is opt-in for local WampServer compatibility and required explicitly for hosted TiDB/MySQL deployments.
+define('DB_SSL_ENABLED', envFlag('DB_SSL_ENABLED', false));
+define('DB_SSL_CA', trim((string)(getenv('DB_SSL_CA') ?: '')));
 define('DEFAULT_LOCALE', 'en');
 
 // ── Application ───────────────────────────────────────────
@@ -109,6 +112,15 @@ function db(): PDO {
             PDO::ATTR_EMULATE_PREPARES   => false,
         ];
         try {
+            if (DB_SSL_ENABLED) {
+                if (DB_SSL_CA === '' || !is_file(DB_SSL_CA) || !is_readable(DB_SSL_CA)) {
+                    throw new PDOException('Database TLS CA certificate is unavailable.');
+                }
+                $options[PDO::MYSQL_ATTR_SSL_CA] = DB_SSL_CA;
+                if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
+                    $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = true;
+                }
+            }
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
             ensureKinderVaultSchema($pdo);
         } catch (PDOException $e) {

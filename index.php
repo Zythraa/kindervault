@@ -74,7 +74,7 @@ $description = $locale === 'ms'
 <?php endif; ?>
 <script type="text/babel" src="pages/students.jsx?v=23"></script>
 <script type="text/babel" src="pages/payments.jsx?v=16"></script>
-<script type="text/babel" src="pages/receipts.jsx?v=9"></script>
+<script type="text/babel" src="pages/receipts.jsx?v=11"></script>
 <script type="text/babel" src="pages/development.jsx?v=38"></script>
   <script type="text/babel" src="pages/backup.jsx?v=12"></script>
   <script type="text/babel" src="pages/settings.jsx?v=23"></script>

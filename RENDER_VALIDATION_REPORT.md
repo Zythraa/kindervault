@@ -1,61 +1,96 @@
-# KinderVault Render-preparation validation
+# KinderVault Render + TiDB compatibility validation
 
-Validation date: 17 September 2026. This report covers local, synthetic-data
-checks only. No GitHub repository was pushed and no Render service or secret was
-created.
+Validation date: 17 September 2026. This cycle used fictional synthetic data only.
+The local WAMP `kindervault` database was not used or modified. No GitHub push,
+Render service, or production secret was created.
+
+## Verdict scope
+
+The requested deployment architecture is:
+
+`Private GitHub repository -> Render Free Web Service (Docker, Singapore) -> TiDB Cloud Starter (Singapore, public endpoint, TLS)`
+
+The application is configured for `APP_ENV=production`, `APP_DEBUG=false`, and
+`SCANNER_ENABLED=false` in the Render blueprint.
+
+## Validation matrix
+
+| Area | Result | Evidence / scope |
+|---|---|---|
+| Authentication | PASS | Synthetic Docker integration: valid login, invalid/inactive denial, logout/session invalidation |
+| MFA | PASS | Synthetic Docker integration: enrollment, TOTP replay rejection, recovery-code use/replay, regeneration and disable |
+| RBAC | PASS | Teacher restrictions and permission grant/revoke checks passed |
+| CSRF | PASS | Mutation without token returned HTTP 403 |
+| Student CRUD | PASS | Synthetic create, read, class transfer, delete and cascade checks passed |
+| Payments | PASS | Paid/overdue transitions, validation, bulk payment transaction checks passed |
+| Receipts | PASS | Receipt generation, stable regeneration, and bulk shared-receipt checks passed |
+| KPM development | PASS | Create, duplicate prevention, edit and cleanup checks passed |
+| Reading progress | PASS | Create, edit and cleanup checks passed |
+| Search | PASS | Covered by the authenticated application/integration paths and permission-aware search code |
+| User Management | PASS | Administrator CRUD/permission checks and Teacher denial passed |
+| Audit Log | PASS | Expected security/CRUD action coverage and pagination passed |
+| English/Bahasa Melayu | PASS | Session locale switch persisted (`en -> ms -> en`) |
+| Transactions | PASS | Atomic bulk payment and rollback/error paths passed |
+| Foreign keys | PASS | Student deletion cascaded dependent payment/development/reading data in isolated InnoDB test DB; schema constraints inspected |
+| Student code uniqueness | PASS | `uq_students_code` schema constraint and generated-code CRUD path verified |
+| Receipt number uniqueness | PASS | Receipt numbers derive from unique payment anchor IDs; bulk rows share one receipt; no collision observed in synthetic run |
+| Docker -> TiDB connection | PASS | Running production-flagged Docker container used TiDB TLS CA mount; `db()->query('SELECT 1')` returned `1` without exposing secrets |
+| `/health.php` | PASS | Rebuilt TiDB-backed container returned HTTP 200 `{"status":"ok"}`; probe now applies the same CA + certificate verification options as `db()` |
+| Production error handling | PASS | `APP_DEBUG=false`; sensitive paths and configuration disclosure checks passed |
+| Scanner disabled mode | PASS | `SCANNER_ENABLED=false`; scanner page omitted and API returned HTTP 503 |
 
 ## Automated results
 
-- Docker image build: PASS (`kindervault-web:latest`, PHP 8.3 Apache image).
-- Image security inspection: PASS. Backups, testing fixtures, scanner assets,
-  `.env`, and the scanner page are excluded from the production image;
-  `database/schema.sql` remains available for database initialization.
-- MySQL isolation: PASS. MySQL 8.0.46 ran in an isolated Compose network with
-  no published database port.
-- Synthetic seed: PASS (15 students, 12 payments, 15 development records, 15
-  reading records, and synthetic role accounts).
-- HTTP smoke/security suite: PASS (17/17), including health, CSRF, RBAC,
-  scanner-disabled behavior, and blocked sensitive/deployment files.
-- Database-backed unit suite: PASS (22/22), including security configuration,
-  permissions, MFA cryptography/recovery codes, CSRF, audit sanitization, and
-  public-user field filtering.
+- User-provided TiDB evidence: `TIDB_PDO_TLS_OK`; `database/schema.sql` was
+  imported successfully and required tables were confirmed.
+- Live Docker-to-TiDB verification: the rebuilt container used the mounted CA
+  secret with `DB_SSL_ENABLED=true`; `db()->query('SELECT 1')` returned `1`, and
+  `/health.php` returned HTTP 200 `{"status":"ok"}`.
+- No password, MFA key, CA contents, or connection string was printed or stored.
+- TiDB endpoint DNS/TCP reachability: PASS (gateway endpoint on port 4000).
+- PDO TLS configuration: PASS by static/lint/guard checks. TLS verification is
+  required when `DB_SSL_ENABLED=true`; no certificate-verification bypass is used.
+- Synthetic Docker seed: PASS (15 fictional students, payments, KPM records,
+  reading records, and test role accounts).
+- Database-backed unit suite: PASS (22/22).
 - Full HTTP integration/security/MFA/audit/performance suite: PASS (44/44).
+- Production HTTP smoke/security suite: PASS (17/17).
 - PHP lint: PASS for all project PHP files outside the preserved backup.
-- Localization audit: PASS (631 literal calls, 0 missing translation keys).
-- Persistence: PASS. Synthetic records survived a MySQL restart and a full
-  web-stack recreate using the named volume.
-- Initialization safety: PASS. Class defaults use idempotent `INSERT IGNORE`
-  and preserve administrator-created classes on repeated application starts.
-- Cleanup: PASS. Disposable containers, network, and synthetic MySQL volume
-  were removed after testing. The existing pre-render backup was preserved.
+- Localization audit: PASS (633 literal translation calls, 0 missing keys).
+- Docker image build and production-image exclusion checks: PASS.
 
-## Manual steps still required
+## Live TiDB checks completed for this health-path fix
 
-1. Install/use Git, create the private repository, and push the reviewed source
-   (without `.env`, backups, testing fixtures, or scanner resources).
-2. Provision MySQL 8/MariaDB externally, or as a Render Private Service with a
-   persistent disk mounted at `/var/lib/mysql`; Render does not provide managed
-   MySQL.
-3. Import `database/schema.sql`, configure the Render environment variables,
-   generate a unique `MFA_ENCRYPTION_KEY`, and create the first Administrator
-   with the CLI-only `tools/create_admin.php` procedure.
-4. Deploy the Docker Web Service from `render.yaml`, then complete
-   `RENDER_POST_DEPLOY_CHECKLIST.md` in a real browser, including MFA QR
-   scanning, print layouts, and bilingual navigation.
+The live Docker container was rebuilt with the corrected health probe and run with
+`APP_ENV=production`, `APP_DEBUG=false`, `SCANNER_ENABLED=false`,
+`DB_SSL_ENABLED=true`, and the existing CA secret mounted read-only. The probe
+performs only `SELECT 1`; it does not require roles, settings, classes, students,
+or other base data. A true connection failure remains HTTP 503 with the safe body
+`{"status":"unavailable"}` and never exposes SQL, paths, credentials, or traces.
 
-## Specific limitations
+## Render and TiDB network setup
 
-- The browser/visual checklist and physical authenticator scan were not
-  automated in this environment.
-- Host access to Docker's mapped `127.0.0.1:8080` was unavailable from this
-  sandbox; all application checks were executed successfully over the isolated
-  Docker network.
-- The local WAMP `kindervault` database was not used or modified.
+Render's default outbound addresses are region-specific CIDR ranges. After
+creating the Singapore Web Service, open **Connect -> Outbound** in the Render
+Dashboard and add every displayed Singapore CIDR range to the TiDB Cloud
+Starter public-endpoint **Authorized Networks** list. Do not guess or hardcode
+an old range; Render states that a service may use any address in its associated
+ranges and ranges can change. If using Render Dedicated Outbound IPs, add the
+assigned `/32` addresses instead.
+
+References: [Render outbound IP addresses](https://render.com/docs/outbound-ip-addresses)
+and [TiDB Cloud Starter public-endpoint firewall rules](https://docs.pingcap.com/tidbcloud/configure-serverless-firewall-rules-for-public-endpoints/).
+
+## Limitations
+
+- Browser visual checks, physical MFA QR scanning, and Render dashboard checks
+  remain manual pre-deployment steps.
+- No real student/parent data was used.
 
 ## Verdict
 
-**READY FOR MANUAL RENDER DEPLOYMENT**
+**READY FOR RENDER + TIDB DEPLOYMENT**
 
-The limitations above are post-deployment browser/manual checks, not code,
-configuration, or security blockers. Follow `RENDER_DEPLOYMENT.md` in order and
-complete the post-deploy checklist before introducing real operational data.
+The health-path blocker is resolved and the rebuilt Docker container is confirmed
+healthy against live TiDB over verified TLS. Complete the manual Render dashboard
+steps and outbound-CIDR allowlist checks before creating the service.

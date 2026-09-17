@@ -2,6 +2,7 @@ services:
   - type: web
     name: kindervault
     runtime: docker
+    plan: free
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health.php
     envVars:
@@ -12,14 +13,18 @@ services:
       - key: SCANNER_ENABLED
         value: "false"
       - key: DB_HOST
-        sync: false
+        value: gateway01.ap-southeast-1.prod.aws.tidbcloud.com
       - key: DB_PORT
-        sync: false
+        value: "4000"
       - key: DB_NAME
-        sync: false
+        value: kindervault
       - key: DB_USER
-        sync: false
+        value: 3tg1mCiMFrW8c7z.root
       - key: DB_PASSWORD
         sync: false
+      - key: DB_SSL_ENABLED
+        value: "true"
+      - key: DB_SSL_CA
+        value: /etc/secrets/tidb-ca.pem
       - key: MFA_ENCRYPTION_KEY
         sync: false
