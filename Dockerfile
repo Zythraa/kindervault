@@ -1,7 +1,16 @@
 FROM php:8.3-apache
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html
-
+# Render secret files are group-readable by GID 1000. Add www-data to that
+# group without assuming the base image's group name.
+RUN set -eux; \
+    if getent group 1000 >/dev/null 2>&1; then \
+        secret_group="$(getent group 1000 | cut -d: -f1)"; \
+    else \
+        groupadd --gid 1000 render-secrets; \
+        secret_group="render-secrets"; \
+    fi; \
+    usermod --append --groups "${secret_group}" www-data
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libfreetype6-dev \

@@ -68,6 +68,18 @@ performs only `SELECT 1`; it does not require roles, settings, classes, students
 or other base data. A true connection failure remains HTTP 503 with the safe body
 `{"status":"unavailable"}` and never exposes SQL, paths, credentials, or traces.
 
+## Render runtime blocker: CA secret permissions
+
+Render runtime diagnostics identified the blocker as `CA_FILE_READABLE=FAIL`
+while DNS and TCP were successful. The `tidb-ca.pem` secret was present, but the
+Apache/PHP runtime user (`www-data`, UID 33) was not a member of Render's
+secret-file group (GID 1000). The Dockerfile now safely reuses an existing GID
+1000 group or creates `render-secrets` with GID 1000, then adds `www-data` to
+that group. No secret is copied into the image, no world-writable permissions
+are used, and TLS verification remains enabled. The rebuilt image verified
+`www-data` can read a synthetic group-1000-readable file and the updated health
+code returned `{"status":"ok"}` against the existing live TiDB environment.
+
 ## Render and TiDB network setup
 
 Render's default outbound addresses are region-specific CIDR ranges. After
