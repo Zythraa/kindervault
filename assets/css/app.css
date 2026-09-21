@@ -6936,6 +6936,25 @@ button[disabled] {
     margin: 0 !important;
     overflow: hidden !important;
   }
+
+  /* Native browser print fallback: ordinary pages do not render a dedicated
+     .print-area, so keep their main content visible instead of producing a
+     blank preview. Dedicated print views continue using the rules above. */
+  body:not(:has(.print-area)) * {
+    visibility: visible !important;
+  }
+
+  body:not(:has(.print-area)) .kv-main-scroll,
+  body:not(:has(.print-area)) .kv-app-content,
+  body:not(:has(.print-area)) .kv-page {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  body:not(:has(.print-area)) .kv-page {
+    box-shadow: none !important;
+  }
 }
 
 @media print {
