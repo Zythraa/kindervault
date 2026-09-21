@@ -3,6 +3,8 @@
 // ============================================================
 
 const BackupPage = ({students, payments, devRecords, isAdministrator, embedded = false}) => {
+  const isProduction = window.KV_APP_ENV === "production";
+  const databaseLabel = isProduction ? "TiDB Cloud Starter" : "kindervault (MySQL)";
   const [status, setStatus] = React.useState("idle"); // idle | downloading | done
   const [adminerCredentials, setAdminerCredentials] = React.useState(null);
   const [credentialsLoading, setCredentialsLoading] = React.useState(false);
@@ -67,17 +69,17 @@ const BackupPage = ({students, payments, devRecords, isAdministrator, embedded =
   return (
     <div className={embedded ? "kv-settings-stack kv-backup-settings" : "kv-page kv-page--backup"}>
       {embedded
-        ? <div className="kv-settings-page-head"><div><h3>{window.kvT("Backup & Restore")}</h3><p>{window.kvT("Create database backups and use the local recovery guidance to restore a saved .sql file.")}</p></div></div>
+        ? <div className="kv-settings-page-head"><div><h3>{window.kvT("Backup & Restore")}</h3><p>{window.kvT(isProduction ? "Create downloadable SQL backups of current database records." : "Create database backups and use the local recovery guidance to restore a saved .sql file.")}</p></div></div>
         : <h2 className="kv-page-title" style={{margin:"0 0 20px"}}><i className="ti ti-database-export" style={{marginRight:8}} aria-hidden="true"/>{window.kvT("Backup & Restore")}</h2>}
       <div className="kv-page-grid kv-backup-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
         <Card className="kv-backup-primary-card">
           <CardHead><i className="ti ti-database" style={{marginRight:6,color:C.green}} aria-hidden="true"/>{window.kvT("Database Status")}</CardHead>
           <div style={{padding:16}}>
-            {status==="done"&&<div style={{background:C.greenBg,color:C.greenTx,borderRadius:7,padding:"8px 12px",fontSize:12,marginBottom:12}}><i className="ti ti-check" aria-hidden="true"/> {window.kvT("Backup downloaded successfully and saved in the backup folder.")}</div>}
+            {status==="done"&&<div style={{background:C.greenBg,color:C.greenTx,borderRadius:7,padding:"8px 12px",fontSize:12,marginBottom:12}}><i className="ti ti-check" aria-hidden="true"/> {window.kvT("Backup generated successfully.")}</div>}
             <table className="kv-data-table" style={{width:"100%",fontSize:13}}>
               <tbody>
               {[
-                ["Database","kindervault (MySQL)"],
+                ["Database",databaseLabel],
                 ["Total Students",students.length],
                 ["Total Payments",payments.length],
                 ["Dev Records",devRecords.length],
@@ -104,46 +106,55 @@ const BackupPage = ({students, payments, devRecords, isAdministrator, embedded =
             </button>
             <div style={{fontSize:11,color:"var(--color-text-tertiary)",marginTop:8,lineHeight:1.5}}>
               <i className="ti ti-info-circle" style={{marginRight:4}} aria-hidden="true"/>
-              {window.kvT("Exports all data as a SQL text file, and also stores a copy in kindervault/backup.")}
+              {window.kvT("Exports current database records as a downloadable SQL backup file.")}
             </div>
           </div>
         </Card>
 
         <div className="kv-backup-stack" style={{display:"flex",flexDirection:"column",gap:12}}>
           <Card>
-            <CardHead><i className="ti ti-refresh" style={{marginRight:6,color:C.amber}} aria-hidden="true"/>{window.kvT("Restore from Backup")}</CardHead>
+            <CardHead><i className="ti ti-refresh" style={{marginRight:6,color:C.amber}} aria-hidden="true"/>{window.kvT(isProduction ? "Restore Guidance" : "Restore from Backup")}</CardHead>
             <div style={{padding:16}}>
               <div style={{background:C.amberBg,color:C.amberTx,borderRadius:7,padding:"8px 12px",fontSize:12,marginBottom:12}}>
                 <i className="ti ti-alert-triangle" aria-hidden="true"/> <strong>{window.kvT("Warning:")}</strong> {window.kvT("Restoring will overwrite all current data.")}
               </div>
-              <div style={{fontSize:12,color:"var(--color-text-secondary)",lineHeight:1.6}}>
-                {window.kvT("To restore, import a .sql backup using local Adminer.")}
-              </div>
-              {isAdministrator ? <div style={{marginTop:12,padding:12,border:"1px solid var(--color-border-secondary)",borderRadius:8,background:"var(--color-background-secondary)"}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginBottom:adminerCredentials?10:0}}>
-                  <div style={{fontSize:12,fontWeight:600,color:"var(--color-text-primary)"}}><i className="ti ti-shield-lock" style={{marginRight:5,color:C.blue}} aria-hidden="true"/>{window.kvT("Local Adminer access")}</div>
-                  {!adminerCredentials && <Btn small variant="outline" onClick={revealAdminerCredentials} disabled={credentialsLoading}><i className="ti ti-eye" aria-hidden="true"/>{credentialsLoading ? window.kvT("Loading...") : window.kvT("Reveal details")}</Btn>}
+              {isProduction ? <div style={{fontSize:12,color:"var(--color-text-secondary)",lineHeight:1.65}}>
+                <p style={{margin:"0 0 12px"}}>{window.kvT("A saved SQL backup can be restored by an authorised administrator or developer using approved database administration tools.")}</p>
+                <div style={{background:"var(--color-background-secondary)",border:"1px solid var(--color-border-secondary)",borderRadius:8,padding:"10px 12px",fontSize:11.5}}>
+                  <i className="ti ti-shield-lock" style={{marginRight:5,color:C.blue}} aria-hidden="true"/>{window.kvT("Direct SQL file upload and execution are not provided through the web interface to reduce the risk of malicious SQL execution, accidental database overwrite, and incorrect restoration.")}
                 </div>
-                {adminerCredentials && <>
-                  <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:"5px 10px",fontSize:12,lineHeight:1.5}}>
-                    <span style={{color:"var(--color-text-tertiary)"}}>{window.kvT("URL")}</span><a href={adminerCredentials.url} target="_blank" rel="noreferrer">{adminerCredentials.url}</a>
-                    <span style={{color:"var(--color-text-tertiary)"}}>{window.kvT("Server")}</span><code>{adminerCredentials.server}</code>
-                    <span style={{color:"var(--color-text-tertiary)"}}>{window.kvT("Username")}</span><code>{adminerCredentials.username}</code>
-                    <span style={{color:"var(--color-text-tertiary)"}}>{window.kvT("Password")}</span><code>{adminerCredentials.password}</code>
-                    <span style={{color:"var(--color-text-tertiary)"}}>{window.kvT("Database")}</span><code>{adminerCredentials.database}</code>
+                <p style={{margin:"12px 0 0"}}>{window.kvT("Restore is a controlled administrative recovery process rather than an automatic browser-based restore feature.")}</p>
+              </div> : <>
+                <div style={{fontSize:12,color:"var(--color-text-secondary)",lineHeight:1.6}}>
+                  {window.kvT("To restore, import a .sql backup using local Adminer.")}
+                </div>
+                {isAdministrator ? <div style={{marginTop:12,padding:12,border:"1px solid var(--color-border-secondary)",borderRadius:8,background:"var(--color-background-secondary)"}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginBottom:adminerCredentials?10:0}}>
+                    <div style={{fontSize:12,fontWeight:600,color:"var(--color-text-primary)"}}><i className="ti ti-shield-lock" style={{marginRight:5,color:C.blue}} aria-hidden="true"/>{window.kvT("Local Adminer access")}</div>
+                    {!adminerCredentials && <Btn small variant="outline" onClick={revealAdminerCredentials} disabled={credentialsLoading}><i className="ti ti-eye" aria-hidden="true"/>{credentialsLoading ? window.kvT("Loading...") : window.kvT("Reveal details")}</Btn>}
                   </div>
-                  <div style={{fontSize:11,color:"var(--color-text-tertiary)",lineHeight:1.5,marginTop:10}}><i className="ti ti-info-circle" style={{marginRight:4}} aria-hidden="true"/>{window.kvT("This is a local database-maintenance login, not a KinderVault user account.")}</div>
-                </>}
-              </div> : <div style={{fontSize:11,color:"var(--color-text-tertiary)",marginTop:12}}><i className="ti ti-lock" style={{marginRight:4}} aria-hidden="true"/>{window.kvT("Local database access details are visible to Administrators only.")}</div>}
-              <ol style={{fontSize:12,color:"var(--color-text-tertiary)",marginTop:10,paddingLeft:16,lineHeight:1.8}}>
-                <li>{window.kvT("Open")} <a href="http://localhost/adminer/" target="_blank" rel="noreferrer">Adminer</a>.</li>
-                <li>{window.kvT("Choose MySQL, enter the local access details above, then sign in.")}</li>
-                <li>{window.kvT("Select the kindervault database.")}</li>
-                <li>{window.kvT("Choose Import, upload your .sql file, then run the import.")}</li>
-              </ol>
+                  {adminerCredentials && <>
+                    <div style={{display:"grid",gridTemplateColumns:"auto 1fr",gap:"5px 10px",fontSize:12,lineHeight:1.5}}>
+                      <span style={{color:"var(--color-text-tertiary)"}}>{window.kvT("URL")}</span><a href={adminerCredentials.url} target="_blank" rel="noreferrer">{adminerCredentials.url}</a>
+                      <span style={{color:"var(--color-text-tertiary)"}}>{window.kvT("Server")}</span><code>{adminerCredentials.server}</code>
+                      <span style={{color:"var(--color-text-tertiary)"}}>{window.kvT("Username")}</span><code>{adminerCredentials.username}</code>
+                      <span style={{color:"var(--color-text-tertiary)"}}>{window.kvT("Password")}</span><code>{adminerCredentials.password}</code>
+                      <span style={{color:"var(--color-text-tertiary)"}}>{window.kvT("Database")}</span><code>{adminerCredentials.database}</code>
+                    </div>
+                    <div style={{fontSize:11,color:"var(--color-text-tertiary)",lineHeight:1.5,marginTop:10}}><i className="ti ti-info-circle" style={{marginRight:4}} aria-hidden="true"/>{window.kvT("This is a local database-maintenance login, not a KinderVault user account.")}</div>
+                  </>}
+                </div> : <div style={{fontSize:11,color:"var(--color-text-tertiary)",marginTop:12}}><i className="ti ti-lock" style={{marginRight:4}} aria-hidden="true"/>{window.kvT("Local database access details are visible to Administrators only.")}</div>}
+                <ol style={{fontSize:12,color:"var(--color-text-tertiary)",marginTop:10,paddingLeft:16,lineHeight:1.8}}>
+                  <li>{window.kvT("Open")} <a href="http://localhost/adminer/" target="_blank" rel="noreferrer">Adminer</a>.</li>
+                  <li>{window.kvT("Choose MySQL, enter the local access details above, then sign in.")}</li>
+                  <li>{window.kvT("Select the kindervault database.")}</li>
+                  <li>{window.kvT("Choose Import, upload your .sql file, then run the import.")}</li>
+                </ol>
+              </>}
             </div>
           </Card>
 
+          {!isProduction && (
           <Card>
             <CardHead><i className="ti ti-calendar" style={{marginRight:6,color:C.blue}} aria-hidden="true"/>{window.kvT("Auto-Backup Setup")}</CardHead>
             <div style={{padding:16,fontSize:12,color:"var(--color-text-secondary)",lineHeight:1.7}}>
@@ -154,6 +165,7 @@ const BackupPage = ({students, payments, devRecords, isAdministrator, embedded =
               <div style={{marginTop:8}}>{window.kvT("Schedule it in Task Scheduler to run nightly at 2:00 AM.")}</div>
             </div>
           </Card>
+          )}
         </div>
       </div>
     </div>

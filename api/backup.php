@@ -25,6 +25,18 @@ $lines = [
 ];
 
 $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
+$redactedColumns = [
+    'password',
+    'mfa_secret_encrypted',
+    'mfa_recovery_codes_json',
+    'session_token',
+    'csrf_token',
+    'api_key',
+    'access_token',
+    'secret_key',
+    'encryption_key',
+];
+$redactedPasswordPlaceholder = '!BACKUP_REDACTED!';
 foreach ($tables as $table) {
     $safeTable = str_replace('`', '``', (string)$table);
     $createRow = $pdo->query("SHOW CREATE TABLE `{$safeTable}`")->fetch();
@@ -44,10 +56,21 @@ foreach ($tables as $table) {
             static fn(string $column): string => '`' . str_replace('`', '``', $column) . '`',
             array_keys($row)
         );
-        $values = array_map(
-            static fn(mixed $value): string => $value === null ? 'NULL' : $pdo->quote((string)$value),
-            array_values($row)
-        );
+        $values = [];
+        foreach ($row as $column => $value) {
+            $columnName = strtolower((string)$column);
+            $isSensitiveColumn = in_array($columnName, $redactedColumns, true)
+                || preg_match('/(?:password|passhash|secret|token|api[_-]?key)/i', $columnName) === 1;
+            if ($isSensitiveColumn) {
+                // Password columns are NOT NULL in the users table, so use a
+                // non-credential placeholder. Other secret fields can be NULL.
+                $values[] = preg_match('/(?:password|passhash)/i', $columnName) === 1
+                    ? $pdo->quote($redactedPasswordPlaceholder)
+                    : 'NULL';
+                continue;
+            }
+            $values[] = $value === null ? 'NULL' : $pdo->quote((string)$value);
+        }
         $lines[] = "INSERT INTO `{$safeTable}` (" . implode(', ', $columns) . ') VALUES (' . implode(', ', $values) . ');';
     }
     $lines[] = '';
@@ -82,4 +105,3 @@ header('Content-Length: ' . strlen($sql));
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 echo $sql;
 exit;
-

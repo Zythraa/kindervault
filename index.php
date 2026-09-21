@@ -56,6 +56,7 @@ $description = $locale === 'ms'
     window.KV_LOCALE = <?= json_encode($locale) ?>;
     document.documentElement.setAttribute('lang', window.KV_LOCALE);
     window.KV_SCANNER_ENABLED = <?= json_encode(SCANNER_ENABLED) ?>;
+    window.KV_APP_ENV = <?= json_encode(APP_ENV) ?>;
   </script>
 </head>
 <body>
@@ -66,7 +67,7 @@ $description = $locale === 'ms'
      Order matters: shared → pages → app (root)
      ══════════════════════════════════════════════════════════ -->
 
-  <script type="text/babel" src="pages/shared.jsx?v=44"></script>
+  <script type="text/babel" src="pages/shared.jsx?v=45"></script>
 <script type="text/babel" src="pages/dashboard.jsx?v=15"></script>
 <script type="text/babel" src="pages/classes.jsx?v=8"></script>
 <?php if (SCANNER_ENABLED): ?>
@@ -76,7 +77,7 @@ $description = $locale === 'ms'
 <script type="text/babel" src="pages/payments.jsx?v=16"></script>
 <script type="text/babel" src="pages/receipts.jsx?v=11"></script>
 <script type="text/babel" src="pages/development.jsx?v=38"></script>
-  <script type="text/babel" src="pages/backup.jsx?v=12"></script>
+  <script type="text/babel" src="pages/backup.jsx?v=13"></script>
   <script type="text/babel" src="pages/settings.jsx?v=23"></script>
 
 <!-- Root App – bootstraps React, loads data from API -->
