@@ -78,7 +78,7 @@ $description = $locale === 'ms'
 <script type="text/babel" src="pages/receipts.jsx?v=11"></script>
 <script type="text/babel" src="pages/development.jsx?v=38"></script>
   <script type="text/babel" src="pages/backup.jsx?v=13"></script>
-  <script type="text/babel" src="pages/settings.jsx?v=24"></script>
+  <script type="text/babel" src="pages/settings.jsx?v=25"></script>
 
 <!-- Root App – bootstraps React, loads data from API -->
 <script type="text/babel">

@@ -504,12 +504,15 @@ const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeC
 
   React.useEffect(() => {
     if (!auditPrintData) return;
+    const previousTitle = document.title;
+    document.title = auditPrintData.print_title || "Audit history";
     document.documentElement.classList.add("kv-printing-audit");
     document.body.classList.add("kv-printing-audit");
     const timer = window.setTimeout(() => {
       try {
         window.print();
       } finally {
+        document.title = previousTitle;
         document.documentElement.classList.remove("kv-printing-audit");
         document.body.classList.remove("kv-printing-audit");
         setAuditPrintData(null);
@@ -517,6 +520,7 @@ const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeC
     }, 150);
     return () => {
       window.clearTimeout(timer);
+      document.title = previousTitle;
       document.documentElement.classList.remove("kv-printing-audit");
       document.body.classList.remove("kv-printing-audit");
     };
@@ -812,7 +816,10 @@ const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeC
       } while (page <= totalPages);
 
       const userNames = Object.fromEntries(users.map(user => [String(user.id), user.full_name]));
-      setAuditPrintData({records,filters:{...auditFilters},users:userNames,generated_at:new Date().toISOString()});
+      const generatedAt = new Date();
+      const pad = value => String(value).padStart(2, "0");
+      const printTitle = `Audit history (${pad(generatedAt.getDate())}-${pad(generatedAt.getMonth() + 1)}-${generatedAt.getFullYear()}) (${pad(generatedAt.getHours())}-${pad(generatedAt.getMinutes())})`;
+      setAuditPrintData({records,filters:{...auditFilters},users:userNames,generated_at:generatedAt.toISOString(),print_title:printTitle});
     } catch (error) {
       setFlash({msg:error.message || window.kvT("Unable to prepare the audit history for printing."),type:"danger"});
     } finally {
