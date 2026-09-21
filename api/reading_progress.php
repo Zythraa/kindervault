@@ -140,10 +140,12 @@ switch ($method) {
 
 function ensureReadingProgressSchema(): void {
     $pdo = db();
+    // Match students.id (INT UNSIGNED) so TiDB/MySQL can create the
+    // foreign key constraint on a fresh deployment database.
     $pdo->exec('
         CREATE TABLE IF NOT EXISTS reading_progress_records (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            student_id INT NOT NULL,
+            student_id INT UNSIGNED NOT NULL,
             quarter VARCHAR(12) NOT NULL,
             record_date DATE NOT NULL,
             has_bm TINYINT(1) NOT NULL DEFAULT 1,
