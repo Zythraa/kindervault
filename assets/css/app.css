@@ -6502,20 +6502,74 @@ button[disabled] {
 .kv-audit-summary-card--teal > i { color: #087153; background: rgba(29, 158, 117, .12); }
 
 .kv-settings-audit-filters {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  align-items: end;
-  gap: 9px;
-  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px 16px;
 }
 
-.kv-settings-audit-filters .kv-field {
+.kv-audit-filter-row {
+  display: grid;
+  align-items: end;
+  gap: 10px;
+  min-width: 0;
+}
+
+.kv-audit-filter-row--primary {
+  grid-template-columns: minmax(240px, 2fr) repeat(2, minmax(150px, 1fr)) auto;
+}
+
+.kv-audit-filter-row--secondary {
+  grid-template-columns: repeat(5, minmax(140px, 1fr));
+}
+
+.kv-audit-filter-control {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kv-audit-filter-label {
+  overflow: hidden;
+  color: var(--color-text-tertiary);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .055em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.kv-audit-filter-control .kv-form-control {
+  min-width: 0;
   margin: 0;
+}
+
+.kv-audit-filter-control--search .kv-search-field {
+  width: 100%;
+}
+
+.kv-audit-filter-control--search .kv-search-field > i {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  z-index: 1;
+  color: var(--color-text-tertiary);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.kv-audit-filter-control--search .kv-search-field input {
+  padding-left: 34px !important;
 }
 
 .kv-settings-filter-actions {
   display: flex;
-  min-width: 140px;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: max-content;
   gap: 6px;
 }
 
@@ -6711,11 +6765,16 @@ button[disabled] {
 }
 
 @media (max-width: 1180px) {
-  .kv-settings-audit-filters {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .kv-audit-filter-row--primary {
+    grid-template-columns: minmax(200px, 2fr) repeat(2, minmax(130px, 1fr));
+  }
+
+  .kv-audit-filter-row--secondary {
+    grid-template-columns: repeat(3, minmax(140px, 1fr));
   }
 
   .kv-settings-filter-actions {
+    grid-column: 1 / -1;
     justify-content: flex-end;
   }
 }
@@ -6773,13 +6832,22 @@ button[disabled] {
   .kv-role-grid,
   .kv-audit-summary-grid,
   .kv-audit-detail-grid,
-  .kv-settings-audit-filters {
+  .kv-audit-filter-row--primary,
+  .kv-audit-filter-row--secondary {
     grid-template-columns: 1fr;
   }
 
   .kv-settings-filter-actions,
   .kv-settings-modal-footer {
     width: 100%;
+  }
+
+  .kv-settings-filter-actions {
+    justify-content: stretch;
+  }
+
+  .kv-settings-filter-actions .kv-btn {
+    flex: 1;
   }
 
   .kv-settings-modal-footer .kv-btn {

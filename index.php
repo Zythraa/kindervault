@@ -40,7 +40,7 @@ $description = $locale === 'ms'
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- App CSS -->
-  <link rel="stylesheet" href="assets/css/app.css?v=49">
+  <link rel="stylesheet" href="assets/css/app.css?v=50">
 
   <!-- React 18 + Babel (CDN) -->
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
@@ -78,7 +78,7 @@ $description = $locale === 'ms'
 <script type="text/babel" src="pages/receipts.jsx?v=11"></script>
 <script type="text/babel" src="pages/development.jsx?v=38"></script>
   <script type="text/babel" src="pages/backup.jsx?v=13"></script>
-  <script type="text/babel" src="pages/settings.jsx?v=23"></script>
+  <script type="text/babel" src="pages/settings.jsx?v=24"></script>
 
 <!-- Root App – bootstraps React, loads data from API -->
 <script type="text/babel">
