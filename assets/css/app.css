@@ -2485,6 +2485,98 @@ button:hover { opacity: 0.93; }
   font-size: 15px;
 }
 
+/* Dedicated list print views. These remain hidden on screen and are revealed
+   only by their page-specific print actions. */
+.kv-student-list-print-area,
+.kv-reading-list-print-area,
+.kv-receipts-list-print-area {
+  display: none;
+}
+
+.kv-list-print-sheet {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 2mm;
+  color: #17121f;
+  background: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.kv-list-print-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12mm;
+  margin-bottom: 6mm;
+  padding-bottom: 3mm;
+  border-bottom: 2px solid #6b3fa0;
+}
+
+.kv-list-print-header h1 {
+  margin: 0;
+  color: #4e2d78;
+  font-size: 17pt;
+  line-height: 1.15;
+}
+
+.kv-list-print-header p,
+.kv-list-print-header > span {
+  margin: 1.5mm 0 0;
+  color: #5f566b;
+  font-size: 8.5pt;
+}
+
+.kv-list-print-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 8.5pt;
+}
+
+.kv-list-print-table thead {
+  display: table-header-group;
+}
+
+.kv-list-print-table tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.kv-list-print-table th,
+.kv-list-print-table td {
+  padding: 2.2mm 1.8mm;
+  border: 1px solid #d8d0e2;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.kv-list-print-table th {
+  color: #3d1a70;
+  background: #f0eaf7;
+  font-size: 7.2pt;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.kv-list-print-table td strong {
+  font-weight: 700;
+}
+
+.kv-list-print-table td small {
+  display: block;
+  margin-top: 1mm;
+  color: #6f657b;
+  font-size: 7.5pt;
+}
+
+.kv-list-print-empty {
+  margin: 8mm 0;
+  color: #5f566b;
+  font-size: 10pt;
+}
+
 /* ── Print styles ───────────────────────────────────────────── */
 /* --------------------------------------------------------------------------
    KinderVault 2026 interface system
@@ -6928,13 +7020,13 @@ button[disabled] {
   }
   .dev-print-sheet {
     width: 194mm !important;
-    height: 281mm !important;
+    height: auto !important;
     min-height: 281mm !important;
     border: none !important;
     box-shadow: none !important;
     padding: 5mm 3.5mm 5mm !important;
     margin: 0 !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   /* Native browser print fallback: ordinary pages do not render a dedicated
@@ -6956,53 +7048,87 @@ button[disabled] {
     box-shadow: none !important;
   }
 
-  /* Explicit page-print mode used by the shared top-bar print action. */
-  html.kv-printing-page,
-  body.kv-printing-page {
+}
+
+@page kv-list-landscape {
+  size: A4 landscape;
+  margin: 10mm;
+}
+
+@media print {
+  html.kv-printing-students,
+  body.kv-printing-students,
+  html.kv-printing-reading,
+  body.kv-printing-reading,
+  html.kv-printing-receipts,
+  body.kv-printing-receipts {
+    width: 277mm !important;
     height: auto !important;
     min-height: 0 !important;
     overflow: visible !important;
   }
 
-  body.kv-printing-page * {
-    visibility: visible !important;
-  }
-
-  body.kv-printing-page aside,
-  body.kv-printing-page .topbar,
-  body.kv-printing-page .no-print,
-  body.kv-printing-page button,
-  body.kv-printing-page input,
-  body.kv-printing-page select,
-  body.kv-printing-page textarea {
-    display: none !important;
-  }
-
-  body.kv-printing-page .kv-main-scroll,
-  body.kv-printing-page .kv-app-content,
-  body.kv-printing-page .kv-page {
-    width: 100% !important;
-    max-width: none !important;
-    height: auto !important;
-    min-height: 0 !important;
+  body.kv-printing-students .kv-student-list-print-area,
+  body.kv-printing-reading .kv-reading-list-print-area,
+  body.kv-printing-receipts .kv-receipts-list-print-area {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 277mm !important;
+    max-width: 277mm !important;
+    page: kv-list-landscape;
     margin: 0 !important;
-    overflow: visible !important;
-    box-shadow: none !important;
+    padding: 0 !important;
   }
+
+  body.kv-printing-students .kv-student-list-print-sheet,
+  body.kv-printing-reading .kv-reading-list-print-sheet,
+  body.kv-printing-receipts .kv-receipts-list-print-sheet {
+    width: 277mm !important;
+    max-width: 277mm !important;
+    padding: 0 !important;
+    color: #17121f !important;
+    background: #fff !important;
+  }
+
+  body.kv-printing-students .kv-student-list-print-table th:nth-child(1) { width: 4%; }
+  body.kv-printing-students .kv-student-list-print-table th:nth-child(2) { width: 18%; }
+  body.kv-printing-students .kv-student-list-print-table th:nth-child(3) { width: 10%; }
+  body.kv-printing-students .kv-student-list-print-table th:nth-child(4) { width: 12%; }
+  body.kv-printing-students .kv-student-list-print-table th:nth-child(5) { width: 9%; }
+  body.kv-printing-students .kv-student-list-print-table th:nth-child(6) { width: 21%; }
+  body.kv-printing-students .kv-student-list-print-table th:nth-child(7) { width: 11%; }
+  body.kv-printing-students .kv-student-list-print-table th:nth-child(8) { width: 8%; }
+  body.kv-printing-students .kv-student-list-print-table th:nth-child(9) { width: 7%; }
+
+  body.kv-printing-reading .kv-reading-list-print-table th:nth-child(1) { width: 22%; }
+  body.kv-printing-reading .kv-reading-list-print-table th:nth-child(2) { width: 11%; }
+  body.kv-printing-reading .kv-reading-list-print-table th:nth-child(3) { width: 10%; }
+  body.kv-printing-reading .kv-reading-list-print-table th:nth-child(4),
+  body.kv-printing-reading .kv-reading-list-print-table th:nth-child(5) { width: 15%; }
+  body.kv-printing-reading .kv-reading-list-print-table th:nth-child(6) { width: 27%; }
+
+  body.kv-printing-receipts .kv-receipts-list-print-table th:nth-child(1) { width: 17%; }
+  body.kv-printing-receipts .kv-receipts-list-print-table th:nth-child(2) { width: 25%; }
+  body.kv-printing-receipts .kv-receipts-list-print-table th:nth-child(3) { width: 17%; }
+  body.kv-printing-receipts .kv-receipts-list-print-table th:nth-child(4) { width: 20%; }
+  body.kv-printing-receipts .kv-receipts-list-print-table th:nth-child(5) { width: 11%; }
+  body.kv-printing-receipts .kv-receipts-list-print-table th:nth-child(6) { width: 10%; }
 }
 
 @media print {
   .kv-receipt-print-area {
     width: 194mm !important;
     max-width: 194mm !important;
-    height: 281mm !important;
+    height: auto !important;
   }
 
   .kv-receipt-sheet {
     width: 194mm !important;
-    height: 281mm !important;
+    height: auto !important;
     min-height: 281mm !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     border: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
@@ -7014,7 +7140,7 @@ button[disabled] {
 
   .kv-receipt-layout {
     width: 194mm !important;
-    height: 281mm !important;
+    height: auto !important;
     min-height: 281mm !important;
     padding: 13mm 14mm 9mm !important;
   }
@@ -8044,6 +8170,13 @@ button[disabled] {
   margin: 3px 0 0;
   color: var(--color-text-tertiary);
   font-size: 12px;
+}
+
+.kv-reading-history-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
 }
 
 .kv-reading-record-count {

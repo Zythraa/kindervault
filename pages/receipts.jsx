@@ -101,6 +101,24 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
     }, delay);
   };
 
+  const printReceiptList = () => {
+    if (!canPrintReceipts) return;
+    const previousTitle = document.title;
+    const printedAt = window.kvDate(new Date(), {year:"numeric", month:"2-digit", day:"2-digit"}, "");
+    document.title = `${window.kvT("All Receipts")} - ${printedAt}`;
+    document.documentElement.classList.add("kv-printing-receipts");
+    document.body.classList.add("kv-printing-receipts");
+    window.setTimeout(() => {
+      try {
+        window.print();
+      } finally {
+        document.documentElement.classList.remove("kv-printing-receipts");
+        document.body.classList.remove("kv-printing-receipts");
+        document.title = previousTitle;
+      }
+    }, 100);
+  };
+
   const formatPhoneForWA = (phone) => {
     if (!phone) return "";
     let cleaned = phone.replace(/\D/g, '');
@@ -266,9 +284,12 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
 
   return (
     <div className="kv-page kv-page--receipts">
-      <h2 className="kv-page-title" style={{margin:"0 0 20px"}}>
-        <i className="ti ti-receipt" style={{marginRight:8}} aria-hidden="true"/>{window.kvT('Receipts')}
-      </h2>
+      <div className="kv-page-header no-print" style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
+        <h2 className="kv-page-title" style={{margin:0}}>
+          <i className="ti ti-receipt" style={{marginRight:8}} aria-hidden="true"/>{window.kvT('Receipts')}
+        </h2>
+        {canPrintReceipts && <Btn variant="outline" onClick={printReceiptList} style={{marginLeft:"auto"}}><i className="ti ti-printer" aria-hidden="true"/> {window.kvT("Print")}</Btn>}
+      </div>
       <Card className="kv-table-card">
         <CardHead>
           <div className="kv-table-toolbar" style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",flexWrap:"wrap",gap:10}}>
@@ -344,6 +365,38 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
             </table>
           </div>
         ) : <EmptyState icon="receipt" text={window.kvT('No receipts yet. Record a payment to generate one.')}/>}      </Card>
+
+      <div className="print-area kv-receipts-list-print-area" aria-label={window.kvT("All Receipts")}>
+        <div className="kv-receipts-list-print-sheet">
+          <header className="kv-list-print-header">
+            <div>
+              <h1>{window.kvT("All Receipts")}</h1>
+              <p>{window.kvT("Receipts")} · {receipts.length}</p>
+            </div>
+            <span>{window.kvDate(new Date(), {day:"numeric", month:"short", year:"numeric"})}</span>
+          </header>
+          {receipts.length ? (
+            <table className="kv-list-print-table kv-receipts-list-print-table">
+              <thead><tr>
+                {["Receipt No.", "Student", "Type", "Fee Period", "Amount (RM)", "Date"].map(label => <th key={label}>{window.kvT(label)}</th>)}
+              </tr></thead>
+              <tbody>{receipts.map(receipt => {
+                const student = students.find(item => item.id === receipt.student_id || item.id === parseInt(receipt.student_id));
+                const monthlyMonths = collectReceiptMonths(receipt.items || [receipt], student);
+                const period = formatPaymentPeriod(monthlyMonths.join(","));
+                return <tr key={receipt.receipt || receipt.id}>
+                  <td><strong>{receipt.receipt || "-"}</strong></td>
+                  <td><strong>{receipt.student_name || student?.name || "-"}</strong><small>{receipt.student_class || student?.class || "-"}</small></td>
+                  <td>{window.kvT(receipt.type || "-")}</td>
+                  <td>{period.label || "-"}</td>
+                  <td>RM {parseFloat(receipt.amount || 0).toFixed(2)}</td>
+                  <td>{receipt.date ? window.kvDate(receipt.date, {day:"numeric", month:"short", year:"numeric"}, receipt.date) : "-"}</td>
+                </tr>;
+              })}</tbody>
+            </table>
+          ) : <p className="kv-list-print-empty">{window.kvT("No receipts yet. Record a payment to generate one.")}</p>}
+        </div>
+      </div>
     </div>
   );
 };

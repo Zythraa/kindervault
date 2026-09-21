@@ -862,11 +862,31 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
   );
 
   // ── List view ─────────────────────────────────────────────
+  const printStudentList = () => {
+    const previousTitle = document.title;
+    const printedAt = window.kvDate(new Date(), {year:"numeric", month:"2-digit", day:"2-digit"}, "");
+    document.title = `${window.kvT("Student List")} - ${printedAt}`;
+    document.documentElement.classList.add("kv-printing-students");
+    document.body.classList.add("kv-printing-students");
+    window.setTimeout(() => {
+      try {
+        window.print();
+      } finally {
+        document.documentElement.classList.remove("kv-printing-students");
+        document.body.classList.remove("kv-printing-students");
+        document.title = previousTitle;
+      }
+    }, 100);
+  };
+
   return (
     <div className="kv-page kv-page--students">
-      <div className="kv-page-header" style={{display:"flex",alignItems:"center",marginBottom:16}}>
+      <div className="kv-page-header no-print" style={{display:"flex",alignItems:"center",marginBottom:16}}>
         <h2 className="kv-page-title"><i className="ti ti-users" style={{marginRight:8}} aria-hidden="true"/>{window.kvT('Students')}</h2>
-        {canCreateStudents && <Btn onClick={openAdd} style={{marginLeft:"auto"}}><i className="ti ti-user-plus" aria-hidden="true"/> {window.kvT('Add Student')}</Btn>}
+        <div style={{display:"flex",gap:8,marginLeft:"auto",flexWrap:"wrap"}}>
+          <Btn variant="outline" onClick={printStudentList}><i className="ti ti-printer" aria-hidden="true"/> {window.kvT("Print")}</Btn>
+          {canCreateStudents && <Btn onClick={openAdd}><i className="ti ti-user-plus" aria-hidden="true"/> {window.kvT('Add Student')}</Btn>}
+        </div>
       </div>
 
       <Card className="kv-filter-card" style={{marginBottom:16}}>
@@ -923,6 +943,38 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           </div>
         ) : <EmptyState icon="users" text={search?window.kvT('No students match your search.'):window.kvT('No students yet.')} action={<Btn onClick={openAdd} style={{marginTop:12}}>{window.kvT('Add First Student')}</Btn>}/>}
       </Card>
+
+      <div className="print-area kv-student-list-print-area" aria-label={window.kvT("Student List")}>
+        <div className="kv-student-list-print-sheet">
+          <header className="kv-list-print-header">
+            <div>
+              <h1>{window.kvT("Student List")}</h1>
+              <p>{window.kvT("Students")} · {filtered.length}</p>
+            </div>
+            <span>{window.kvDate(new Date(), {day:"numeric", month:"short", year:"numeric"})}</span>
+          </header>
+          {filtered.length ? (
+            <table className="kv-list-print-table">
+              <thead><tr>
+                {["#", "Student", "Student Code", "IC Number", "Class", "Parent", "Phone", "Fee", "Status"].map(label => <th key={label}>{window.kvT(label)}</th>)}
+              </tr></thead>
+              <tbody>{filtered.map((student, index) => (
+                <tr key={student.id}>
+                  <td>{index + 1}</td>
+                  <td><strong>{student.name || "-"}</strong></td>
+                  <td>{student.code || "-"}</td>
+                  <td>{student.ic || "-"}</td>
+                  <td>{student.class || "-"}</td>
+                  <td>{student.parent || "-"}</td>
+                  <td>{student.phone || "-"}</td>
+                  <td>RM {parseFloat(student.fee || 0).toFixed(2)}</td>
+                  <td>{window.kvT(student.status || "-")}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          ) : <p className="kv-list-print-empty">{window.kvT("No students yet.")}</p>}
+        </div>
+      </div>
     </div>
   );
 };

@@ -262,6 +262,23 @@ const ReadingHistoryCard = ({
     ) : <span className="kv-reading-not-recorded">{window.kvT("Not recorded")}</span>
   );
 
+  const printReadingRecords = () => {
+    const previousTitle = document.title;
+    const printedAt = window.kvDate(new Date(), {year:"numeric", month:"2-digit", day:"2-digit"}, "");
+    document.title = `${window.kvT("Reading Records")} - ${printedAt}`;
+    document.documentElement.classList.add("kv-printing-reading");
+    document.body.classList.add("kv-printing-reading");
+    window.setTimeout(() => {
+      try {
+        window.print();
+      } finally {
+        document.documentElement.classList.remove("kv-printing-reading");
+        document.body.classList.remove("kv-printing-reading");
+        document.title = previousTitle;
+      }
+    }, 100);
+  };
+
   return (
     <>
     <Card className="kv-reading-history-card no-print">
@@ -270,7 +287,10 @@ const ReadingHistoryCard = ({
           <h3><i className="ti ti-books" aria-hidden="true"/> {window.kvT("Reading Records")}</h3>
           <p>{window.kvT("Review each student's latest and historical reading progress.")}</p>
         </div>
-        <span className="kv-reading-record-count">{window.kvT("{count} student(s)", {count: visibleRecords.length})}</span>
+        <div className="kv-reading-history-actions">
+          <span className="kv-reading-record-count">{window.kvT("{count} student(s)", {count: visibleRecords.length})}</span>
+          <Btn small variant="outline" onClick={printReadingRecords}><i className="ti ti-printer" aria-hidden="true"/> {window.kvT("Print")}</Btn>
+        </div>
       </div>
 
       <div className="kv-reading-toolbar">
@@ -351,6 +371,34 @@ const ReadingHistoryCard = ({
         </div>
       )}
     </Card>
+    <div className="print-area kv-reading-list-print-area" aria-label={window.kvT("Reading Records")}>
+      <div className="kv-reading-list-print-sheet">
+        <header className="kv-list-print-header">
+          <div>
+            <h1>{window.kvT("Reading Records")}</h1>
+            <p>{window.kvT("Latest reading progress by student")} · {visibleRecords.length}</p>
+          </div>
+          <span>{window.kvDate(new Date(), {day:"numeric", month:"short", year:"numeric"})}</span>
+        </header>
+        {visibleRecords.length ? (
+          <table className="kv-list-print-table kv-reading-list-print-table">
+            <thead><tr>
+              {["Student", "Record Date", "Quarter", "Bahasa Melayu", "English", "Notes"].map(label => <th key={label}>{window.kvT(label)}</th>)}
+            </tr></thead>
+            <tbody>{visibleRecords.map(record => (
+              <tr key={record.id}>
+                <td><strong>{record.student_name || "-"}</strong><small>{record.student_class || "-"}</small></td>
+                <td>{prettyDate(record.record_date)}</td>
+                <td>{record.quarter || "-"}</td>
+                <td>{hasReadingLanguage(record, "bm") ? `${window.kvT("Book {level}", {level:record.bm_book_level || 1})} · ${window.kvT("Page")} ${record.bm_page || 0}` : window.kvT("Not recorded")}</td>
+                <td>{hasReadingLanguage(record, "bi") ? `${window.kvT("Book {level}", {level:record.bi_book_level || 1})} · ${window.kvT("Page")} ${record.bi_page || 0}` : window.kvT("Not recorded")}</td>
+                <td>{record.notes || "-"}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        ) : <p className="kv-list-print-empty">{window.kvT("No reading progress records yet.")}</p>}
+      </div>
+    </div>
     {detailStudent && (
       <div className="kv-reading-detail-backdrop" onMouseDown={event => event.target === event.currentTarget && setDetailStudentId("")}>
         <section className="kv-reading-detail-modal" role="dialog" aria-modal="true" aria-labelledby="reading-detail-title">
