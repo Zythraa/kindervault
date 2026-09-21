@@ -40,7 +40,7 @@ $description = $locale === 'ms'
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- App CSS -->
-  <link rel="stylesheet" href="assets/css/app.css?v=51">
+  <link rel="stylesheet" href="assets/css/app.css?v=52">
 
   <!-- React 18 + Babel (CDN) -->
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
@@ -67,7 +67,7 @@ $description = $locale === 'ms'
      Order matters: shared → pages → app (root)
      ══════════════════════════════════════════════════════════ -->
 
-  <script type="text/babel" src="pages/shared.jsx?v=45"></script>
+  <script type="text/babel" src="pages/shared.jsx?v=46"></script>
 <script type="text/babel" src="pages/dashboard.jsx?v=15"></script>
 <script type="text/babel" src="pages/classes.jsx?v=8"></script>
 <?php if (SCANNER_ENABLED): ?>

@@ -6955,6 +6955,40 @@ button[disabled] {
   body:not(:has(.print-area)) .kv-page {
     box-shadow: none !important;
   }
+
+  /* Explicit page-print mode used by the shared top-bar print action. */
+  html.kv-printing-page,
+  body.kv-printing-page {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  body.kv-printing-page * {
+    visibility: visible !important;
+  }
+
+  body.kv-printing-page aside,
+  body.kv-printing-page .topbar,
+  body.kv-printing-page .no-print,
+  body.kv-printing-page button,
+  body.kv-printing-page input,
+  body.kv-printing-page select,
+  body.kv-printing-page textarea {
+    display: none !important;
+  }
+
+  body.kv-printing-page .kv-main-scroll,
+  body.kv-printing-page .kv-app-content,
+  body.kv-printing-page .kv-page {
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
 }
 
 @media print {

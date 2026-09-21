@@ -29,6 +29,7 @@ const TRANSLATIONS = {
     "Receipt Preview": "Receipt Preview",
     "Send WhatsApp": "Send WhatsApp",
     "Print / PDF": "Print / PDF",
+    "Print current page": "Print current page",
     "Parent's phone number is missing for this student.": "Parent's phone number is missing for this student.",
     "Parent's phone number is not valid for WhatsApp.": "Parent's phone number is not valid for WhatsApp.",
     "All Receipts": "All Receipts",
@@ -159,6 +160,7 @@ const TRANSLATIONS = {
     "Receipt Preview": "Pratonton Resit",
     "Send WhatsApp": "Hantar WhatsApp",
     "Print / PDF": "Cetak / PDF",
+    "Print current page": "Cetak halaman semasa",
     "Parent's phone number is missing for this student.": "Nombor telefon ibu bapa tidak ada untuk pelajar ini.",
     "Parent's phone number is not valid for WhatsApp.": "Nombor telefon ibu bapa tidak sah untuk WhatsApp.",
     "Loading…": "Sedang dimuatkan…",
@@ -1346,6 +1348,33 @@ window.kvDateTime = (value, options = {}, fallback = '') => {
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? (fallback || value) : date.toLocaleString(window.kvDateLocale(), options);
 };
+// Print the page currently visible in the application.  The temporary body
+// class lets the print stylesheet switch from the dedicated report views to
+// a safe, full-page print layout for ordinary pages.
+window.kvPrintPage = (title = 'KinderVault') => {
+  if (typeof window.print !== 'function') return;
+  const previousTitle = document.title;
+  const now = new Date();
+  const pad = value => String(value).padStart(2, '0');
+  const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}-${pad(now.getMinutes())}`;
+  const safeTitle = String(title || 'KinderVault').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'KinderVault';
+  const cleanup = () => {
+    document.documentElement.classList.remove('kv-printing-page');
+    document.body.classList.remove('kv-printing-page');
+    document.title = previousTitle;
+  };
+
+  document.title = `${safeTitle} (${stamp})`;
+  document.documentElement.classList.add('kv-printing-page');
+  document.body.classList.add('kv-printing-page');
+  window.addEventListener('afterprint', cleanup, {once: true});
+  window.setTimeout(() => {
+    window.print();
+    // Chromium fires afterprint, but the fallback also cleans up when a
+    // browser closes the preview without dispatching that event.
+    window.setTimeout(cleanup, 600);
+  }, 100);
+};
 window.kvPaymentItemLabel = (type, month = '', fallback = '') => {
   const rawType = String(type || '').trim();
   const months = String(month || '').split(',').map(value => value.trim()).filter(Boolean);
@@ -1578,6 +1607,13 @@ const Topbar = ({title, onSearch, searchQuery, userName, lang, onLanguageChange,
         <input value={searchQuery || ""} placeholder={window.kvT('Search everything...')} onChange={e=>onSearch&&onSearch(e.target.value)} style={{padding:"6px 10px 6px 28px",fontSize:12,border:"0.5px solid var(--color-border-secondary)",borderRadius:8,background:"var(--color-background-secondary)",color:"var(--color-text-primary)",width:220}}/>
       </div>}
       <div className="kv-topbar-actions">
+      <button type="button"
+        onClick={() => window.kvPrintPage(title)}
+        className="kv-icon-btn no-print"
+        title={window.kvT('Print current page')}
+        aria-label={window.kvT('Print current page')}>
+        <i className="ti ti-printer" aria-hidden="true" />
+      </button>
       <button type="button" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
         className="kv-icon-btn"
         title={window.kvT('Toggle Theme')}>
