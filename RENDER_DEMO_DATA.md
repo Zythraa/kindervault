@@ -12,6 +12,8 @@ Render Free does not provide a service shell. Use the TiDB Cloud **SQL Editor** 
 
 For development testing, run [database/render_demo_development_seed.sql](database/render_demo_development_seed.sql) after the student fixture. It creates varied KPM checklist records for 12 demo students and intentionally leaves 8 demo students without development records.
 
+For reading-progress testing, run [database/render_demo_reading_seed.sql](database/render_demo_reading_seed.sql) after the student fixture. It creates 15 BM/English reading records for 12 demo students, including multiple history dates and language combinations, and leaves 8 demo students without reading records.
+
 The SQL fixture is idempotent for its `DEMO26-*` student codes and `DEMO26-PAY-*` payment references. It uses synthetic records only and does not contain credentials or deployment secrets.
 
 ## Alternative when a Render shell is available
