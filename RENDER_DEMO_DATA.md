@@ -2,7 +2,17 @@
 
 This is an explicitly guarded, one-time fixture for the deployed FYP environment. It creates 20 fictional Malaysian student records and payment scenarios in the Render/TiDB database only. It does not run automatically, and it must not be run against the WAMP database.
 
-## Run from the Render service shell
+## Recommended method for Render Free
+
+Render Free does not provide a service shell. Use the TiDB Cloud **SQL Editor** instead:
+
+1. Open the TiDB Cloud Starter cluster and select the `kindervault` database on the `main` branch.
+2. Open [database/render_demo_student_seed.sql](database/render_demo_student_seed.sql), copy the full file, and paste it into the SQL Editor.
+3. Execute it once, then refresh the deployed Render dashboard.
+
+The SQL fixture is idempotent for its `DEMO26-*` student codes and `DEMO26-PAY-*` payment references. It uses synthetic records only and does not contain credentials or deployment secrets.
+
+## Alternative when a Render shell is available
 
 After the latest commit has been deployed, open the Render service shell and run:
 
