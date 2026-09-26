@@ -2,6 +2,8 @@
 -- Run this only in the TiDB Cloud SQL Editor for the deployed FYP database.
 -- Do not run it against the local WAMP database.
 
+USE `kindervault`;
+
 START TRANSACTION;
 
 INSERT IGNORE INTO students
