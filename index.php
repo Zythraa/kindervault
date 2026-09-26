@@ -40,7 +40,7 @@ $description = $locale === 'ms'
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- App CSS -->
-  <link rel="stylesheet" href="assets/css/app.css?v=53">
+  <link rel="stylesheet" href="assets/css/app.css?v=54">
 
   <!-- React 18 + Babel (CDN) -->
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
@@ -73,7 +73,7 @@ $description = $locale === 'ms'
 <?php if (SCANNER_ENABLED): ?>
 <script type="text/babel" src="pages/registration_scanner.jsx?v=2"></script>
 <?php endif; ?>
-<script type="text/babel" src="pages/students.jsx?v=25"></script>
+<script type="text/babel" src="pages/students.jsx?v=26"></script>
 <script type="text/babel" src="pages/payments.jsx?v=16"></script>
 <script type="text/babel" src="pages/receipts.jsx?v=12"></script>
 <script type="text/babel" src="pages/development.jsx?v=39"></script>

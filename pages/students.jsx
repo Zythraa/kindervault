@@ -44,6 +44,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           && (!classF || s.class === classF);
     })
     .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), undefined, {sensitivity:"base"}));
+  const formatGender = (student) => student?.gender === "M" ? window.kvT("Male") : student?.gender === "F" ? window.kvT("Female") : "–";
 
   const derivePrimaryParent = (f) => [f.father_name, f.mother_name].filter(Boolean).join(" / ");
   const derivePrimaryPhone = (f) => f.father_phone || f.mother_phone || f.phone || "";
@@ -419,6 +420,23 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
       window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`, "_blank");
     };
 
+    const printStudentProfile = () => {
+      const previousTitle = document.title;
+      const printedAt = window.kvDate(new Date(), {year:"numeric", month:"2-digit", day:"2-digit"}, "");
+      document.title = `${window.kvT("Student Profile")} - ${selected.name || "Student"} - ${printedAt}`;
+      document.documentElement.classList.add("kv-printing-student-profile");
+      document.body.classList.add("kv-printing-student-profile");
+      window.setTimeout(() => {
+        try {
+          window.print();
+        } finally {
+          document.documentElement.classList.remove("kv-printing-student-profile");
+          document.body.classList.remove("kv-printing-student-profile");
+          document.title = previousTitle;
+        }
+      }, 100);
+    };
+
     // ── Receipt preview ──────────────────────────────────────
     if (profileReceipt) {
       const s = profileReceipt.student;
@@ -579,11 +597,12 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           </div>
         )}
 
-        <div className="kv-page-header" style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
+        <div className="kv-page-header no-print" style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
           <Btn variant="outline" small onClick={backToList} title={window.kvT("Back to students")}><i className="ti ti-arrow-left" aria-hidden="true"/></Btn>
           <h2 className="kv-page-title">{selected.name}</h2>
           {statusBadge(selected.status)}
           <div style={{marginLeft:"auto",display:"flex",gap:8}}>
+            <Btn small variant="outline" onClick={printStudentProfile}><i className="ti ti-printer" aria-hidden="true"/> {window.kvT("Print")}</Btn>
             {canViewDevelopment && <Btn small variant="outline" onClick={openStudentDevelopment}><i className="ti ti-chart-line" aria-hidden="true"/> {window.kvT("Development")}</Btn>}
             {canUpdateStudents && <Btn small onClick={()=>openEdit(selected)}><i className="ti ti-edit" aria-hidden="true"/> {window.kvT("Edit")}</Btn>}
           </div>
@@ -594,7 +613,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           <Card>
             <CardHead><i className="ti ti-id-badge" style={{marginRight:6}} aria-hidden="true"/>{window.kvT("Student Details")}</CardHead>
             <div style={{padding:"12px 16px"}}>
-              {[["Student Code",<code style={{fontSize:12}}>{selected.code}</code>],["IC / Birth Cert",selected.ic||"–"],["Gender",selected.gender === "M" ? window.kvT("Male") : window.kvT("Female")],["Date of Birth",selected.dob ? window.kvDate(selected.dob, {day:'numeric', month:'short', year:'numeric'}, selected.dob) : "–"],["Class",<span style={{background:C.blueBg,color:C.blueTx,fontSize:11,padding:"2px 8px",borderRadius:10}}>{selected.class}</span>],["Enrolment",selected.enrol ? window.kvDate(selected.enrol, {day:'numeric', month:'short', year:'numeric'}, selected.enrol) : "–"],["Monthly Fee",<span style={{fontWeight:500,color:C.green}}>RM {parseFloat(selected.fee).toFixed(2)}</span>]].map(([l,v])=>(
+              {[["Student Code",<code style={{fontSize:12}}>{selected.code}</code>],["IC / Birth Cert",selected.ic||"–"],["Gender",formatGender(selected)],["Date of Birth",selected.dob ? window.kvDate(selected.dob, {day:'numeric', month:'short', year:'numeric'}, selected.dob) : "–"],["Class",<span style={{background:C.blueBg,color:C.blueTx,fontSize:11,padding:"2px 8px",borderRadius:10}}>{selected.class}</span>],["Enrolment",selected.enrol ? window.kvDate(selected.enrol, {day:'numeric', month:'short', year:'numeric'}, selected.enrol) : "–"],["Monthly Fee",<span style={{fontWeight:500,color:C.green}}>RM {parseFloat(selected.fee).toFixed(2)}</span>]].map(([l,v])=>(
                 <div key={l} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"0.5px solid var(--color-border-tertiary)",fontSize:13}}>
                   <span style={{color:"var(--color-text-tertiary)"}}>{window.kvT(l)}</span>
                   <span style={{color:"var(--color-text-primary)"}}>{v}</span>
@@ -724,7 +743,69 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
             )}
           </Card>
         )}
-      </div>
+        <div className="print-area kv-student-profile-print-area" aria-label={window.kvT("Student Profile")}>
+          <div className="kv-student-profile-print-sheet">
+            <header className="kv-profile-print-header">
+              <div>
+                <div className="kv-profile-print-eyebrow">KINDERVAULT</div>
+                <h1>{window.kvT("Student Profile")}</h1>
+                <p>{selected.name || "-"}</p>
+              </div>
+              <div className="kv-profile-print-date">{window.kvDate(new Date(), {day:"numeric", month:"short", year:"numeric"})}</div>
+            </header>
+
+            <div className="kv-profile-print-grid">
+              <section className="kv-profile-print-section">
+                <h2>{window.kvT("Student Details")}</h2>
+                <dl>
+                  <div><dt>{window.kvT("Student Code")}</dt><dd>{selected.code || "-"}</dd></div>
+                  <div><dt>{window.kvT("IC / Birth Cert")}</dt><dd>{selected.ic || "-"}</dd></div>
+                  <div><dt>{window.kvT("Gender")}</dt><dd>{formatGender(selected)}</dd></div>
+                  <div><dt>{window.kvT("Date of Birth")}</dt><dd>{selected.dob ? window.kvDate(selected.dob, {day:"numeric", month:"short", year:"numeric"}, selected.dob) : "-"}</dd></div>
+                  <div><dt>{window.kvT("Class")}</dt><dd>{selected.class || "-"}</dd></div>
+                  <div><dt>{window.kvT("Enrolment")}</dt><dd>{selected.enrol ? window.kvDate(selected.enrol, {day:"numeric", month:"short", year:"numeric"}, selected.enrol) : "-"}</dd></div>
+                  <div><dt>{window.kvT("Monthly Fee")}</dt><dd>RM {parseFloat(selected.fee || 0).toFixed(2)}</dd></div>
+                </dl>
+              </section>
+              <section className="kv-profile-print-section">
+                <h2>{window.kvT("Parent / Guardian")}</h2>
+                <dl>
+                  <div><dt>{window.kvT("Father")}</dt><dd>{selected.father_name || "-"}</dd></div>
+                  <div><dt>{window.kvT("Father Phone")}</dt><dd>{selected.father_phone || "-"}</dd></div>
+                  <div><dt>{window.kvT("Mother")}</dt><dd>{selected.mother_name || "-"}</dd></div>
+                  <div><dt>{window.kvT("Mother Phone")}</dt><dd>{selected.mother_phone || "-"}</dd></div>
+                  <div><dt>{window.kvT("Address")}</dt><dd>{selected.father_address || selected.mother_address || selected.address || "-"}</dd></div>
+                </dl>
+              </section>
+            </div>
+
+            <section className="kv-profile-print-section kv-profile-print-summary">
+              <h2>{window.kvT("Payment History")}</h2>
+              <div className="kv-profile-print-summary-grid">
+                <div><span>{window.kvT("Status")}</span><strong>{window.kvT(selected.status || "-")}</strong></div>
+                <div><span>{window.kvT("Outstanding")}</span><strong>{outstandingItems.length}</strong></div>
+                <div><span>{window.kvT("Paid History")}</span><strong>{stuPaidPayments.length}</strong></div>
+              </div>
+              {stuPaidPayments.length ? (
+                <table className="kv-profile-print-table">
+                  <thead><tr>{["Date", "Type", "Period", "Amount", "Method", "Receipt"].map(label => <th key={label}>{window.kvT(label)}</th>)}</tr></thead>
+                  <tbody>{[...stuPaidPayments].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(payment => (
+                    <tr key={payment.id}>
+                      <td>{payment.date ? window.kvDate(payment.date, {day:"numeric", month:"short", year:"numeric"}, payment.date) : "-"}</td>
+                      <td>{window.kvT(payment.type || "-")}</td>
+                      <td>{fmtMonthRange(payment.month)}</td>
+                      <td>RM {parseFloat(payment.amount || 0).toFixed(2)}</td>
+                      <td>{window.kvT(payment.method || "-")}</td>
+                      <td>{payment.receipt || "-"}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              ) : <p className="kv-profile-print-empty">{window.kvT("No payment records yet.")}</p>}
+            </section>
+
+            <footer className="kv-profile-print-footer">{window.kvT("Generated by KinderVault")}</footer>
+          </div>
+        </div>      </div>
     );
   }
 
@@ -911,7 +992,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
             <table className="kv-data-table" style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
               <thead>
                 <tr style={{background:"var(--color-background-secondary)"}}>
-                  {["#",window.kvT('Student'),window.kvT('IC Number'),window.kvT('Class'),window.kvT('Parent'),window.kvT('Phone'),window.kvT('Fee'),window.kvT('Status'),window.kvT('Actions')].map(h=>(
+                  {["#",window.kvT('Student'),window.kvT('IC Number'),window.kvT('Class'),window.kvT('Gender'),window.kvT('Parent'),window.kvT('Phone'),window.kvT('Fee'),window.kvT('Status'),window.kvT('Actions')].map(h=>(
                     <th key={h} style={{padding:"8px 12px",textAlign:"left",fontSize:11,textTransform:"uppercase",letterSpacing:.5,color:"var(--color-text-tertiary)",fontWeight:500,borderBottom:"0.5px solid var(--color-border-tertiary)",whiteSpace:"nowrap"}}>{h}</th>
                   ))}
                 </tr>
@@ -926,6 +1007,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                     </td>
                     <td style={{padding:"9px 12px",fontFamily:"monospace",fontSize:11,color:"var(--color-text-secondary)"}}>{s.ic||"–"}</td>
                     <td style={{padding:"9px 12px"}}><span style={{background:C.blueBg,color:C.blueTx,fontSize:11,padding:"2px 8px",borderRadius:10}}>{s.class}</span></td>
+                    <td style={{padding:"9px 12px",color:"var(--color-text-secondary)"}}>{formatGender(s)}</td>
                     <td style={{padding:"9px 12px",color:"var(--color-text-secondary)"}}>{s.parent}</td>
                     <td style={{padding:"9px 12px",color:"var(--color-text-secondary)"}}>{s.phone||"–"}</td>
                     <td style={{padding:"9px 12px",fontWeight:500,color:C.green}}>RM {parseFloat(s.fee).toFixed(2)}</td>
@@ -957,7 +1039,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           {filtered.length ? (
             <table className="kv-list-print-table">
               <thead><tr>
-                {["#", "Student", "Student Code", "IC Number", "Class", "Parent", "Phone", "Fee", "Status"].map(label => <th key={label}>{window.kvT(label)}</th>)}
+                {["#", "Student", "Student Code", "IC Number", "Class", "Gender", "Parent", "Phone", "Fee", "Status"].map(label => <th key={label}>{window.kvT(label)}</th>)}
               </tr></thead>
               <tbody>{filtered.map((student, index) => (
                 <tr key={student.id}>
@@ -966,6 +1048,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                   <td>{student.code || "-"}</td>
                   <td>{student.ic || "-"}</td>
                   <td>{student.class || "-"}</td>
+                  <td>{formatGender(student)}</td>
                   <td>{student.parent || "-"}</td>
                   <td>{student.phone || "-"}</td>
                   <td>RM {parseFloat(student.fee || 0).toFixed(2)}</td>
