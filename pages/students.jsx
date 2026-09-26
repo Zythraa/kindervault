@@ -14,7 +14,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
   const blankForm = {
     name:"", ic:"", birth_cert:"", gender:"M", dob:"", child_position:"", program_age:"5",
     monthly_package:"A", wants_uniform:1, wants_sports_uniform:1, wants_tudung:1, wants_iqra:0,
-    class:"Permata", parent:"", phone:"", address:"",
+    class:"Intelek", parent:"", phone:"", address:"",
     father_name:"", father_ic:"", father_address:"", father_job:"", father_employer:"", father_phone:"",
     mother_name:"", mother_ic:"", mother_address:"", mother_job:"", mother_employer:"", mother_phone:"",
     fee:packageAmount("A"), status:"Active", enrol:new Date().toISOString().split("T")[0]
@@ -34,6 +34,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
   const canDeleteStudents = canUsePermission(permissions, "students.delete", isAdministrator);
   const canCreatePayments = canUsePermission(permissions, "payments.create", isAdministrator);
   const canViewDevelopment = canUsePermission(permissions, "development.view", isAdministrator);
+  const classByProgrammeAge = {"4":"Permata", "5":"Intelek", "6":"Ceria"};
 
   const classes = classesList ? classesList.map(c => c.name) : [];
   const filtered = [...students]
@@ -62,9 +63,9 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
     const student = review?.student || {};
     const father = review?.father || {};
     const mother = review?.mother || {};
-    const classByAge = {"4":"Permata", "5":"Intelek", "6":"Ceria"};
+
     const selectedAge = student.program_age || student.entry_age || "";
-    const mappedClass = classByAge[String(selectedAge)] || "";
+    const mappedClass = classByProgrammeAge[String(selectedAge)] || "";
     setForm(previous => ({
       ...previous,
       name: student.name || "",
@@ -768,7 +769,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                 <div className="kv-field-label">{window.kvT("Programme Age")}</div>
                 <div className="kv-student-age-options">
                   {["4","5","6"].map(age => (
-                    <button key={age} type="button" onClick={()=>setForm({...form,program_age:age})} className={form.program_age===age ? "is-selected" : ""}>
+                    <button key={age} type="button" onClick={()=>setForm({...form,program_age:age,class:classByProgrammeAge[age] || form.class})} className={form.program_age===age ? "is-selected" : ""}>
                       {window.kvT("{age} years", {age})}
                     </button>
                   ))}
