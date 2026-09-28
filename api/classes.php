@@ -15,7 +15,20 @@ $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
 switch ($method) {
     case 'GET':
         requirePermission('classes.view');
-        $rows = db()->query('SELECT * FROM classes ORDER BY COALESCE(age_group, 99), name')->fetchAll();
+        // The application supports one class per age group. Keep the oldest
+        // row as the canonical record so legacy duplicate rows cannot leak
+        // into dropdowns or the Classes page while they are being cleaned up.
+        $rows = db()->query(<<<'SQL'
+            SELECT c.*
+            FROM classes c
+            INNER JOIN (
+                SELECT age_group, MIN(id) AS canonical_id
+                FROM classes
+                WHERE age_group IN (4, 5, 6)
+                GROUP BY age_group
+            ) canonical ON canonical.canonical_id = c.id
+            ORDER BY c.age_group
+        SQL)->fetchAll();
         jsonResponse($rows);
 
     case 'POST':
