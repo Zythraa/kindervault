@@ -46,6 +46,28 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
     });
   };
   const collectReceiptMonths = (items, student) => [...new Set(items.filter(item => item?.type === 'Monthly Fee').flatMap(item => expandAdvanceMonths(item, student)))];
+  const calculateReceiptBalance = (items, student) => {
+    const months = collectReceiptMonths(items, student);
+    const fee = parseFloat(student?.fee || 0);
+    if (!months.length || !Number.isFinite(fee) || fee <= 0) return null;
+    const target = new Set(months);
+    const paid = {};
+    const receiptMaxId = Math.max(...items.map(item => parseInt(item.id || 0)).filter(Number.isFinite), 0);
+    payments.filter(p => parseInt(p.student_id) === parseInt(student?.id) && parseInt(p.id || 0) <= receiptMaxId && p.type === "Monthly Fee" && ["Paid", "Advance", "Partial"].includes(p.status)).sort((a,b) => parseInt(a.id || 0) - parseInt(b.id || 0)).forEach(p => {
+      const covered = expandAdvanceMonths(p, student);
+      let remaining = parseFloat(p.amount || 0);
+      covered.forEach(month => {
+        if (!target.has(month) || remaining <= 0) return;
+        const available = Math.max(0, fee - (paid[month] || 0));
+        const applied = Math.min(available, remaining);
+        paid[month] = (paid[month] || 0) + applied;
+        remaining -= applied;
+      });
+    });
+    const due = months.length * fee;
+    const received = months.reduce((sum, month) => sum + Math.min(fee, paid[month] || 0), 0);
+    return Math.max(0, due - received);
+  };
   const allReceiptPayments = payments.filter(p=>p.receipt);
   const allReceipts = Object.values(allReceiptPayments.reduce((groups, payment) => {
     if (!groups[payment.receipt]) groups[payment.receipt] = [];
@@ -176,6 +198,8 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
 
     const overallPeriod = formatPaymentPeriod([...new Set(monthlyPeriods)].join(','));
     const receiptTotal = receiptItems.reduce((total, item) => total + parseFloat(item.amount || 0), 0);
+    const receiptStatus = receiptItems.some(item => item.status === 'Partial') ? 'Partial' : (receiptItems.some(item => item.status === 'Advance') ? 'Advance' : 'Paid');
+    const receiptBalance = calculateReceiptBalance(receiptItems, s);
 
     return (
       <div className="kv-page kv-page--receipt-preview">
@@ -232,7 +256,7 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
               <section className="kv-receipt-payment-section">
                 <div className="kv-receipt-section-heading">
                   <div><span>{window.kvT('Payment Summary')}</span><small>{window.kvT('Official payment document')}</small></div>
-                  <span className="kv-receipt-paid-badge"><i className="ti ti-circle-check-filled" aria-hidden="true"/> {window.kvT('Paid')}</span>
+                  <span className="kv-receipt-paid-badge" style={receiptStatus === 'Partial' ? {background:'#fff3cd',color:'#8a5a00'} : undefined}><i className="ti ti-circle-check-filled" aria-hidden="true"/> {window.kvT(receiptStatus === 'Partial' ? 'Partial Payment' : (receiptStatus === 'Advance' ? 'Advance Payment' : 'Paid'))}</span>
                 </div>
                 <table className="kv-receipt-items-table">
                   <thead><tr><th>{window.kvT('Description')}</th><th>{window.kvT('Fee Period')}</th><th>{window.kvT('Amount (RM)')}</th></tr></thead>
@@ -243,7 +267,7 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
                       <td>{parseFloat(item.amount || 0).toFixed(2)}</td>
                     </tr>})}
                   </tbody>
-                  <tfoot><tr><td colSpan="2">{window.kvT('Total Received')}</td><td>RM {receiptTotal.toFixed(2)}</td></tr></tfoot>
+                  <tfoot><tr><td colSpan="2">{window.kvT('Total Received')}</td><td>RM {receiptTotal.toFixed(2)}</td></tr>{receiptStatus === 'Partial' && receiptBalance !== null && <tr><td colSpan="2" style={{color:'#8a5a00'}}>{window.kvT('Outstanding Balance')}</td><td style={{color:'#8a5a00'}}>RM {receiptBalance.toFixed(2)}</td></tr>}</tfoot>
                 </table>
               </section>
 
@@ -267,7 +291,7 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
 
               <section className="kv-receipt-confirmation">
                 <div className="kv-receipt-confirmation-mark"><i className="ti ti-check" aria-hidden="true"/></div>
-                <div><span>{window.kvT('Payment Confirmed')}</span><p>{window.kvT('This receipt confirms that the payment above has been received and recorded in KinderVault.')}</p></div>
+                <div><span>{window.kvT(receiptStatus === 'Partial' ? 'Partial Payment Received' : 'Payment Confirmed')}</span><p>{window.kvT(receiptStatus === 'Partial' ? 'This receipt confirms a partial payment. The remaining balance is still outstanding.' : 'This receipt confirms that the payment above has been received and recorded in KinderVault.')}</p></div>
                 <strong>RM {receiptTotal.toFixed(2)}</strong>
               </section>
 

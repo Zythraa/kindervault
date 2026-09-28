@@ -483,7 +483,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
           </div>
           <div style={{display:"flex",gap:8,marginTop:8}}>
             <Btn variant="amber" onClick={save} disabled={loading} style={{opacity:loading?0.6:1}}>
-              {loading ? <><i className="ti ti-loader" aria-hidden="true"/> {window.kvT('Saving...')}</> : (view==="add" ? <><i className="ti ti-receipt" aria-hidden="true"/> {(form.status === "Paid" || form.status === "Advance") && !isPartialFormPayment ? window.kvT('Save & Generate Receipt') : window.kvT('Save Payment')}</> : <><i className="ti ti-device-floppy" aria-hidden="true"/> {window.kvT('Update Payment')}</>)}
+              {loading ? <><i className="ti ti-loader" aria-hidden="true"/> {window.kvT('Saving...')}</> : (view==="add" ? <><i className="ti ti-receipt" aria-hidden="true"/> {(form.status === "Paid" || form.status === "Advance" || form.status === "Partial") ? window.kvT('Save & Generate Receipt') : window.kvT('Save Payment')}</> : <><i className="ti ti-device-floppy" aria-hidden="true"/> {window.kvT('Update Payment')}</>)}
             </Btn>
             <Btn variant="outline" onClick={backToList}>{window.kvT('Cancel')}</Btn>
           </div>

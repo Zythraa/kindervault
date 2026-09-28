@@ -397,7 +397,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           ref: res.ref || "",
           notes: res.notes || "",
           student: selected,
-          items: [{ desc: res.type === "Monthly Fee" ? window.kvT("Monthly Fee ({period})", {period: fmtMonthRange(res.month)}) : window.kvT(res.type), amount: parseFloat(res.amount || 0) }],
+          items: [{ id: res.id, type: res.type, month: res.month || "", status: res.status || "Paid", desc: res.type === "Monthly Fee" ? window.kvT("Monthly Fee ({period})", {period: fmtMonthRange(res.month)}) : window.kvT(res.type), amount: parseFloat(res.amount || 0) }],
           total: parseFloat(res.amount || 0)
         };
         navigate({page:"students", state:profileState({profileReceipt:receiptPreview})});
@@ -501,6 +501,9 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
       const receiptMonths = [...new Set(receiptItems.filter(item => item.type === "Monthly Fee").flatMap(item => expandAdvanceReceiptMonths(item, s)))];
       const overallPeriod = formatReceiptPeriod(receiptMonths.join(","));
       const receiptTotal = receiptItems.reduce((total, item) => total + item.amount, 0);
+      const receiptStatus = receiptItems.some(item => item.status === "Partial") ? "Partial" : (receiptItems.some(item => item.status === "Advance") ? "Advance" : "Paid");
+      const receiptMaxId = Math.max(...receiptItems.map(item => parseInt(item.id || 0)).filter(Number.isFinite), 0);
+      const receiptBalance = receiptStatus === "Partial" && receiptMonths.length ? Math.max(0, receiptMonths.length * parseFloat(s?.fee || 0) - receiptMonths.reduce((sum, month) => sum + Math.min(parseFloat(s?.fee || 0), (allocateMonthlyPaidAmounts((payments || []).filter(p => parseInt(p.student_id) === parseInt(s?.id) && parseInt(p.id || 0) <= receiptMaxId), parseFloat(s?.fee || 0))[month] || 0)), 0)) : null;
       const receiptDate = profileReceipt.date
         ? window.kvDate(profileReceipt.date, {day:"numeric", month:"short", year:"numeric"}, profileReceipt.date)
         : window.kvDate(new Date(), {day:"numeric", month:"short", year:"numeric"});
@@ -564,7 +567,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                 <section className="kv-receipt-payment-section">
                   <div className="kv-receipt-section-heading">
                     <div><span>{window.kvT("Payment Summary")}</span><small>{window.kvT("Official payment document")}</small></div>
-                    <span className="kv-receipt-paid-badge"><i className="ti ti-circle-check-filled" aria-hidden="true"/> {window.kvT("Paid")}</span>
+                    <span className="kv-receipt-paid-badge" style={receiptStatus === "Partial" ? {background:"#fff3cd",color:"#8a5a00"} : undefined}><i className="ti ti-circle-check-filled" aria-hidden="true"/> {window.kvT(receiptStatus === "Partial" ? "Partial Payment" : (receiptStatus === "Advance" ? "Advance Payment" : "Paid"))}</span>
                   </div>
                   <table className="kv-receipt-items-table">
                     <thead><tr><th>{window.kvT("Description")}</th><th>{window.kvT("Fee Period")}</th><th>{window.kvT("Amount (RM)")}</th></tr></thead>
@@ -575,7 +578,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                         <td>{item.amount.toFixed(2)}</td>
                       </tr>})}
                   </tbody>
-                    <tfoot><tr><td colSpan="2">{window.kvT("Total Received")}</td><td>RM {receiptTotal.toFixed(2)}</td></tr></tfoot>
+                    <tfoot><tr><td colSpan="2">{window.kvT("Total Received")}</td><td>RM {receiptTotal.toFixed(2)}</td></tr>{receiptStatus === "Partial" && receiptBalance !== null && <tr><td colSpan="2" style={{color:"#8a5a00"}}>{window.kvT("Outstanding Balance")}</td><td style={{color:"#8a5a00"}}>RM {receiptBalance.toFixed(2)}</td></tr>}</tfoot>
                   </table>
                 </section>
 
@@ -599,7 +602,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
 
                 <section className="kv-receipt-confirmation">
                   <div className="kv-receipt-confirmation-mark"><i className="ti ti-check" aria-hidden="true"/></div>
-                  <div><span>{window.kvT("Payment Confirmed")}</span><p>{window.kvT("This receipt confirms that the payment above has been received and recorded in KinderVault.")}</p></div>
+                  <div><span>{window.kvT(receiptStatus === "Partial" ? "Partial Payment Received" : "Payment Confirmed")}</span><p>{window.kvT(receiptStatus === "Partial" ? "This receipt confirms a partial payment. The remaining balance is still outstanding." : "This receipt confirms that the payment above has been received and recorded in KinderVault.")}</p></div>
                   <strong>RM {receiptTotal.toFixed(2)}</strong>
                 </section>
 

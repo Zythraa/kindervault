@@ -119,7 +119,7 @@ switch ($method) {
                 $stmt2->execute([$newId]);
                 $inserted[] = $stmt2->fetch();
             }
-            $receipt = in_array($status, ['Paid', 'Advance'], true) ? generateReceiptNumber($insertedIds[0]) : '';
+            $receipt = in_array($status, ['Paid', 'Partial', 'Advance'], true) ? generateReceiptNumber($insertedIds[0]) : '';
             if ($receipt !== '') {
                 $placeholders = implode(',', array_fill(0, count($insertedIds), '?'));
                 $setReceipt = $pdo->prepare("UPDATE payments SET receipt = ? WHERE id IN ($placeholders)");
@@ -169,7 +169,7 @@ switch ($method) {
             $d['notes']  ?? '',
         ]);
         $newId = (int)$pdo->lastInsertId();
-        $receipt = in_array($status, ['Paid', 'Advance'], true) ? generateReceiptNumber($newId) : '';
+        $receipt = in_array($status, ['Paid', 'Partial', 'Advance'], true) ? generateReceiptNumber($newId) : '';
         if ($receipt !== '') {
             $setReceipt = $pdo->prepare('UPDATE payments SET receipt = ? WHERE id = ?');
             $setReceipt->execute([$receipt, $newId]);
@@ -208,7 +208,7 @@ switch ($method) {
 
         $status = isset($d['status']) ? $d['status'] : ($current['status'] ?? 'Paid');
         validatePaymentInput(array_merge($current, $d));
-        if (in_array($status, ['Paid', 'Advance'], true)) {
+        if (in_array($status, ['Paid', 'Partial', 'Advance'], true)) {
             $receipt = $current['receipt'] ?: generateReceiptNumber((int)$current['id']);
         } else {
             $receipt = '';
