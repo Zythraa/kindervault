@@ -206,6 +206,9 @@ switch ($method) {
         $current = $stmt0->fetch();
         if (!$current) jsonResponse(['error' => 'Payment not found'], 404);
 
+        if (in_array((string)($current['status'] ?? ''), ['Paid', 'Advance'], true)) {
+            jsonResponse(['error' => 'Completed payments cannot be edited. View or delete the record, then create a new payment if a correction is required.'], 409);
+        }
         $status = isset($d['status']) ? $d['status'] : ($current['status'] ?? 'Paid');
         validatePaymentInput(array_merge($current, $d));
         if (in_array($status, ['Paid', 'Partial', 'Advance'], true)) {
