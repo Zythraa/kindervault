@@ -187,6 +187,17 @@ function ensureKinderVaultSchema(PDO $pdo): void {
         }
     }
 
+    // Keep the age-group mapping independent from editable class names.
+    // Existing installations are backfilled from the original class names.
+    $classColumns = $pdo->query('SHOW COLUMNS FROM classes')->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('age_group', $classColumns, true)) {
+        $pdo->exec("ALTER TABLE classes ADD COLUMN age_group TINYINT UNSIGNED NULL AFTER name");
+    }
+    foreach ([4 => 'Permata', 5 => 'Intelek', 6 => 'Ceria'] as $ageGroup => $defaultName) {
+        $stmt = $pdo->prepare('UPDATE classes SET age_group = ? WHERE age_group IS NULL AND name = ?');
+        $stmt->execute([$ageGroup, $defaultName]);
+    }
+
     $defaultFeeConfig = [
         'annual' => [
             'registration' => 100,

@@ -13,7 +13,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
   const annual = feeConfig?.annual || {};
   const blankForm = {
     name:"", ic:"", birth_cert:"", gender:"M", dob:"", child_position:"", program_age:"5",
-    monthly_package:"A", wants_uniform:1, wants_sports_uniform:1, wants_tudung:1, wants_iqra:0,
+    monthly_package:"A", wants_uniform:0, wants_sports_uniform:0, wants_tudung:0, wants_iqra:0,
     class:"Intelek", parent:"", phone:"", address:"",
     father_name:"", father_ic:"", father_address:"", father_job:"", father_employer:"", father_phone:"",
     mother_name:"", mother_ic:"", mother_address:"", mother_job:"", mother_employer:"", mother_phone:"",
@@ -35,7 +35,12 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
   const canCreatePayments = canUsePermission(permissions, "payments.create", isAdministrator);
   const canPrintReceipts = canUsePermission(permissions, "receipts.print", isAdministrator);
   const canViewDevelopment = canUsePermission(permissions, "development.view", isAdministrator);
-  const classByProgrammeAge = {"4":"Permata", "5":"Intelek", "6":"Ceria"};
+  const classByProgrammeAge = Object.fromEntries(
+    (classesList || []).filter(item => item && item.age_group).map(item => [String(item.age_group), item.name])
+  );
+  if (!classByProgrammeAge["4"]) classByProgrammeAge["4"] = "Permata";
+  if (!classByProgrammeAge["5"]) classByProgrammeAge["5"] = "Intelek";
+  if (!classByProgrammeAge["6"]) classByProgrammeAge["6"] = "Ceria";
 
   const classes = classesList ? classesList.map(c => c.name) : [];
   const filtered = [...students]
@@ -243,6 +248,9 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
     const fee = parseFloat(stu.fee || 0);
     const paidAmounts = allocateMonthlyPaidAmounts(stuPays, fee);
     let startStr = stu.enrol ? stu.enrol.substring(0,7) : currentMonthStr;
+    // A future enrolment is not yet billable. It should not show as unpaid,
+    // overdue, or carry current-year annual fees before the start month.
+    if (startStr > currentMonthStr) return [];
     let [sy,sm] = startStr.split("-").map(Number);
     let [cy,cm] = currentMonthStr.split("-").map(Number);
     const missingMonths = [];

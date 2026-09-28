@@ -17,7 +17,7 @@ const ClassRosterModal = ({classInfo, students, onClose}) => {
         <div>
           <div className="kv-class-roster-eyebrow"><i className="ti ti-users" aria-hidden="true"/>{window.kvT("Students in this class")}</div>
           <h3 id="class-roster-title">{classInfo.name}</h3>
-          <p>{window.kvT(classInfo.age)} <span>{window.kvT("{count} student(s) enrolled", {count: students.length})}</span></p>
+          <p>{window.kvT(classInfo.age || `${classInfo.age_group} years old`)} <span>{window.kvT("{count} student(s) enrolled", {count: students.length})}</span></p>
         </div>
         <button type="button" className="kv-icon-btn" onClick={onClose} aria-label={window.kvT("Close student list")} title={window.kvT("Close")}><i className="ti ti-x" aria-hidden="true"/></button>
       </div>
@@ -30,11 +30,13 @@ const ClassRosterModal = ({classInfo, students, onClose}) => {
 };
 
 const ClassesPage = ({classesList, students = []}) => {
-  const fixedClasses = [
-    {name:"Permata", age:"4 years old"},
-    {name:"Intelek", age:"5 years old"},
-    {name:"Ceria", age:"6 years old"},
-  ];
+  const fixedClasses = (classesList || []).length
+    ? [...classesList].sort((left, right) => (Number(left.age_group || 99) - Number(right.age_group || 99)) || String(left.name).localeCompare(String(right.name)))
+    : [
+        {name:"Permata", age_group:4, age:"4 years old"},
+        {name:"Intelek", age_group:5, age:"5 years old"},
+        {name:"Ceria", age_group:6, age:"6 years old"},
+      ];
   const [rosterClass, setRosterClass] = React.useState(null);
   const studentsInClass = className => students.filter(student=>student.class===className).slice().sort((left,right)=>String(left.name || "").localeCompare(String(right.name || "")));
   const rosterStudents = rosterClass ? studentsInClass(rosterClass.name) : [];
@@ -48,7 +50,7 @@ const ClassesPage = ({classesList, students = []}) => {
       <Card className="kv-info-card" style={{maxWidth:760,marginBottom:16}}>
         <div style={{padding:16}}>
           <div style={{fontSize:13,color:"var(--color-text-secondary)",lineHeight:1.6}}>
-            {window.kvT("The class structure is fixed based on the owner's decision. Only one class is used for each age year.")}
+            {window.kvT("One class is used for each age year. Administrators can rename these class labels from Settings > General while the age grouping remains unchanged.")}
           </div>
         </div>
       </Card>
@@ -74,7 +76,7 @@ const ClassesPage = ({classesList, students = []}) => {
                   <tr key={c.name} style={{borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
                     <td style={{padding:"12px 16px",color:"var(--color-text-tertiary)",fontSize:11}}>{i+1}</td>
                     <td style={{padding:"12px 16px",fontWeight:600,color:"var(--color-text-primary)"}}>{c.name}</td>
-                    <td style={{padding:"12px 16px",color:"var(--color-text-secondary)"}}>{window.kvT(c.age)}</td>
+                    <td style={{padding:"12px 16px",color:"var(--color-text-secondary)"}}>{window.kvT(c.age || `${c.age_group} years old`)}</td>
                     <td style={{padding:"12px 16px",color:"var(--color-text-secondary)"}}>
                       {count > 0 ? <span style={{background:C.blueBg,color:C.blueTx,fontSize:11,padding:"2px 8px",borderRadius:10}}>{window.kvT("{count} student(s)", {count})}</span> : <span style={{color:"var(--color-text-tertiary)",fontSize:11}}>{window.kvT('None')}</span>}
                     </td>

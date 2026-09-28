@@ -67,18 +67,18 @@ $description = $locale === 'ms'
      Order matters: shared → pages → app (root)
      ══════════════════════════════════════════════════════════ -->
 
-  <script type="text/babel" src="pages/shared.jsx?v=47"></script>
+  <script type="text/babel" src="pages/shared.jsx?v=48"></script>
 <script type="text/babel" src="pages/dashboard.jsx?v=15"></script>
-<script type="text/babel" src="pages/classes.jsx?v=8"></script>
+<script type="text/babel" src="pages/classes.jsx?v=9"></script>
 <?php if (SCANNER_ENABLED): ?>
 <script type="text/babel" src="pages/registration_scanner.jsx?v=2"></script>
 <?php endif; ?>
-<script type="text/babel" src="pages/students.jsx?v=27"></script>
+<script type="text/babel" src="pages/students.jsx?v=28"></script>
 <script type="text/babel" src="pages/payments.jsx?v=16"></script>
 <script type="text/babel" src="pages/receipts.jsx?v=12"></script>
 <script type="text/babel" src="pages/development.jsx?v=39"></script>
   <script type="text/babel" src="pages/backup.jsx?v=13"></script>
-  <script type="text/babel" src="pages/settings.jsx?v=25"></script>
+  <script type="text/babel" src="pages/settings.jsx?v=26"></script>
 
 <!-- Root App – bootstraps React, loads data from API -->
 <script type="text/babel">
@@ -1018,7 +1018,7 @@ function App() {
             {page==="payments"    && <PaymentsPage     students={students} payments={payments} setPayments={setPayments} setFlash={setFlash} goReceipt={goReceipt} navigationState={routeState} navigationKey={route.entryId} navigate={navigate} goBack={goBack} replaceRouteState={replaceRouteState} feeConfig={feeConfig} permissions={permissions} isAdministrator={isAdministrator}/>}
             {page==="receipts"    && <ReceiptsPage     students={students} payments={payments} selectedReceipt={selectedReceipt} openReceipt={goReceipt} goBack={goBack} navigationState={routeState} navigationKey={route.entryId} replaceRouteState={replaceRouteState} permissions={permissions} isAdministrator={isAdministrator}/>}
             {page==="development" && <PageErrorBoundary><DevPage students={students} devRecords={devRecs} setDevRecords={setDevRecs} readingRecords={readingRecs} setReadingRecords={setReadingRecs} currentUser={currentUser} setFlash={setFlash} navigationState={routeState} navigationKey={route.entryId} navigate={navigate} replaceRouteState={replaceRouteState} permissions={permissions} isAdministrator={isAdministrator}/></PageErrorBoundary>}
-            {page==="settings"    && <SettingsPage     setFlash={setFlash} currentUser={currentUser} setCurrentUser={setCurrentUser} feeConfig={feeConfig} setFeeConfig={setFeeConfig} isAdministrator={isAdministrator} students={students} payments={payments} devRecords={devRecs} navigationState={routeState} navigationKey={route.entryId}/>} 
+            {page==="settings"    && <SettingsPage     setFlash={setFlash} currentUser={currentUser} setCurrentUser={setCurrentUser} feeConfig={feeConfig} setFeeConfig={setFeeConfig} isAdministrator={isAdministrator} students={students} payments={payments} devRecords={devRecs} classesList={classesList} setClassesList={setClassesList} navigationState={routeState} navigationKey={route.entryId}/>}
           </>}
         </div>
       </div>

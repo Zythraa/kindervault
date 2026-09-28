@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS `dev_records` (
 CREATE TABLE IF NOT EXISTS `classes` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(80) NOT NULL,
+    `age_group` TINYINT UNSIGNED NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_classes_name` (`name`)
@@ -106,6 +107,10 @@ CREATE TABLE IF NOT EXISTS `classes` (
 
 INSERT IGNORE INTO `classes` (`name`)
 VALUES ('Permata'), ('Intelek'), ('Ceria');
+
+UPDATE `classes` SET `age_group` = 4 WHERE `age_group` IS NULL AND `name` = 'Permata';
+UPDATE `classes` SET `age_group` = 5 WHERE `age_group` IS NULL AND `name` = 'Intelek';
+UPDATE `classes` SET `age_group` = 6 WHERE `age_group` IS NULL AND `name` = 'Ceria';
 
 CREATE TABLE IF NOT EXISTS `users` (
     `id` INT NOT NULL AUTO_INCREMENT,

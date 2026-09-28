@@ -340,7 +340,7 @@ const SettingsAuditPrintReport = ({data, formatDateTime}) => {
   );
 };
 
-const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeConfig, isAdministrator, students = [], payments = [], devRecords = [], navigationState = {}, navigationKey}) => {
+const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeConfig, isAdministrator, students = [], payments = [], devRecords = [], classesList = [], setClassesList, navigationState = {}, navigationKey}) => {
   const allowedInitialTabs = isAdministrator
     ? ["general","users","roles","security","audit","backup"]
     : ["general","security"];
@@ -350,6 +350,8 @@ const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeC
   const [conf, setConf] = React.useState("");
   const [generalSaving, setGeneralSaving] = React.useState(false);
   const [localFeeConfig, setLocalFeeConfig] = React.useState(feeConfig || {});
+  const [classNames, setClassNames] = React.useState([]);
+  const [classSaving, setClassSaving] = React.useState(false);
   const [users, setUsers] = React.useState([]);
   const [roles, setRoles] = React.useState(settingsRoleFallbacks);
   const [catalog, setCatalog] = React.useState([]);
@@ -402,6 +404,10 @@ const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeC
   React.useEffect(() => {
     setLocalFeeConfig(feeConfig || {});
   }, [feeConfig]);
+
+  React.useEffect(() => {
+    setClassNames((classesList || []).slice().sort((left, right) => Number(left.age_group || 99) - Number(right.age_group || 99)));
+  }, [classesList]);
 
   React.useEffect(() => {
     const closeOnOutsidePointer = (event) => {
@@ -570,6 +576,35 @@ const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeC
       setFlash({msg:window.kvT("Network error. Please try again."),type:"danger"});
     } finally {
       setGeneralSaving(false);
+    }
+  };
+
+  const saveClassNames = async () => {
+    if (!isAdministrator || classSaving) return;
+    const names = classNames.map(item => String(item.name || "").trim());
+    if (names.some(name => !name || name.length > 80 || /[<>]/.test(name))) {
+      setFlash({msg:window.kvT("Each class name is required and must be 80 characters or fewer."),type:"danger"});
+      return;
+    }
+    if (new Set(names.map(name => name.toLowerCase())).size !== names.length) {
+      setFlash({msg:window.kvT("Class names must be unique."),type:"danger"});
+      return;
+    }
+    setClassSaving(true);
+    try {
+      let nextClasses = classNames;
+      for (const item of classNames) {
+        const response = await api.put(`api/classes.php?id=${item.id}`, {name:String(item.name || "").trim()});
+        if (response.error) throw new Error(response.error);
+        if (response.class) nextClasses = nextClasses.map(current => current.id === item.id ? response.class : current);
+      }
+      setClassNames(nextClasses);
+      if (typeof setClassesList === "function") setClassesList(nextClasses);
+      setFlash({msg:window.kvT("Class names saved successfully."),type:"success"});
+    } catch (error) {
+      setFlash({msg:error.message || window.kvT("Unable to save class names."),type:"danger"});
+    } finally {
+      setClassSaving(false);
     }
   };
 
@@ -881,6 +916,19 @@ const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeC
         <div className="kv-form-grid-3">
           {["A","B","C"].map(code => <div key={code}>{moneyInput(localFeeConfig?.monthly_packages?.[code]?.label || `Package ${code}`,["monthly_packages",code,"amount"])}</div>)}
         </div>
+      </div>
+    </Card>}
+    {isAdministrator && <Card>
+      <CardHead><i className="ti ti-chalkboard" style={{marginRight:6}} aria-hidden="true"/>{window.kvT("Class Names")}</CardHead>
+      <div className="kv-form-card-body">
+        <div className="kv-settings-help" style={{marginBottom:16}}>{window.kvT("Rename the existing age-group classes. Students assigned to a renamed class are updated automatically; the age grouping remains unchanged.")}</div>
+        <div className="kv-form-grid-3">
+          {classNames.map(item => <div className="kv-field" key={item.id}>
+            <div className="kv-field-label">{window.kvT(`${item.age_group || "-"} years old`)}</div>
+            <input className="kv-form-control" maxLength="80" value={item.name || ""} onChange={event=>setClassNames(previous=>previous.map(current=>current.id === item.id ? {...current,name:event.target.value} : current))}/>
+          </div>)}
+        </div>
+        <div style={{marginTop:16}}><Btn onClick={saveClassNames} disabled={classSaving || !classNames.length}>{classSaving?<><i className="ti ti-loader" aria-hidden="true"/> {window.kvT("Saving...")}</>:<><i className="ti ti-device-floppy" aria-hidden="true"/> {window.kvT("Save Class Names")}</>}</Btn></div>
       </div>
     </Card>}
     <div><Btn onClick={saveGeneral} disabled={generalSaving}>{generalSaving?<><i className="ti ti-loader" aria-hidden="true"/> {window.kvT("Saving...")}</>:<><i className="ti ti-device-floppy" aria-hidden="true"/> {window.kvT("Save Settings")}</>}</Btn></div>

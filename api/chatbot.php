@@ -836,7 +836,13 @@ function chatbotHandle(array $classification, string $normalized, string $langua
         $stmt = db()->query("SELECT c.name, COUNT(s.id) AS active_count FROM classes c LEFT JOIN students s ON s.class = c.name AND s.status = 'Active' GROUP BY c.id, c.name ORDER BY c.id");
         $rows = $stmt->fetchAll();
         if ($intent === 'class_student_count') {
-            $className = in_array($searchTerm, ['Permata', 'Intelek', 'Ceria'], true) ? $searchTerm : '';
+            $className = '';
+            foreach ($rows as $row) {
+                if ($searchTerm !== '' && strcasecmp((string)$row['name'], $searchTerm) === 0) {
+                    $className = (string)$row['name'];
+                    break;
+                }
+            }
             $matches = array_values(array_filter($rows, static fn(array $row): bool => $row['name'] === $className));
             $match = $matches[0] ?? null;
             $count = (int)($match['active_count'] ?? 0);

@@ -339,6 +339,16 @@ function detectAgeGroup(?string $dob, string $assessmentDate): ?int {
 
 function detectAgeGroupFromClass(string $className): ?int {
     $normalized = strtolower(trim($className));
+    try {
+        $stmt = db()->prepare('SELECT age_group FROM classes WHERE name = ? LIMIT 1');
+        $stmt->execute([$className]);
+        $storedAge = $stmt->fetchColumn();
+        if ($storedAge !== false && (int)$storedAge >= 4 && (int)$storedAge <= 6) {
+            return (int)$storedAge;
+        }
+    } catch (Throwable $e) {
+        // Fall back to the legacy name mapping for older/incomplete databases.
+    }
     $mapped = [
         'permata' => 4,
         'intelek' => 5,
