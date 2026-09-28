@@ -30,7 +30,7 @@ const DashboardPage = ({students, payments, classesList, devRecords, setPage, op
     const paidAmountsByStudent = {};
 
     payments.forEach(p => {
-      if (p.type !== "Monthly Fee" || (p.status !== "Paid" && p.status !== "Advance")) return;
+      if (p.type !== "Monthly Fee" || (p.status !== "Paid" && p.status !== "Advance" && p.status !== "Partial")) return;
       const studentId = parseInt(p.student_id);
       const student = studentById[studentId];
       if (!student) return;
@@ -82,7 +82,7 @@ const DashboardPage = ({students, payments, classesList, devRecords, setPage, op
   };
 
   const paidThisMonth = payments.filter(p =>
-    (p.date || "").startsWith(thisMonth) && (p.status === "Paid" || p.status === "Advance")
+    (p.date || "").startsWith(thisMonth) && (p.status === "Paid" || p.status === "Advance" || p.status === "Partial")
   );
 
   const collectedThisMonth = paidThisMonth
@@ -132,7 +132,7 @@ const DashboardPage = ({students, payments, classesList, devRecords, setPage, op
     .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), undefined, {sensitivity:"base"}));
 
   const recentPayments = payments
-    .filter(p => p.status === "Paid" || p.status === "Advance")
+    .filter(p => p.status === "Paid" || p.status === "Advance" || p.status === "Partial")
     .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
     .slice(0, 5);
 

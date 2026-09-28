@@ -128,7 +128,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
 
   const allocateMonthlyPaidAmounts = (studentPayments, fee) => {
     const paidAmounts = {};
-    studentPayments.filter(p => p.type === "Monthly Fee" && (p.status === "Paid" || p.status === "Advance")).forEach(p => {
+    studentPayments.filter(p => p.type === "Monthly Fee" && (p.status === "Paid" || p.status === "Advance" || p.status === "Partial")).forEach(p => {
       const months = (p.month || "").split(",").map(m => m.trim()).filter(Boolean);
       let remaining = parseFloat(p.amount || 0);
       months.forEach(m => {
@@ -179,7 +179,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
 
     const paidAmountsByStudent = {};
     payments.forEach(p => {
-      if (p.type === "Monthly Fee" && (p.status === "Paid" || p.status === "Advance")) {
+      if (p.type === "Monthly Fee" && (p.status === "Paid" || p.status === "Advance" || p.status === "Partial")) {
         const stId = parseInt(p.student_id);
         const st = studentById[stId];
         if (!st) return;
@@ -258,7 +258,10 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
   };
 
   const { outstandingList, totalOverdueAmt, virtualRecords } = computeVirtualPayments();
-  const allPayments = [...payments, ...virtualRecords];
+  // Stored Unpaid/Overdue rows are legacy obligation snapshots. The virtual
+  // rows are the authoritative remaining balances, so avoid showing both.
+  const recordedPayments = payments.filter(p => !(p.type === "Monthly Fee" && (p.status === "Unpaid" || p.status === "Overdue")));
+  const allPayments = [...recordedPayments, ...virtualRecords];
   const displayedOutstandingList = monthFilter
     ? outstandingList.map(out => {
         const selectedEntry = out.overdueEntries.find(entry => entry.month === monthFilter);
@@ -278,7 +281,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
     return coveredMonths.length === 0 && String(payment.date || "").substring(0, 7) === monthFilter;
   };
   const filtered = allPayments.filter(p => (!statusF || p.status === statusF) && (!typeF || p.type === typeF) && paymentMatchesMonth(p));
-  const totalPaid  = payments.filter(p=>p.status==="Paid" || p.status==="Advance").reduce((a,p)=>a+parseFloat(p.amount),0);
+  const totalPaid  = payments.filter(p=>p.status==="Paid" || p.status==="Advance" || p.status==="Partial").reduce((a,p)=>a+parseFloat(p.amount),0);
 
   const listState = () => ({statusF, typeF, monthFilter, activeTab});
   const updateMonthFilter = value => {
@@ -329,7 +332,10 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
     }
     setLoading(true);
     let finalStatus = form.status;
-    if (form.type === "Monthly Fee" && months.length > 1) {
+    const selectedDue = form.type === "Monthly Fee" ? parseFloat(computeMonthlyAmount(form.student_id, form.monthFrom, form.monthTo) || 0) : 0;
+    if (form.type === "Monthly Fee" && selectedDue > 0 && parseFloat(form.amount || 0) < selectedDue - 0.005) {
+      finalStatus = "Partial";
+    } else if (form.type === "Monthly Fee" && months.length > 1) {
       finalStatus = "Advance";
     } else if (form.type === "Monthly Fee" && months.length === 1 && finalStatus === "Advance") {
       finalStatus = "Paid";
@@ -403,6 +409,10 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
   };
 
   // ── Add / Edit form ───────────────────────────────────────
+  const selectedFormDue = form.type === "Monthly Fee" && form.student_id
+    ? parseFloat(computeMonthlyAmount(form.student_id, form.monthFrom, form.monthTo) || 0)
+    : 0;
+  const isPartialFormPayment = selectedFormDue > 0 && parseFloat(form.amount || 0) < selectedFormDue - 0.005;
   if (view === "add" || view === "edit") return (
     <div className="kv-page kv-page--payment-form">
       <div className="kv-page-header" style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
@@ -473,7 +483,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
           </div>
           <div style={{display:"flex",gap:8,marginTop:8}}>
             <Btn variant="amber" onClick={save} disabled={loading} style={{opacity:loading?0.6:1}}>
-              {loading ? <><i className="ti ti-loader" aria-hidden="true"/> {window.kvT('Saving...')}</> : (view==="add" ? <><i className="ti ti-receipt" aria-hidden="true"/> {(form.status === "Paid" || form.status === "Advance") ? window.kvT('Save & Generate Receipt') : window.kvT('Save Payment')}</> : <><i className="ti ti-device-floppy" aria-hidden="true"/> {window.kvT('Update Payment')}</>)}
+              {loading ? <><i className="ti ti-loader" aria-hidden="true"/> {window.kvT('Saving...')}</> : (view==="add" ? <><i className="ti ti-receipt" aria-hidden="true"/> {(form.status === "Paid" || form.status === "Advance") && !isPartialFormPayment ? window.kvT('Save & Generate Receipt') : window.kvT('Save Payment')}</> : <><i className="ti ti-device-floppy" aria-hidden="true"/> {window.kvT('Update Payment')}</>)}
             </Btn>
             <Btn variant="outline" onClick={backToList}>{window.kvT('Cancel')}</Btn>
           </div>
@@ -533,7 +543,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
         <div className="kv-table-toolbar" style={{padding:"10px 14px",display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
           <select value={statusF} onChange={e=>{const value=e.target.value;setStatusF(value);replaceRouteState && replaceRouteState({statusF:value});}} style={{padding:"6px 10px",fontSize:12,border:"0.5px solid var(--color-border-secondary)",borderRadius:7,background:"var(--color-background-primary)",color:"var(--color-text-secondary)"}}>
             <option value="">{window.kvT("All Status")}</option>
-            {["Paid","Unpaid","Overdue","Advance"].map(s=><option key={s} value={s}>{window.kvT(s)}</option>)}
+            {["Paid","Partial","Unpaid","Overdue","Advance"].map(s=><option key={s} value={s}>{window.kvT(s)}</option>)}
           </select>
           <select value={typeF} onChange={e=>{const value=e.target.value;setTypeF(value);replaceRouteState && replaceRouteState({typeF:value});}} style={{padding:"6px 10px",fontSize:12,border:"0.5px solid var(--color-border-secondary)",borderRadius:7,background:"var(--color-background-primary)",color:"var(--color-text-secondary)"}}>
             <option value="">{window.kvT("All Types")}</option>

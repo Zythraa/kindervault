@@ -26,7 +26,7 @@ function validatePaymentInput(array $data, bool $validateStudent = true): void {
         jsonResponse(['error' => 'Payment amount must be greater than zero and within the supported range.'], 422);
     }
     $types = ['Monthly Fee','Annual Registration','Books / Materials','Uniform','Sports Uniform','Tudung','Lawatan','Sukan','Penyampaian Hadiah','Pakej Gambar','IQRA Class','Others'];
-    $statuses = ['Paid','Unpaid','Overdue','Advance'];
+    $statuses = ['Paid','Partial','Unpaid','Overdue','Advance'];
     $methods = ['', 'Cash','Bank Transfer','QR DuitNow','Cheque'];
     if (!in_array((string)($data['type'] ?? 'Monthly Fee'), $types, true)
         || !in_array((string)($data['status'] ?? 'Paid'), $statuses, true)

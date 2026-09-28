@@ -514,7 +514,7 @@ function chatbotMonthlyOutstandingRows(?string $onlyMonth = null, bool $pastOnly
     foreach ($students as $student) $studentById[(int)$student['id']] = $student;
 
     $paidAmounts = [];
-    $payments = db()->query("SELECT student_id, amount, month FROM payments WHERE type = 'Monthly Fee' AND status IN ('Paid','Advance') ORDER BY id")->fetchAll();
+    $payments = db()->query("SELECT student_id, amount, month FROM payments WHERE type = 'Monthly Fee' AND status IN ('Paid','Partial','Advance') ORDER BY id")->fetchAll();
     foreach ($payments as $payment) {
         $studentId = (int)$payment['student_id'];
         if (!isset($studentById[$studentId])) continue;
@@ -608,8 +608,8 @@ function chatbotSystemGuide(string $topic, string $language): array {
             'route' => 'classes', 'label' => 'Open Classes', 'permission' => 'classes.view',
         ],
         'payments' => [
-            'en' => "Payment Management records monthly and annual fee items, payment method, reference, date, amount, status, and notes. Paid and Advance amounts reduce the assigned month's balance; an incomplete current month is Unpaid, while an incomplete earlier month is Overdue. Authorized users can record, edit, delete, filter, and send WhatsApp reminders.",
-            'ms' => "Pengurusan Bayaran merekod yuran bulanan dan tahunan, kaedah, rujukan, tarikh, jumlah, status dan nota. Jumlah Selesai dan Pendahuluan mengurangkan baki bulan yang ditetapkan; baki bulan semasa ialah Belum Dibayar manakala baki bulan terdahulu ialah Tertunggak. Pengguna dibenarkan boleh merekod, mengubah, memadam, menapis dan menghantar peringatan WhatsApp.",
+            'en' => "Payment Management records monthly and annual fee items, payment method, reference, date, amount, status, and notes. Paid, Partial, and Advance amounts reduce the assigned month's balance; an incomplete current month is Unpaid, while an incomplete earlier month is Overdue. Authorized users can record, edit, delete, filter, and send WhatsApp reminders.",
+            'ms' => "Pengurusan Bayaran merekod yuran bulanan dan tahunan, kaedah, rujukan, tarikh, jumlah, status dan nota. Jumlah Selesai, Sebahagian dan Pendahuluan mengurangkan baki bulan yang ditetapkan; baki bulan semasa ialah Belum Dibayar manakala baki bulan terdahulu ialah Tertunggak. Pengguna dibenarkan boleh merekod, mengubah, memadam, menapis dan menghantar peringatan WhatsApp.",
             'route' => 'payments', 'label' => 'Open Payments', 'permission' => 'payments.view',
         ],
         'receipts' => [
@@ -800,7 +800,7 @@ function chatbotHandle(array $classification, string $normalized, string $langua
             $resultCount += $activeStudents;
         }
         if (hasPermission('payments.view')) {
-            $stmt = db()->prepare("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status IN ('Paid','Advance') AND DATE_FORMAT(date, '%Y-%m') = ?");
+            $stmt = db()->prepare("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status IN ('Paid','Partial','Advance') AND DATE_FORMAT(date, '%Y-%m') = ?");
             $stmt->execute([date('Y-m')]);
             $collected = (float)$stmt->fetchColumn();
             $currentDue = chatbotMonthlyOutstandingRows(date('Y-m'));
@@ -990,7 +990,7 @@ function chatbotHandle(array $classification, string $normalized, string $langua
 
     if ($intent === 'overdue_explanation') {
         $reply = chatbotText(
-            "A monthly fee becomes overdue when the student is active, the fee month has already passed, and the Paid or Advance amount allocated to that month is still less than the student's monthly fee. The current month's balance is shown as Unpaid, not Overdue. Common causes are no payment record, a partial payment, the payment being assigned to another month, or its status not being Paid/Advance.",
+            "A monthly fee becomes overdue when the student is active, the fee month has already passed, and the Paid, Partial, or Advance amount allocated to that month is still less than the student's monthly fee. The current month's balance is shown as Unpaid, not Overdue. Common causes are no payment record, a partial payment, the payment being assigned to another month, or its status not being a recognised payment status.",
             "Yuran bulanan menjadi tertunggak apabila murid masih aktif, bulan yuran sudah berlalu dan jumlah berstatus Selesai atau Pendahuluan untuk bulan itu masih kurang daripada yuran bulanan murid. Baki bulan semasa dipaparkan sebagai Belum Dibayar, bukan Tertunggak. Punca biasa ialah tiada rekod bayaran, bayaran separa, bayaran dimasukkan pada bulan lain atau statusnya bukan Selesai/Pendahuluan.",
             $language
         );
@@ -1055,7 +1055,7 @@ function chatbotHandle(array $classification, string $normalized, string $langua
 
     if ($intent === 'payment_summary') {
         if (!hasPermission('payments.view')) return chatbotDenied('payments.view', $intent, $language);
-        $stmt = db()->prepare("SELECT COUNT(*) AS payment_count, COALESCE(SUM(amount), 0) AS total FROM payments WHERE status IN ('Paid','Advance') AND DATE_FORMAT(date, '%Y-%m') = ?");
+            $stmt = db()->prepare("SELECT COUNT(*) AS payment_count, COALESCE(SUM(amount), 0) AS total FROM payments WHERE status IN ('Paid','Partial','Advance') AND DATE_FORMAT(date, '%Y-%m') = ?");
         $stmt->execute([date('Y-m')]);
         $row = $stmt->fetch() ?: ['payment_count' => 0, 'total' => 0];
         $count = (int)$row['payment_count'];

@@ -67,14 +67,14 @@ $description = $locale === 'ms'
      Order matters: shared → pages → app (root)
      ══════════════════════════════════════════════════════════ -->
 
-  <script type="text/babel" src="pages/shared.jsx?v=48"></script>
-<script type="text/babel" src="pages/dashboard.jsx?v=15"></script>
+  <script type="text/babel" src="pages/shared.jsx?v=49"></script>
+<script type="text/babel" src="pages/dashboard.jsx?v=16"></script>
 <script type="text/babel" src="pages/classes.jsx?v=9"></script>
 <?php if (SCANNER_ENABLED): ?>
 <script type="text/babel" src="pages/registration_scanner.jsx?v=2"></script>
 <?php endif; ?>
-<script type="text/babel" src="pages/students.jsx?v=28"></script>
-<script type="text/babel" src="pages/payments.jsx?v=16"></script>
+<script type="text/babel" src="pages/students.jsx?v=29"></script>
+<script type="text/babel" src="pages/payments.jsx?v=17"></script>
 <script type="text/babel" src="pages/receipts.jsx?v=12"></script>
 <script type="text/babel" src="pages/development.jsx?v=39"></script>
   <script type="text/babel" src="pages/backup.jsx?v=13"></script>

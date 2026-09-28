@@ -224,7 +224,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
   // ── Helpers ──────────────────────────────────────────────
   const allocateMonthlyPaidAmounts = (stuPays, fee) => {
     const paidAmounts = {};
-    stuPays.filter(p => p.type === "Monthly Fee" && (p.status === "Paid" || p.status === "Advance")).forEach(p => {
+    stuPays.filter(p => p.type === "Monthly Fee" && (p.status === "Paid" || p.status === "Advance" || p.status === "Partial")).forEach(p => {
       const months = (p.month || "").split(",").map(m => m.trim()).filter(Boolean);
       let remaining = parseFloat(p.amount || 0);
       months.forEach(m => {

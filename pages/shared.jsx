@@ -365,6 +365,7 @@ Object.assign(TRANSLATIONS.ms, {
   "Unpaid": "Belum Dibayar",
   "Overdue": "Tertunggak",
   "Advance": "Bayaran Awal",
+  "Partial": "Bayaran Sebahagian",
   "Success": "Berjaya",
   "Successful": "Berjaya",
   "Failed": "Gagal",
@@ -1439,7 +1440,7 @@ const canUsePermission = (permissions, permission, isAdministrator = false) => (
 
 // ── Shared Atoms ─────────────────────────────────────────────
 const statusBadge = (s) => {
-  const map = {Paid:"green",Unpaid:"amber",Overdue:"red",Advance:"teal",Active:"green",Inactive:"amber",Graduated:"gray",Excellent:"teal",Good:"blue",Satisfactory:"amber","Needs Improvement":"red"};
+  const map = {Paid:"green",Partial:"blue",Unpaid:"amber",Overdue:"red",Advance:"teal",Active:"green",Inactive:"amber",Graduated:"gray",Excellent:"teal",Good:"blue",Satisfactory:"amber","Needs Improvement":"red"};
   const col = map[s] || "gray";
   return <span className={`kv-badge kv-badge--${col}`}>{window.kvT(s)}</span>;
 };
