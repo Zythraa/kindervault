@@ -594,7 +594,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
                         ) : (
                           <div style={{display:"flex",gap:4}}>
                             {p.receipt&&<Btn small variant="outline" onClick={()=>goReceipt(p)}><i className="ti ti-receipt" aria-hidden="true"/> {window.kvT("View")}</Btn>}
-                            {canUpdatePayments && !["Paid", "Advance"].includes(p.status) && <Btn small variant="outline" onClick={()=>openEdit(p)} title={window.kvT("Edit payment")}><i className="ti ti-edit" aria-hidden="true"/></Btn>}
+                            {canUpdatePayments && !["Paid", "Advance", "Partial"].includes(p.status) && <Btn small variant="outline" onClick={()=>openEdit(p)} title={window.kvT("Edit payment")}><i className="ti ti-edit" aria-hidden="true"/></Btn>}
                             {canDeletePayments && <Btn small variant="danger" onClick={()=>del(p)} title={window.kvT("Delete payment")}><i className="ti ti-trash" aria-hidden="true"/></Btn>}
                           </div>
                         )}
