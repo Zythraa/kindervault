@@ -1558,8 +1558,7 @@ const Sidebar = ({page, setPage, mobileOpen, onClose, permissions = [], isAdmini
       <div className="kv-nav-group">
         <div className="kv-nav-group-label">{window.kvT("Workspace")}</div>
         {workspaceItems.map(n => (
-          <button key={n.page} onClick={()=>{ setPage(n.page); onClose && onClose(); }} className={
-av-btn${page===n.page?' active':''}`} aria-current={page===n.page ? "page" : undefined}>
+          <button key={n.page} onClick={()=>{ setPage(n.page); onClose && onClose(); }} className={`kv-sidebar-nav-btn${page===n.page?' active':''}`} aria-current={page===n.page ? "page" : undefined}>
             <i className={`ti ti-${n.icon}`} aria-hidden="true"/>
             <span>{window.kvT(n.label)}</span>
           </button>
@@ -1568,8 +1567,7 @@ av-btn${page===n.page?' active':''}`} aria-current={page===n.page ? "page" : und
       {systemItems.length > 0 && <div className="kv-nav-group">
         <div className="kv-nav-group-label">{window.kvT("System")}</div>
         {systemItems.map(n => (
-          <button key={n.page} onClick={()=>{ setPage(n.page); onClose && onClose(); }} className={
-av-btn${page===n.page?' active':''}`} aria-current={page===n.page ? "page" : undefined}>
+          <button key={n.page} onClick={()=>{ setPage(n.page); onClose && onClose(); }} className={`kv-sidebar-nav-btn${page===n.page?' active':''}`} aria-current={page===n.page ? "page" : undefined}>
             <i className={`ti ti-${n.icon}`} aria-hidden="true"/>
             <span>{window.kvT(n.label)}</span>
           </button>
