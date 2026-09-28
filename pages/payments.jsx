@@ -576,10 +576,10 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
                       <td style={{padding:"9px 12px"}}>{statusBadge(p.status)}</td>
                       <td style={{padding:"9px 12px",fontFamily:"monospace",fontSize:10,color:"var(--color-text-tertiary)"}}>{p.receipt||"–"}</td>
                       <td className="no-print" style={{padding:"9px 12px"}}>
-                        {p.isVirtual ? (
+                        {(p.isVirtual || p.status === "Unpaid" || p.status === "Overdue") ? (
                           <div style={{display:"flex",gap:4}}>
-                            <Btn small style={{background:"#25D366",color:"white",borderColor:"#25D366"}} onClick={()=>sendWhatsApp(p)}><i className="ti ti-brand-whatsapp" aria-hidden="true"/> {window.kvT("Send")}</Btn>
-                            <Btn small variant="amber" onClick={()=>openAdd({...blankForm, student_id: p.student_id, amount: p.amount.toString(), monthFrom: p.month, monthTo: p.month})}><i className="ti ti-cash" aria-hidden="true"/> {window.kvT("Pay")}</Btn>
+                            {canCreatePayments && <Btn small style={{background:"#25D366",color:"white",borderColor:"#25D366"}} onClick={()=>sendWhatsApp(p)}><i className="ti ti-brand-whatsapp" aria-hidden="true"/> {window.kvT("Send")}</Btn>}
+                            {canCreatePayments && <Btn small variant="amber" onClick={()=>openAdd({...blankForm, student_id: p.student_id, amount: p.amount.toString(), monthFrom: p.month, monthTo: p.month})}><i className="ti ti-cash" aria-hidden="true"/> {window.kvT("Pay")}</Btn>}
                           </div>
                         ) : (
                           <div style={{display:"flex",gap:4}}>
