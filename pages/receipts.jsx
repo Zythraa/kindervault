@@ -2,7 +2,7 @@
 // pages/receipts.jsx  –  ReceiptsPage component
 // ============================================================
 
-const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack, navigationState = {}, navigationKey, replaceRouteState, permissions = [], isAdministrator = false}) => {
+const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, openReceipt, goBack, navigationState = {}, navigationKey, replaceRouteState, permissions = [], isAdministrator = false}) => {
   const locale = window.kvLang || 'en';
   const canPrintReceipts = canUsePermission(permissions, "receipts.print", isAdministrator);
   const [searchQuery, setSearchQuery] = React.useState(navigationState.search || "");
@@ -199,7 +199,11 @@ const ReceiptsPage = ({students, payments, selectedReceipt, openReceipt, goBack,
     const overallPeriod = formatPaymentPeriod([...new Set(monthlyPeriods)].join(','));
     const receiptTotal = receiptItems.reduce((total, item) => total + parseFloat(item.amount || 0), 0);
     const receiptStatus = receiptItems.some(item => item.status === 'Partial') ? 'Partial' : (receiptItems.some(item => item.status === 'Advance') ? 'Advance' : 'Paid');
-    const receiptBalance = calculateReceiptBalance(receiptItems, s);
+    const receiptMaxId = Math.max(...receiptItems.map(item => parseInt(item.id || 0)).filter(Number.isFinite), 0);
+    const annualDueByType = {'Annual Registration': parseFloat(feeConfig?.annual?.registration || 0), 'Books / Materials': parseFloat((feeConfig?.annual?.books || {})[s?.program_age || '5'] || 0), 'Uniform': parseFloat(feeConfig?.annual?.uniform || 0), 'Sports Uniform': parseFloat(feeConfig?.annual?.sports_uniform || 0), 'Tudung': parseFloat(feeConfig?.annual?.tudung || 0), 'Lawatan': parseFloat(feeConfig?.annual?.lawatan || 0), 'Sukan': parseFloat(feeConfig?.annual?.sukan || 0), 'Penyampaian Hadiah': parseFloat(feeConfig?.annual?.hadiah || 0), 'Pakej Gambar': parseFloat(feeConfig?.annual?.gambar || 0), 'IQRA Class': parseFloat(feeConfig?.annual?.iqra || 0)};
+    const nonMonthlyBalance = receiptItems.filter(item => item.type !== 'Monthly Fee' && annualDueByType[item.type] > 0).reduce((balance, item) => { const due = annualDueByType[item.type]; const received = payments.filter(p => parseInt(p.student_id) === parseInt(s?.id) && parseInt(p.id || 0) <= receiptMaxId && p.type === item.type && String(p.month || '') === String(item.month || '') && ['Paid', 'Advance', 'Partial'].includes(p.status)).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0); return balance + Math.max(0, due - Math.min(due, received)); }, 0);
+    const monthlyBalance = calculateReceiptBalance(receiptItems, s);
+    const receiptBalance = monthlyBalance === null && nonMonthlyBalance === 0 ? null : (monthlyBalance || 0) + nonMonthlyBalance;
 
     return (
       <div className="kv-page kv-page--receipt-preview">
