@@ -60,8 +60,8 @@ switch ($method) {
             if ($ageGroup >= 4 && $ageGroup <= 6) {
                 // Keep every student in the same age-group class, including
                 // legacy rows whose class value still uses a retired name.
-                $updateStudents = $pdo->prepare('UPDATE students SET class = ? WHERE class = ? OR program_age = ?');
-                $updateStudents->execute([$name, $current['name'], (string)$ageGroup]);
+                $updateStudents = $pdo->prepare('UPDATE students SET class = ? WHERE TRIM(class) = ? OR CAST(program_age AS UNSIGNED) = ?');
+                $updateStudents->execute([$name, $current['name'], $ageGroup]);
             } else {
                 $updateStudents = $pdo->prepare('UPDATE students SET class = ? WHERE class = ?');
                 $updateStudents->execute([$name, $current['name']]);

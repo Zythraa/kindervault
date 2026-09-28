@@ -340,7 +340,7 @@ const SettingsAuditPrintReport = ({data, formatDateTime}) => {
   );
 };
 
-const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeConfig, isAdministrator, students = [], payments = [], devRecords = [], classesList = [], setClassesList, navigationState = {}, navigationKey}) => {
+const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeConfig, isAdministrator, students = [], setStudents, payments = [], devRecords = [], classesList = [], setClassesList, navigationState = {}, navigationKey}) => {
   const allowedInitialTabs = isAdministrator
     ? ["general","users","roles","security","audit","backup"]
     : ["general","security"];
@@ -592,6 +592,10 @@ const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeC
     }
     setClassSaving(true);
     try {
+      const renamePairs = classNames.map(item => {
+        const before = (classesList || []).find(current => current.id === item.id);
+        return {before: before?.name || item.name, after: String(item.name || "").trim(), age_group: item.age_group};
+      });
       let nextClasses = classNames;
       for (const item of classNames) {
         const response = await api.put(`api/classes.php?id=${item.id}`, {name:String(item.name || "").trim()});
@@ -600,6 +604,13 @@ const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeC
       }
       setClassNames(nextClasses);
       if (typeof setClassesList === "function") setClassesList(nextClasses);
+      if (typeof setStudents === "function") {
+        setStudents(previous => previous.map(student => {
+          const pair = renamePairs.find(rename => String(student.class || "") === String(rename.before || "")
+            || (rename.age_group && new RegExp("^\\s*" + rename.age_group + "(?:\\D|$)").test(String(student.program_age || ""))));
+          return pair ? {...student, class: pair.after} : student;
+        }));
+      }
       setFlash({msg:window.kvT("Class names saved successfully."),type:"success"});
     } catch (error) {
       setFlash({msg:error.message || window.kvT("Unable to save class names."),type:"danger"});
