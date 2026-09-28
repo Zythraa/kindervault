@@ -73,9 +73,9 @@ $description = $locale === 'ms'
 <?php if (SCANNER_ENABLED): ?>
 <script type="text/babel" src="pages/registration_scanner.jsx?v=2"></script>
 <?php endif; ?>
-<script type="text/babel" src="pages/students.jsx?v=31"></script>
+<script type="text/babel" src="pages/students.jsx?v=32"></script>
 <script type="text/babel" src="pages/payments.jsx?v=18"></script>
-<script type="text/babel" src="pages/receipts.jsx?v=13"></script>
+<script type="text/babel" src="pages/receipts.jsx?v=14"></script>
 <script type="text/babel" src="pages/development.jsx?v=39"></script>
   <script type="text/babel" src="pages/backup.jsx?v=13"></script>
   <script type="text/babel" src="pages/settings.jsx?v=26"></script>
