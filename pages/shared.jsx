@@ -367,6 +367,9 @@ Object.assign(TRANSLATIONS.ms, {
   "Advance": "Bayaran Awal",
   "Partial": "Bayaran Sebahagian",
   "Partial Payment": "Bayaran Sebahagian",
+  "Voided": "Dibatalkan",
+  "Payment voided and retained for audit.": "Bayaran dibatalkan dan dikekalkan untuk audit.",
+  "Void this payment? The record and receipt will be retained for audit, but excluded from balances.": "Batalkan bayaran ini? Rekod dan resit akan dikekalkan untuk audit tetapi tidak dikira dalam baki.",
   "Advance Payment": "Bayaran Pendahuluan",
   "Outstanding Balance": "Baki Tertunggak",
   "Partial Payment Received": "Bayaran Sebahagian Diterima",
@@ -1445,7 +1448,7 @@ const canUsePermission = (permissions, permission, isAdministrator = false) => (
 
 // ── Shared Atoms ─────────────────────────────────────────────
 const statusBadge = (s) => {
-  const map = {Paid:"green",Partial:"blue",Unpaid:"amber",Overdue:"red",Advance:"teal",Active:"green",Inactive:"amber",Graduated:"gray",Excellent:"teal",Good:"blue",Satisfactory:"amber","Needs Improvement":"red"};
+  const map = {Paid:"green",Partial:"blue",Unpaid:"amber",Overdue:"red",Advance:"teal",Voided:"gray",Active:"green",Inactive:"amber",Graduated:"gray",Excellent:"teal",Good:"blue",Satisfactory:"amber","Needs Improvement":"red"};
   const col = map[s] || "gray";
   return <span className={`kv-badge kv-badge--${col}`}>{window.kvT(s)}</span>;
 };
@@ -1555,7 +1558,8 @@ const Sidebar = ({page, setPage, mobileOpen, onClose, permissions = [], isAdmini
       <div className="kv-nav-group">
         <div className="kv-nav-group-label">{window.kvT("Workspace")}</div>
         {workspaceItems.map(n => (
-          <button key={n.page} onClick={()=>{ setPage(n.page); onClose && onClose(); }} className={`nav-btn${page===n.page?' active':''}`} aria-current={page===n.page ? "page" : undefined}>
+          <button key={n.page} onClick={()=>{ setPage(n.page); onClose && onClose(); }} className={
+av-btn${page===n.page?' active':''}`} aria-current={page===n.page ? "page" : undefined}>
             <i className={`ti ti-${n.icon}`} aria-hidden="true"/>
             <span>{window.kvT(n.label)}</span>
           </button>
@@ -1564,7 +1568,8 @@ const Sidebar = ({page, setPage, mobileOpen, onClose, permissions = [], isAdmini
       {systemItems.length > 0 && <div className="kv-nav-group">
         <div className="kv-nav-group-label">{window.kvT("System")}</div>
         {systemItems.map(n => (
-          <button key={n.page} onClick={()=>{ setPage(n.page); onClose && onClose(); }} className={`nav-btn${page===n.page?' active':''}`} aria-current={page===n.page ? "page" : undefined}>
+          <button key={n.page} onClick={()=>{ setPage(n.page); onClose && onClose(); }} className={
+av-btn${page===n.page?' active':''}`} aria-current={page===n.page ? "page" : undefined}>
             <i className={`ti ti-${n.icon}`} aria-hidden="true"/>
             <span>{window.kvT(n.label)}</span>
           </button>

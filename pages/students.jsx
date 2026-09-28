@@ -501,7 +501,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
       const receiptMonths = [...new Set(receiptItems.filter(item => item.type === "Monthly Fee").flatMap(item => expandAdvanceReceiptMonths(item, s)))];
       const overallPeriod = formatReceiptPeriod(receiptMonths.join(","));
       const receiptTotal = receiptItems.reduce((total, item) => total + item.amount, 0);
-      const receiptStatus = receiptItems.some(item => item.status === "Partial") ? "Partial" : (receiptItems.some(item => item.status === "Advance") ? "Advance" : "Paid");
+      const receiptStatus = receiptItems.some(item => item.status === "Voided") ? "Voided" : (receiptItems.some(item => item.status === "Partial") ? "Partial" : (receiptItems.some(item => item.status === "Advance") ? "Advance" : "Paid"));
       const receiptMaxId = Math.max(...receiptItems.map(item => parseInt(item.id || 0)).filter(Number.isFinite), 0);
       const receiptHistory = [...(payments || []), ...receiptItems.map(item => ({...item, student_id: s?.id}))].reduce((list, payment) => { const key = String(payment.id || [payment.type, payment.month, payment.amount].join("-")); if (!list.some(existing => String(existing.id || [existing.type, existing.month, existing.amount].join("-")) === key)) list.push(payment); return list; }, []);
       const annualDueByType = {"Annual Registration": parseFloat(annual.registration || 0), "Books / Materials": parseFloat((annual.books || {})[s?.program_age || "5"] || 0), "Uniform": parseFloat(annual.uniform || 0), "Sports Uniform": parseFloat(annual.sports_uniform || 0), "Tudung": parseFloat(annual.tudung || 0), "Lawatan": parseFloat(annual.lawatan || 0), "Sukan": parseFloat(annual.sukan || 0), "Penyampaian Hadiah": parseFloat(annual.hadiah || 0), "Pakej Gambar": parseFloat(annual.gambar || 0), "IQRA Class": parseFloat(annual.iqra || 0)};
@@ -573,7 +573,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                 <section className="kv-receipt-payment-section">
                   <div className="kv-receipt-section-heading">
                     <div><span>{window.kvT("Payment Summary")}</span><small>{window.kvT("Official payment document")}</small></div>
-                    <span className="kv-receipt-paid-badge" style={receiptStatus === "Partial" ? {background:"#fff3cd",color:"#8a5a00"} : undefined}><i className="ti ti-circle-check-filled" aria-hidden="true"/> {window.kvT(receiptStatus === "Partial" ? "Partial Payment" : (receiptStatus === "Advance" ? "Advance Payment" : "Paid"))}</span>
+                    <span className="kv-receipt-paid-badge" style={receiptStatus === "Partial" ? {background:"#fff3cd",color:"#8a5a00"} : undefined}><i className="ti ti-circle-check-filled" aria-hidden="true"/> {window.kvT(receiptStatus === "Voided" ? "Voided" : (receiptStatus === "Partial" ? "Partial Payment" : (receiptStatus === "Advance" ? "Advance Payment" : "Paid")))}</span>
                   </div>
                   <table className="kv-receipt-items-table">
                     <thead><tr><th>{window.kvT("Description")}</th><th>{window.kvT("Fee Period")}</th><th>{window.kvT("Amount (RM)")}</th></tr></thead>

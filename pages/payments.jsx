@@ -369,12 +369,12 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
 
   const del = async (p) => {
     if (!canDeletePayments) { setFlash({msg:window.kvT("Access Denied. You do not have permission to delete payments."),type:"danger"}); return; }
-    if (!window.confirm(window.kvT("Delete this payment and its receipt?"))) return;
+    if (!window.confirm(window.kvT("Void this payment? The record and receipt will be retained for audit, but excluded from balances."))) return;
     try {
       const res = await api.delete(`api/payments.php?id=${p.id}`);
       if (res.error) { setFlash({msg:res.error,type:"danger"}); return; }
-      setPayments(prev=>prev.filter(x=>x.id!==p.id));
-      setFlash({msg:window.kvT("Payment deleted."),type:"success"});
+      setPayments(prev=>prev.map(x=>x.id===p.id?{...x,status:"Voided"}:x));
+      setFlash({msg:window.kvT("Payment voided and retained for audit."),type:"success"});
     } catch(e) {
       setFlash({msg:window.kvT("Failed to delete payment."),type:"danger"});
     }
@@ -595,7 +595,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
                           <div style={{display:"flex",gap:4}}>
                             {p.receipt&&<Btn small variant="outline" onClick={()=>goReceipt(p)}><i className="ti ti-receipt" aria-hidden="true"/> {window.kvT("View")}</Btn>}
                             {canUpdatePayments && !["Paid", "Advance", "Partial"].includes(p.status) && <Btn small variant="outline" onClick={()=>openEdit(p)} title={window.kvT("Edit payment")}><i className="ti ti-edit" aria-hidden="true"/></Btn>}
-                            {canDeletePayments && <Btn small variant="danger" onClick={()=>del(p)} title={window.kvT("Delete payment")}><i className="ti ti-trash" aria-hidden="true"/></Btn>}
+                            {canDeletePayments && p.status !== "Voided" && <Btn small variant="danger" onClick={()=>del(p)} title={window.kvT("Void payment")}><i className="ti ti-ban" aria-hidden="true"/></Btn>}
                           </div>
                         )}
                       </td>

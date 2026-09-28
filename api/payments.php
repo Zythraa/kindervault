@@ -257,13 +257,13 @@ switch ($method) {
         $currentStmt->execute([$id]);
         $current = $currentStmt->fetch();
         if (!$current) jsonResponse(['error' => 'Payment not found'], 404);
-        $stmt = db()->prepare('DELETE FROM payments WHERE id = ?');
+        $stmt = db()->prepare("UPDATE payments SET status = 'Voided', updated_at = CURRENT_TIMESTAMP WHERE id = ?");
         $stmt->execute([$id]);
-        auditLog('DELETE', 'Payment Management', 'Payment', 'PAY-' . $id, 'Deleted a payment record.', 'Success', [
+        auditLog('VOID', 'Payment Management', 'Payment', 'PAY-' . $id, 'Voided a payment record without removing its audit history.', 'Success', [
             'receipt' => $current['receipt'] ?? '',
             'status' => $current['status'] ?? '',
         ]);
-        jsonResponse(['success' => true]);
+        jsonResponse(['success' => true, 'status' => 'Voided']);
 
     default:
         jsonResponse(['error' => 'Method not allowed'], 405);
