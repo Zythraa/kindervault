@@ -52,6 +52,8 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
     if (!months.length || !Number.isFinite(fee) || fee <= 0) return null;
     const target = new Set(months);
     const paid = {};
+    const obligationDue = {};
+    payments.filter(p => parseInt(p.student_id) === parseInt(student?.id) && p.type === "Monthly Fee" && ["Unpaid", "Overdue"].includes(p.status)).forEach(p => { const covered = String(p.month || "").split(",").map(m => m.trim()).filter(Boolean); const perMonth = parseFloat(p.amount || 0) / Math.max(covered.length, 1); covered.forEach(month => { if (target.has(month)) obligationDue[month] = Math.max(obligationDue[month] || 0, perMonth); }); });
     const receiptMaxId = Math.max(...items.map(item => parseInt(item.id || 0)).filter(Number.isFinite), 0);
     const receiptHistory = [...payments, ...items.map(item => ({...item, student_id: student?.id}))].reduce((list, payment) => { const key = String(payment.id || [payment.type, payment.month, payment.amount].join("-")); if (!list.some(existing => String(existing.id || [existing.type, existing.month, existing.amount].join("-")) === key)) list.push(payment); return list; }, []);
     receiptHistory.filter(p => parseInt(p.student_id) === parseInt(student?.id) && p.type === "Monthly Fee" && ["Paid", "Advance", "Partial"].includes(p.status)).sort((a,b) => parseInt(a.id || 0) - parseInt(b.id || 0)).forEach(p => {
@@ -59,14 +61,14 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
       let remaining = parseFloat(p.amount || 0);
       covered.forEach(month => {
         if (!target.has(month) || remaining <= 0) return;
-        const available = Math.max(0, fee - (paid[month] || 0));
+        const available = Math.max(0, (obligationDue[month] || fee) - (paid[month] || 0));
         const applied = Math.min(available, remaining);
         paid[month] = (paid[month] || 0) + applied;
         remaining -= applied;
       });
     });
-    const due = months.length * fee;
-    const received = months.reduce((sum, month) => sum + Math.min(fee, paid[month] || 0), 0);
+    const due = months.reduce((sum, month) => sum + (obligationDue[month] || fee), 0);
+    const received = months.reduce((sum, month) => sum + Math.min(obligationDue[month] || fee, paid[month] || 0), 0);
     return Math.max(0, due - received);
   };
   const allReceiptPayments = payments.filter(p=>p.receipt);
