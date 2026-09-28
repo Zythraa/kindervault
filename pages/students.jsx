@@ -346,27 +346,13 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
         setFlash({msg:window.kvT("Payment amount must be greater than zero and cannot exceed the selected outstanding balance."),type:"danger"});
         return;
       }
-      const monthsCoveredByPayment = (item, amount) => {
-        if (item.type !== "Monthly Fee") return item.month;
-        const months = String(item.month || "").split(",").map(month => month.trim()).filter(Boolean);
-        const fee = parseFloat(selected.fee || 0);
-        if (!months.length || !Number.isFinite(fee) || fee <= 0) return item.month;
-        let remaining = amount;
-        const covered = [];
-        months.forEach(month => {
-          if (remaining <= 0) return;
-          covered.push(month);
-          remaining -= Math.min(fee, remaining);
-        });
-        return covered.join(",");
-      };
       let remainingAmount = customAmount;
       const allocatedItems = [];
       checkedItems.forEach(item => {
         if (remainingAmount <= 0) return;
         const amount = Math.min(item.amount, remainingAmount);
         if (amount <= 0) return;
-        allocatedItems.push({ type:item.type, amount:Number(amount.toFixed(2)), month:monthsCoveredByPayment(item, amount), status: amount + 0.005 < item.amount ? "Partial" : "Paid" });
+        allocatedItems.push({ type:item.type, amount:Number(amount.toFixed(2)), month:item.month, status: amount + 0.005 < item.amount ? "Partial" : "Paid" });
         remainingAmount -= amount;
       });
       setSaving(true);
@@ -403,6 +389,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           student: selected,
           items: receiptItems,
           total: receiptItems.reduce((total, item) => total + item.amount, 0),
+          outstandingBalance: Math.max(0, Number((checkedTotal - customAmount).toFixed(2))),
           payments: newPays
         };
         const fresh = await api.get("api/payments.php");
@@ -537,8 +524,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
       const overallPeriod = formatReceiptPeriod(receiptMonths.join(","));
       const receiptTotal = receiptItems.reduce((total, item) => total + item.amount, 0);
       const receiptStatus = receiptItems.some(item => item.status === "Voided") ? "Voided" : (receiptItems.some(item => item.status === "Partial") ? "Partial" : (receiptItems.some(item => item.status === "Advance") ? "Advance" : "Paid"));
-      const completeOutstandingBalance = computeOutstandingItems(s).reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
-      const receiptBalance = receiptStatus === "Partial" ? completeOutstandingBalance : null;
+      const receiptBalance = receiptStatus === "Partial" && Number.isFinite(Number(profileReceipt.outstandingBalance)) ? Math.max(0, Number(profileReceipt.outstandingBalance)) : null;
       const receiptDate = profileReceipt.date
         ? window.kvDate(profileReceipt.date, {day:"numeric", month:"short", year:"numeric"}, profileReceipt.date)
         : window.kvDate(new Date(), {day:"numeric", month:"short", year:"numeric"});
