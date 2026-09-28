@@ -337,7 +337,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
       finalStatus = "Partial";
     } else if (form.type === "Monthly Fee" && months.length > 1) {
       finalStatus = "Advance";
-    } else if (form.type === "Monthly Fee" && months.length === 1 && finalStatus === "Advance") {
+    } else if (form.type === "Monthly Fee" && months.length === 1 && (finalStatus === "Advance" || finalStatus === "Partial")) {
       finalStatus = "Paid";
     }
     const payload = {...form, month: months.join(","), status: finalStatus};
