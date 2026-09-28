@@ -48,12 +48,29 @@ switch ($method) {
         $currentStmt->execute([$id]);
         $current = $currentStmt->fetch();
         if (!$current) jsonResponse(['error' => 'Class not found.'], 404);
-        $duplicate = $pdo->prepare('SELECT id FROM classes WHERE name = ? AND id <> ? LIMIT 1');
+        $duplicate = $pdo->prepare('SELECT id, name, age_group FROM classes WHERE name = ? AND id <> ?');
         $duplicate->execute([$name, $id]);
-        if ($duplicate->fetchColumn()) jsonResponse(['error' => 'That class name is already in use.'], 422);
+        $legacyDuplicates = [];
+        foreach ($duplicate->fetchAll() as $duplicateRow) {
+            // A stale duplicate with the same age group can be retired safely
+            // when an administrator reuses the original class name. A name
+            // used by another age group must still be rejected.
+            if ((int)($duplicateRow['age_group'] ?? 0) === (int)($current['age_group'] ?? 0)
+                && (int)$duplicateRow['id'] > (int)$current['id']) {
+                $legacyDuplicates[] = $duplicateRow;
+                continue;
+            }
+            jsonResponse(['error' => 'That class name is already in use.'], 422);
+        }
         if ($current['name'] === $name) jsonResponse(['success' => true, 'class' => $current]);
         $pdo->beginTransaction();
         try {
+            foreach ($legacyDuplicates as $legacyDuplicate) {
+                $moveLegacyStudents = $pdo->prepare('UPDATE students SET class = ? WHERE TRIM(class) = ?');
+                $moveLegacyStudents->execute([$name, $legacyDuplicate['name']]);
+                $removeLegacyClass = $pdo->prepare('DELETE FROM classes WHERE id = ?');
+                $removeLegacyClass->execute([(int)$legacyDuplicate['id']]);
+            }
             $updateClass = $pdo->prepare('UPDATE classes SET name = ? WHERE id = ?');
             $updateClass->execute([$name, $id]);
             $ageGroup = (int)($current['age_group'] ?? 0);
