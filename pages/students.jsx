@@ -33,6 +33,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
   const canUpdateStudents = canUsePermission(permissions, "students.update", isAdministrator);
   const canDeleteStudents = canUsePermission(permissions, "students.delete", isAdministrator);
   const canCreatePayments = canUsePermission(permissions, "payments.create", isAdministrator);
+  const canPrintReceipts = canUsePermission(permissions, "receipts.print", isAdministrator);
   const canViewDevelopment = canUsePermission(permissions, "development.view", isAdministrator);
   const classByProgrammeAge = {"4":"Permata", "5":"Intelek", "6":"Ceria"};
 
@@ -342,6 +343,14 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
         if (typeof setPayments === "function") {
           setPayments(prev => [...prev, ...newPays]);
         }
+        const receiptItems = (newPays.length ? newPays : checkedItems).map((item, index) => ({
+          id: item.id || `receipt-item-${index}`,
+          type: item.type,
+          month: item.month || "",
+          status: item.status || "Paid",
+          desc: item.desc || window.kvPaymentItemLabel(item.type, item.month),
+          amount: parseFloat(item.amount || 0),
+        }));
         const receiptData = {
           receipt: res.receipt,
           date: payForm.date,
@@ -349,8 +358,8 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           ref: payForm.ref,
           notes: payForm.notes,
           student: selected,
-          items: checkedItems,
-          total: checkedTotal,
+          items: receiptItems,
+          total: receiptItems.reduce((total, item) => total + item.amount, 0),
           payments: newPays
         };
         setPayModal(false);
@@ -437,113 +446,159 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
       }, 100);
     };
 
+    const formatReceiptPeriod = (value) => {
+      const values = String(value || "").split(",").map(item => item.trim()).filter(Boolean);
+      if (!values.length) return {label:"", count:0};
+      const parsed = values.map(value => {
+        const key = /^\d{4}$/.test(value) ? `${value}-01` : value;
+        const date = new Date(`${key}-01`);
+        return {key:value, date, time:date.getTime()};
+      }).filter(item => !Number.isNaN(item.time)).sort((a, b) => a.time - b.time);
+      const labels = parsed.map(item => window.kvDate(item.date, {month:"short", year:"numeric"}, item.key));
+      if (!labels.length) return {label:values.join(", "), count:values.length};
+      let label = labels.join(", ");
+      if (parsed.length > 1) {
+        const contiguous = parsed.every((item, index) => index === 0 ||
+          (item.date.getFullYear() * 12 + item.date.getMonth()) -
+          (parsed[index - 1].date.getFullYear() * 12 + parsed[index - 1].date.getMonth()) === 1);
+        label = contiguous ? `${labels[0]} - ${labels[labels.length - 1]}` : labels.join(", ");
+      }
+      return {label, count:parsed.length};
+    };
+
+    const expandAdvanceReceiptMonths = (item, student) => {
+      const explicit = String(item?.month || "").split(",").map(value => value.trim()).filter(Boolean);
+      if (explicit.length !== 1 || item?.type !== "Monthly Fee" || item?.status !== "Advance") return explicit;
+      const start = explicit[0];
+      const monthlyFee = parseFloat(student?.fee || 0);
+      const amount = parseFloat(item?.amount || 0);
+      if (!/^\d{4}-(?:0[1-9]|1[0-2])$/.test(start) || !Number.isFinite(monthlyFee) || monthlyFee <= 0 || !Number.isFinite(amount) || amount <= monthlyFee) return explicit;
+      const count = Math.round(amount / monthlyFee);
+      if (count < 2 || count > 60 || Math.abs(amount - (count * monthlyFee)) > 0.01) return explicit;
+      const [year, month] = start.split("-").map(Number);
+      return Array.from({length:count}, (_, index) => {
+        const date = new Date(year, month - 1 + index, 1);
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      });
+    };
+
     // ── Receipt preview ──────────────────────────────────────
     if (profileReceipt) {
       const s = profileReceipt.student;
-      const fmt = m => window.kvDate(new Date(m+"-01"), {month:"short",year:"numeric"}, m);
+      const receiptItems = (profileReceipt.items || []).map((item, index) => ({
+        ...item,
+        id: item.id || `receipt-item-${index}`,
+        amount: parseFloat(item.amount || 0),
+      }));
+      const receiptMonths = [...new Set(receiptItems.filter(item => item.type === "Monthly Fee").flatMap(item => expandAdvanceReceiptMonths(item, s)))];
+      const overallPeriod = formatReceiptPeriod(receiptMonths.join(","));
+      const receiptTotal = receiptItems.reduce((total, item) => total + item.amount, 0);
+      const receiptDate = profileReceipt.date
+        ? window.kvDate(profileReceipt.date, {day:"numeric", month:"short", year:"numeric"}, profileReceipt.date)
+        : window.kvDate(new Date(), {day:"numeric", month:"short", year:"numeric"});
+      const receiptType = receiptItems.length > 1 ? window.kvT("Multiple Payments") : window.kvT(receiptItems[0]?.type || "Payment");
       return (
-        <div className="kv-page kv-page--student-receipt">
+        <div className="kv-page kv-page--receipt-preview kv-page--student-receipt">
           <div className="kv-page-header kv-receipt-actions no-print" style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
             <Btn variant="outline" small onClick={()=>goBack({page:"students", state:profileState()})} title={window.kvT("Back to student profile")}><i className="ti ti-arrow-left" aria-hidden="true"/></Btn>
             <h2 className="kv-page-title">{window.kvT("Receipt Preview")}</h2>
             <Btn small variant="outline" onClick={sendReceiptWhatsApp} style={{marginLeft:"auto",background:"#25D366",color:"#fff",border:"none"}}>
               <i className="ti ti-brand-whatsapp" aria-hidden="true"/> {window.kvT('Send WhatsApp')}
             </Btn>
-            <Btn small onClick={()=>{
+            {canPrintReceipts && <Btn small onClick={()=>{
               const orig = document.title;
               const issueDate = (profileReceipt.date || new Date().toISOString().split('T')[0]).replace(/[^\d-]/g, '');
               document.title = `${issueDate}_${s.name}_${s.parent}_${profileReceipt.receipt}`;
               setTimeout(()=>{ window.print(); document.title = orig; }, 100);
             }} style={{background:C.blue,color:"#fff",border:"none"}}>
               <i className="ti ti-printer" aria-hidden="true"/> {window.kvT("Print / PDF")}
-            </Btn>
+            </Btn>}
             <Btn small variant="outline" onClick={()=>goBack({page:"students", state:profileState()})}><i className="ti ti-check" aria-hidden="true"/> {window.kvT("Done")}</Btn>
           </div>
-          <div className="print-area" style={{width:"100%",maxWidth:840,margin:"0 auto"}}>
-            <Card style={{padding:0,boxShadow:"none"}}>
-              <div style={{padding:"28px 32px"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:16,marginBottom:24}}>
-                  <div>
-                    <div style={{fontSize:22,fontWeight:800,color:C.blue,letterSpacing:1.2}}>{SCHOOL}</div>
-                    <div style={{fontSize:14,fontWeight:700,color:"var(--color-text-primary)",marginTop:6}}>{window.kvT("Official Receipt")}</div>
-                    <div style={{fontSize:12,color:"var(--color-text-secondary)",marginTop:10,lineHeight:1.6,maxWidth:320}}>
+          <div className="print-area kv-receipt-print-area">
+            <Card className="kv-receipt-sheet">
+              <div className="kv-receipt-top-accent" aria-hidden="true"/>
+              <div className="kv-receipt-layout">
+                <header className="kv-receipt-header">
+                  <div className="kv-receipt-brand">
+                    <div className="kv-receipt-document-label"><i className="ti ti-receipt" aria-hidden="true"/> {window.kvT("Official Receipt")}</div>
+                    <div className="kv-receipt-school-name">{SCHOOL}</div>
+                    <div className="kv-receipt-school-address">
                       No. 10-G & 12-G, Jalan SP3/2<br/>
                       Taman Saujana Puchong<br/>
                       47110 Puchong
                     </div>
                   </div>
-                  <div style={{textAlign:"right",fontSize:12,color:"var(--color-text-secondary)",lineHeight:1.6}}>
-                    <div style={{fontWeight:700,color:"var(--color-text-primary)",marginBottom:8}}>{window.kvT("RECEIPT DETAILS")}</div>
-                    <div style={{display:"grid",gridTemplateColumns:"auto auto",gap:4,justifyContent:"end",whiteSpace:"nowrap"}}>
-                      <span style={{color:"var(--color-text-secondary)"}}>{window.kvT("Receipt No.")}:</span>
-                      <span style={{fontFamily:"monospace",fontWeight:700,color:"var(--color-text-primary)"}}>{profileReceipt.receipt}</span>
-                      <span style={{color:"var(--color-text-secondary)"}}>{window.kvT("Date Issued:")}</span>
-                      <span style={{fontWeight:700,color:"var(--color-text-primary)"}}>{profileReceipt.date ? window.kvDate(profileReceipt.date, {day:'numeric', month:'short', year:'numeric'}, profileReceipt.date) : "–"}</span>
-                      <span style={{color:"var(--color-text-secondary)"}}>{window.kvT("Payment Type:")}</span>
-                      <span style={{fontWeight:700,color:"var(--color-text-primary)"}}>{profileReceipt.items[0]?.type === "Monthly Fee" ? window.kvT("Monthly Fee") : window.kvT("Payment")}</span>
+                  <div className="kv-receipt-meta-card">
+                    <div className="kv-receipt-meta-title">{window.kvT("RECEIPT DETAILS")}</div>
+                    <div className="kv-receipt-meta-grid">
+                      <span>{window.kvT("Receipt No.")}:</span><strong className="kv-receipt-number">{profileReceipt.receipt}</strong>
+                      <span>{window.kvT("Date Issued:")}</span><strong>{receiptDate}</strong>
+                      <span>{window.kvT("Payment Type:")}</span><strong>{receiptType}</strong>
                     </div>
                   </div>
-                </div>
-                <div style={{padding:"18px 20px",borderRadius:14,border:"1px solid rgba(59,130,246,0.15)",background:"rgba(59,130,246,0.04)",marginBottom:22}}>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,fontSize:13}}>
-                    <div>
-                      <div style={{fontSize:11,color:"var(--color-text-tertiary)",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{window.kvT("Student")}</div>
-                      <div style={{fontWeight:700,color:"var(--color-text-primary)"}}>{s.name}</div>
-                    </div>
-                    <div>
-                      <div style={{fontSize:11,color:"var(--color-text-tertiary)",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{window.kvT("Class")}</div>
-                      <div style={{fontWeight:700,color:"var(--color-text-primary)"}}>{s.class}</div>
-                    </div>
-                    <div>
-                      <div style={{fontSize:11,color:"var(--color-text-tertiary)",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{window.kvT("Parent / Guardian")}</div>
-                      <div style={{fontWeight:700,color:"var(--color-text-primary)"}}>{s.parent}</div>
-                    </div>
-                    <div>
-                      <div style={{fontSize:11,color:"var(--color-text-tertiary)",textTransform:"uppercase",letterSpacing:.8,marginBottom:4}}>{window.kvT("Period")}</div>
-                      <div style={{fontWeight:700,color:"var(--color-text-primary)"}}>{profileReceipt.items[0]?.month || "—"}</div>
-                    </div>
+                </header>
+
+                <section className="kv-receipt-student-card">
+                  <div className="kv-receipt-student-grid">
+                    <div><div className="kv-receipt-field-label">{window.kvT("Student")}</div><div className="kv-receipt-field-value">{s.name}</div></div>
+                    <div><div className="kv-receipt-field-label">{window.kvT("Class")}</div><div className="kv-receipt-field-value">{s.class}</div></div>
+                    <div><div className="kv-receipt-field-label">{window.kvT("Parent / Guardian")}</div><div className="kv-receipt-field-value">{s.parent}</div></div>
+                    <div><div className="kv-receipt-field-label">{window.kvT("Fee Period")}</div><div className="kv-receipt-field-value">{overallPeriod.label || "—"}{overallPeriod.count > 1 ? ` (${overallPeriod.count} ${window.kvT("months")})` : ""}</div></div>
                   </div>
-                </div>
-                <table style={{width:"100%",borderCollapse:"collapse",fontSize:13,marginBottom:18}}>
-                  <thead>
-                    <tr style={{background:C.blue,color:"#fff"}}>
-                      <th style={{padding:"14px 12px",textAlign:"left",fontWeight:700,fontSize:12}}>{window.kvT("Description")}</th>
-                      <th style={{padding:"14px 12px",textAlign:"right",fontWeight:700,fontSize:12}}>{window.kvT("Amount (RM)")}</th>
-                    </tr>
-                  </thead>
+                </section>
+
+                {overallPeriod.label && <div className="kv-receipt-period-banner" style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,margin:"16px 0",padding:"14px 18px",borderRadius:12,background:"linear-gradient(135deg, #f3edff 0%, #faf8ff 100%)",border:"1px solid #dfd2f5"}}>
+                  <div><div style={{fontSize:11,fontWeight:700,letterSpacing:".08em",textTransform:"uppercase",color:"#7750a8"}}>{window.kvT("Fee months covered")}</div><div style={{fontSize:17,fontWeight:700,color:"var(--color-text-primary)",marginTop:3}}>{overallPeriod.label}</div></div>
+                  {overallPeriod.count > 1 && <div style={{fontSize:13,fontWeight:600,color:"#7750a8",whiteSpace:"nowrap"}}>{overallPeriod.count} {window.kvT("months")}</div>}
+                </div>}
+
+                <section className="kv-receipt-payment-section">
+                  <div className="kv-receipt-section-heading">
+                    <div><span>{window.kvT("Payment Summary")}</span><small>{window.kvT("Official payment document")}</small></div>
+                    <span className="kv-receipt-paid-badge"><i className="ti ti-circle-check-filled" aria-hidden="true"/> {window.kvT("Paid")}</span>
+                  </div>
+                  <table className="kv-receipt-items-table">
+                    <thead><tr><th>{window.kvT("Description")}</th><th>{window.kvT("Fee Period")}</th><th>{window.kvT("Amount (RM)")}</th></tr></thead>
                   <tbody>
-                    {profileReceipt.items.map((it,i)=>(
-                      <tr key={i} style={{borderBottom:"1px solid rgba(0,0,0,0.08)"}}>
-                        <td style={{padding:"14px 12px",color:"var(--color-text-primary)"}}>{window.kvPaymentItemLabel(it.type, it.month, it.desc)}</td>
-                        <td style={{padding:"14px 12px",textAlign:"right",fontWeight:700,color:C.green}}>{it.amount.toFixed(2)}</td>
-                      </tr>
-                    ))}
+                      {receiptItems.map((item, index) => { const itemPeriod = item.type === "Monthly Fee" ? formatReceiptPeriod(item.month) : {label:"", count:0}; return <tr key={item.id || index}>
+                        <td>{item.desc || window.kvPaymentItemLabel(item.type, item.month)}</td>
+                        <td>{itemPeriod.label ? `${itemPeriod.label}${itemPeriod.count > 1 ? ` (${itemPeriod.count} ${window.kvT("months")})` : ""}` : "—"}</td>
+                        <td>{item.amount.toFixed(2)}</td>
+                      </tr>})}
                   </tbody>
-                  <tfoot>
-                    <tr style={{borderTop:"2px solid rgba(0,0,0,0.18)",borderBottom:"2px solid rgba(0,0,0,0.18)"}}>
-                      <td style={{padding:"14px 12px",fontWeight:700,fontSize:13,textTransform:"uppercase",color:"var(--color-text-primary)"}}>{window.kvT("Total Received")}</td>
-                      <td style={{padding:"14px 12px",textAlign:"right",fontWeight:800,fontSize:15,color:C.green}}>RM {profileReceipt.total.toFixed(2)}</td>
-                    </tr>
-                  </tfoot>
-                </table>
-                <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:16,fontSize:12,color:"var(--color-text-secondary)"}}>
-                  <div>
-                    <div style={{marginBottom:6,fontWeight:700,color:"var(--color-text-primary)"}}>{window.kvT("Payment Details")}</div>
-                    <div>{window.kvT("Method:")} <strong>{window.kvT(profileReceipt.method)}</strong></div>
-                    {profileReceipt.ref ? <div>{window.kvT("Ref:")} <strong>{profileReceipt.ref}</strong></div> : null}
-                    {profileReceipt.notes ? <div>{window.kvT("Notes:")} <strong>{profileReceipt.notes}</strong></div> : null}
-                  </div>
-                  <div style={{minWidth:220,background:"rgba(15,23,42,0.03)",borderRadius:10,padding:14}}>
-                    <div style={{fontWeight:700,color:"var(--color-text-primary)",marginBottom:6}}>{window.kvT("Receipt Notes")}</div>
-                    <div style={{lineHeight:1.6,color:"var(--color-text-secondary)"}}>
-                      {window.kvT("No signature required. This is a digital receipt.")}
+                    <tfoot><tr><td colSpan="2">{window.kvT("Total Received")}</td><td>RM {receiptTotal.toFixed(2)}</td></tr></tfoot>
+                  </table>
+                </section>
+
+                <section className="kv-receipt-lower-grid">
+                  <div className="kv-receipt-info-card">
+                    <div className="kv-receipt-info-icon"><i className="ti ti-credit-card" aria-hidden="true"/></div>
+                    <div>
+                      <h4>{window.kvT("Payment Details")}</h4>
+                      <dl>
+                        <div><dt>{window.kvT("Method")}</dt><dd>{window.kvT(profileReceipt.method || "Cash")}</dd></div>
+                        {profileReceipt.ref ? <div><dt>{window.kvT("Ref")}</dt><dd>{profileReceipt.ref}</dd></div> : null}
+                        {profileReceipt.notes ? <div><dt>{window.kvT("Notes")}</dt><dd>{profileReceipt.notes}</dd></div> : null}
+                      </dl>
                     </div>
                   </div>
-                </div>
-                <div style={{marginTop:26,paddingTop:18,borderTop:"1px solid rgba(0,0,0,0.08)",fontSize:11,color:"var(--color-text-tertiary)",display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
-                  <div>{window.kvT("Generated by KinderVault")}</div>
-                  <div>{window.kvT("Thank you for your payment.")}</div>
-                </div>
+                  <div className="kv-receipt-info-card">
+                    <div className="kv-receipt-info-icon"><i className="ti ti-file-certificate" aria-hidden="true"/></div>
+                    <div><h4>{window.kvT("Receipt Notes")}</h4><p>{window.kvT("No signature required. This is a digital receipt.")}</p></div>
+                  </div>
+                </section>
+
+                <section className="kv-receipt-confirmation">
+                  <div className="kv-receipt-confirmation-mark"><i className="ti ti-check" aria-hidden="true"/></div>
+                  <div><span>{window.kvT("Payment Confirmed")}</span><p>{window.kvT("This receipt confirms that the payment above has been received and recorded in KinderVault.")}</p></div>
+                  <strong>RM {receiptTotal.toFixed(2)}</strong>
+                </section>
+
+                <footer className="kv-receipt-footer">
+                  <div><strong>{window.kvT("Generated by KinderVault")}</strong><span>{profileReceipt.receipt}</span></div>
+                  <div className="kv-receipt-footer-thanks">{window.kvT("Thank you for your payment.")}</div>
+                </footer>
               </div>
             </Card>
           </div>
