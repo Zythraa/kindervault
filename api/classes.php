@@ -56,8 +56,16 @@ switch ($method) {
         try {
             $updateClass = $pdo->prepare('UPDATE classes SET name = ? WHERE id = ?');
             $updateClass->execute([$name, $id]);
-            $updateStudents = $pdo->prepare('UPDATE students SET class = ? WHERE class = ?');
-            $updateStudents->execute([$name, $current['name']]);
+            $ageGroup = (int)($current['age_group'] ?? 0);
+            if ($ageGroup >= 4 && $ageGroup <= 6) {
+                // Keep every student in the same age-group class, including
+                // legacy rows whose class value still uses a retired name.
+                $updateStudents = $pdo->prepare('UPDATE students SET class = ? WHERE class = ? OR program_age = ?');
+                $updateStudents->execute([$name, $current['name'], (string)$ageGroup]);
+            } else {
+                $updateStudents = $pdo->prepare('UPDATE students SET class = ? WHERE class = ?');
+                $updateStudents->execute([$name, $current['name']]);
+            }
             $pdo->commit();
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
