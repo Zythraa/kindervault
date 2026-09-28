@@ -363,6 +363,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           method: payForm.method,
           ref: payForm.ref,
           notes: payForm.notes,
+          status: customAmount + 0.005 < checkedTotal ? "Partial" : "Paid",
           items: allocatedItems
         };
         const res = await api.post("api/payments.php", payload);
@@ -371,11 +372,11 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
         if (typeof setPayments === "function") {
           setPayments(prev => [...prev, ...newPays]);
         }
-        const receiptItems = (newPays.length ? newPays : checkedItems).map((item, index) => ({
+        const receiptItems = (newPays.length ? newPays : allocatedItems).map((item, index) => ({
           id: item.id || `receipt-item-${index}`,
           type: item.type,
           month: item.month || "",
-          status: item.status || "Paid",
+          status: allocatedItems[index]?.status || item.status || "Paid",
           desc: item.desc || window.kvPaymentItemLabel(item.type, item.month),
           amount: parseFloat(item.amount || 0),
         }));
@@ -390,11 +391,11 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           total: receiptItems.reduce((total, item) => total + item.amount, 0),
           payments: newPays
         };
+        const fresh = await api.get("api/payments.php");
+        if (Array.isArray(fresh) && typeof setPayments === "function") setPayments(fresh);
         setPayModal(false);
         setSelectedItems({});
         navigate({page:"students", state:profileState({profileReceipt:receiptData})});
-        const fresh = await api.get("api/payments.php");
-        if (Array.isArray(fresh) && typeof setPayments === "function") setPayments(fresh);
       } catch(e) {
         setFlash({msg:window.kvT("Network error. Please try again."),type:"danger"});
       } finally {
