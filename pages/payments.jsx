@@ -543,7 +543,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
         <div className="kv-table-toolbar" style={{padding:"10px 14px",display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
           <select value={statusF} onChange={e=>{const value=e.target.value;setStatusF(value);replaceRouteState && replaceRouteState({statusF:value});}} style={{padding:"6px 10px",fontSize:12,border:"0.5px solid var(--color-border-secondary)",borderRadius:7,background:"var(--color-background-primary)",color:"var(--color-text-secondary)"}}>
             <option value="">{window.kvT("All Status")}</option>
-            {["Paid","Partial","Unpaid","Overdue","Advance"].map(s=><option key={s} value={s}>{window.kvT(s)}</option>)}
+            {["Paid","Partial","Unpaid","Overdue","Advance","Voided"].map(s=><option key={s} value={s}>{window.kvT(s)}</option>)}
           </select>
           <select value={typeF} onChange={e=>{const value=e.target.value;setTypeF(value);replaceRouteState && replaceRouteState({typeF:value});}} style={{padding:"6px 10px",fontSize:12,border:"0.5px solid var(--color-border-secondary)",borderRadius:7,background:"var(--color-background-primary)",color:"var(--color-text-secondary)"}}>
             <option value="">{window.kvT("All Types")}</option>
@@ -594,7 +594,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
                         ) : (
                           <div style={{display:"flex",gap:4}}>
                             {p.receipt&&<Btn small variant="outline" onClick={()=>goReceipt(p)}><i className="ti ti-receipt" aria-hidden="true"/> {window.kvT("View")}</Btn>}
-                            {canUpdatePayments && !["Paid", "Advance", "Partial"].includes(p.status) && <Btn small variant="outline" onClick={()=>openEdit(p)} title={window.kvT("Edit payment")}><i className="ti ti-edit" aria-hidden="true"/></Btn>}
+                            {canUpdatePayments && !["Paid", "Advance", "Partial", "Voided"].includes(p.status) && <Btn small variant="outline" onClick={()=>openEdit(p)} title={window.kvT("Edit payment")}><i className="ti ti-edit" aria-hidden="true"/></Btn>}
                             {canDeletePayments && p.status !== "Voided" && <Btn small variant="danger" onClick={()=>del(p)} title={window.kvT("Void payment")}><i className="ti ti-ban" aria-hidden="true"/></Btn>}
                           </div>
                         )}

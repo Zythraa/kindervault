@@ -206,7 +206,7 @@ switch ($method) {
         $current = $stmt0->fetch();
         if (!$current) jsonResponse(['error' => 'Payment not found'], 404);
 
-        if (in_array((string)($current['status'] ?? ''), ['Paid', 'Advance', 'Partial'], true)) {
+        if (in_array((string)($current['status'] ?? ''), ['Paid', 'Advance', 'Partial', 'Voided'], true)) {
             jsonResponse(['error' => 'Completed payments cannot be edited. View or delete the record, then create a new payment if a correction is required.'], 409);
         }
         $status = isset($d['status']) ? $d['status'] : ($current['status'] ?? 'Paid');
@@ -257,6 +257,9 @@ switch ($method) {
         $currentStmt->execute([$id]);
         $current = $currentStmt->fetch();
         if (!$current) jsonResponse(['error' => 'Payment not found'], 404);
+        if (($current['status'] ?? '') === 'Voided') {
+            jsonResponse(['error' => 'This payment has already been voided.'], 409);
+        }
         $stmt = db()->prepare("UPDATE payments SET status = 'Voided', updated_at = CURRENT_TIMESTAMP WHERE id = ?");
         $stmt->execute([$id]);
         auditLog('VOID', 'Payment Management', 'Payment', 'PAY-' . $id, 'Voided a payment record without removing its audit history.', 'Success', [
