@@ -26,7 +26,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
   const [profileTab, setProfileTab]       = React.useState(navigationState.profileTab || "outstanding");
   const [selectedItems, setSelectedItems] = React.useState({});
   const [payModal, setPayModal]           = React.useState(false);
-  const [payForm, setPayForm]             = React.useState({ date: new Date().toISOString().split("T")[0], method:"Cash", ref:"", notes:"" });
+  const [payForm, setPayForm]             = React.useState({ date: new Date().toISOString().split("T")[0], method:"Cash", ref:"", notes:"", amount:"" });
   const [profileReceipt, setProfileReceipt] = React.useState(navigationState.profileReceipt || null);
   const [saving, setSaving]               = React.useState(false);
   const canCreateStudents = canUsePermission(permissions, "students.create", isAdministrator);
@@ -140,7 +140,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
     setProfileTab(state.profileTab || "outstanding");
     setSelectedItems({});
     setPayModal(false);
-    setPayForm({ date: new Date().toISOString().split("T")[0], method:"Cash", ref:"", notes:"" });
+    setPayForm({ date: new Date().toISOString().split("T")[0], method:"Cash", ref:"", notes:"", amount:"" });
     setProfileReceipt(state.profileReceipt || null);
     setScannerOpen(false);
     setSelected(selectedStudent || null);
@@ -262,7 +262,6 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
     }
     const fmt = m => window.kvDate(new Date(m+"-01"), {month:"short",year:"numeric"}, m);
     const items = [];
-    const hasAnnualPayment = (type) => stuPays.some(p => p.type === type && String(p.month || "") === currentYear && (p.status === "Paid" || p.status === "Advance"));
     const annualItems = [
       {id:"annual_reg", type:"Annual Registration", desc:window.kvT("Registration Fee {year}", {year: currentYear}), amount: parseFloat(annual.registration || 0), include:true},
       {id:"annual_books", type:"Books / Materials", desc:window.kvT("Books / Activity Materials {year}", {year: currentYear}), amount: parseFloat((annual.books || {})[stu.program_age || "5"] || 0), include:true},
@@ -276,8 +275,10 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
       {id:"annual_iqra", type:"IQRA Class", desc:window.kvT("IQRA Class {year}", {year: currentYear}), amount: parseFloat(annual.iqra || 0), include:!!parseInt(stu.wants_iqra ?? 0)},
     ];
     annualItems.forEach(item => {
-      if (item.include && item.amount > 0 && !hasAnnualPayment(item.type)) {
-        items.push({ id:item.id, type:item.type, desc:item.desc, month:currentYear, amount:item.amount });
+      const received = stuPays.filter(p => p.type === item.type && String(p.month || "") === currentYear && ["Paid", "Advance", "Partial"].includes(p.status)).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+      const remaining = Math.max(0, item.amount - Math.min(item.amount, received));
+      if (item.include && remaining > 0) {
+        items.push({ id:item.id, type:item.type, desc:item.desc, month:currentYear, amount:remaining });
       }
     });
     if (missingMonths.length > 0) {
@@ -321,6 +322,11 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
     const toggleItem = (id) => setSelectedItems(prev => ({...prev, [id]: !prev[id]}));
     const selectAll  = () => { const all = {}; outstandingItems.forEach(it => all[it.id] = true); setSelectedItems(all); };
     const clearAll   = () => setSelectedItems({});
+    const openPayModal = () => {
+      if (!checkedItems.length) return;
+      setPayForm(prev => ({...prev, amount: checkedTotal.toFixed(2)}));
+      setPayModal(true);
+    };
 
     const fmtMonthRange = (monthStr) => {
       const ms = (monthStr||"").split(",").map(m=>m.trim()).filter(Boolean);
@@ -335,6 +341,20 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
         return;
       }
       if (!checkedItems.length) return;
+      const customAmount = parseFloat(payForm.amount || 0);
+      if (!Number.isFinite(customAmount) || customAmount <= 0 || customAmount > checkedTotal + 0.005) {
+        setFlash({msg:window.kvT("Payment amount must be greater than zero and cannot exceed the selected outstanding balance."),type:"danger"});
+        return;
+      }
+      let remainingAmount = customAmount;
+      const allocatedItems = [];
+      checkedItems.forEach(item => {
+        if (remainingAmount <= 0) return;
+        const amount = Math.min(item.amount, remainingAmount);
+        if (amount <= 0) return;
+        allocatedItems.push({ type:item.type, amount:Number(amount.toFixed(2)), month:item.month, status: amount + 0.005 < item.amount ? "Partial" : "Paid" });
+        remainingAmount -= amount;
+      });
       setSaving(true);
       try {
         const payload = {
@@ -343,7 +363,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           method: payForm.method,
           ref: payForm.ref,
           notes: payForm.notes,
-          items: checkedItems.map(it => ({ type: it.type, amount: it.amount, month: it.month }))
+          items: allocatedItems
         };
         const res = await api.post("api/payments.php", payload);
         if (res.error) { setFlash({msg:res.error,type:"danger"}); return; }
@@ -645,6 +665,10 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                   <span style={{color:C.green}}>RM {checkedTotal.toFixed(2)}</span>
                 </div>
               </div>
+              <div style={{marginBottom:12}}>
+                <Input label={window.kvT('Amount to Pay (RM) *')} type="number" min="0.01" max={checkedTotal.toFixed(2)} step="0.01" value={payForm.amount} onChange={e=>setPayForm({...payForm,amount:e.target.value})}/>
+                <div style={{fontSize:11,color:"var(--color-text-tertiary)",marginTop:4}}>{window.kvT("Default amount is the selected outstanding balance. You may enter a smaller amount for a partial payment.")}</div>
+              </div>
               <div className="kv-form-grid-2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
                 <div>
                   <div style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",marginBottom:4}}>{window.kvT('Payment Date *')}</div>
@@ -736,7 +760,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                       : <Btn small variant="outline" onClick={clearAll}>{window.kvT("Clear All")}</Btn>
                     }
                     {checkedIds.length > 0 && (
-                      <Btn small variant="amber" onClick={()=>setPayModal(true)}>
+                      <Btn small variant="amber" onClick={openPayModal}>
                         <i className="ti ti-cash" aria-hidden="true"/> {window.kvT("Pay Selected ({count}) - RM {amount}", {count: checkedIds.length, amount: checkedTotal.toFixed(2)})}
                       </Btn>
                     )}
@@ -769,7 +793,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                 ))}
                 {checkedIds.length > 0 && (
                   <div style={{padding:"12px 16px",display:"flex",justifyContent:"flex-end",gap:8,background:"var(--color-background-secondary)"}}>
-                    <Btn variant="amber" onClick={()=>setPayModal(true)}>
+                    <Btn variant="amber" onClick={openPayModal}>
                       <i className="ti ti-cash" aria-hidden="true"/> {window.kvT("Pay {count} item(s) - RM {amount}", {count: checkedIds.length, amount: checkedTotal.toFixed(2)})}
                     </Btn>
                   </div>

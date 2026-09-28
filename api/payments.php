@@ -86,7 +86,8 @@ switch ($method) {
             if (!$d['items']) jsonResponse(['error' => 'At least one payment item is required.'], 422);
             $status  = isset($d['status']) ? $d['status'] : 'Paid';
             foreach ($d['items'] as $item) {
-                validatePaymentInput(array_merge($d, $item), true);
+                $itemStatus = isset($item['status']) ? (string)$item['status'] : $status;
+                validatePaymentInput(array_merge($d, $item, ['status' => $itemStatus]), true);
             }
             $pdo = db();
             $pdo->beginTransaction();
@@ -98,13 +99,14 @@ switch ($method) {
             $inserted = [];
             $insertedIds = [];
             foreach ($d['items'] as $i => $item) {
+                $itemStatus = isset($item['status']) ? (string)$item['status'] : $status;
                 $stmt->execute([
                     (int)$d['student_id'],
                     $item['type']   ?? 'Monthly Fee',
                     (float)($item['amount'] ?? 0),
                     $item['month']  ?? '',
                     $d['date']      ?: date('Y-m-d'),
-                    $status,
+                    $itemStatus,
                     $d['method']    ?? 'Cash',
                     $d['ref']       ?? '',
                     '',
@@ -119,7 +121,7 @@ switch ($method) {
                 $stmt2->execute([$newId]);
                 $inserted[] = $stmt2->fetch();
             }
-            $receipt = in_array($status, ['Paid', 'Partial', 'Advance'], true) ? generateReceiptNumber($insertedIds[0]) : '';
+            $receipt = count(array_filter($inserted, static fn($payment) => in_array((string)($payment['status'] ?? ''), ['Paid', 'Partial', 'Advance'], true))) > 0 ? generateReceiptNumber($insertedIds[0]) : '';
             if ($receipt !== '') {
                 $placeholders = implode(',', array_fill(0, count($insertedIds), '?'));
                 $setReceipt = $pdo->prepare("UPDATE payments SET receipt = ? WHERE id IN ($placeholders)");
@@ -144,8 +146,8 @@ switch ($method) {
                 auditLog('RECEIPT_GENERATED', 'Receipt Management', 'Receipt', $receipt, 'Generated a receipt for recorded payments.', 'Success');
             }
             jsonResponse(['receipt' => $receipt, 'payments' => $inserted], 201);
-        }
 
+        }
         // ── Single payment (original) ──────────────────────────────
         validatePaymentInput($d);
         $status  = isset($d['status']) ? $d['status'] : 'Paid';
