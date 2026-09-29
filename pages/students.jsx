@@ -554,7 +554,10 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                 <header className="kv-receipt-header">
                   <div className="kv-receipt-brand">
                     <div className="kv-receipt-document-label"><i className="ti ti-receipt" aria-hidden="true"/> {window.kvT(receiptStatus === "Voided" ? "Voided Receipt" : "Official Receipt")}</div>
-                    <div className="kv-receipt-school-name">{SCHOOL}</div>
+                    <div className="kv-receipt-school-name" aria-label={SCHOOL}>
+                      <span className="kv-receipt-school-name-line">Tadika Permata Intelek Ceria</span>
+                      <span className="kv-receipt-school-name-line">Taska Rahiza</span>
+                    </div>
                     <div className="kv-receipt-school-address">
                       No. 10-G & 12-G, Jalan SP3/2<br/>
                       Taman Saujana Puchong<br/>

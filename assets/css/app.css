@@ -5598,10 +5598,15 @@ button[disabled] {
   max-width: 390px;
   color: #6b3fa0;
   font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
-  font-size: 25px;
+  font-size: 22px;
   font-weight: 800;
   line-height: 1.14;
   letter-spacing: .2px;
+}
+
+.kv-receipt-school-name-line {
+  display: block;
+  white-space: nowrap;
 }
 
 .kv-receipt-school-address {
