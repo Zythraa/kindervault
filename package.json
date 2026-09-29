@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "scripts": {
+    "build:js": "node tools/build-js.cjs"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/preset-react": "^7.27.1"
+  }
+}

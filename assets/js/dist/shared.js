@@ -1,0 +1,2401 @@
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+const SCHOOL = "Tadika Permata Intelek Ceria & Taska Rahiza";
+const ADDR = "No. 12, Jalan Ceria, 43000 Kajang, Selangor";
+const TRANSLATIONS = {
+  en: {
+    Dashboard: "Dashboard",
+    Students: "Students",
+    Classes: "Classes",
+    Payments: "Payments",
+    Receipts: "Receipts",
+    Development: "Development",
+    Backup: "Backup",
+    Settings: "Settings",
+    Logout: "Logout",
+    "Record Payment": "Record Payment",
+    "Search everything…": "Search everything…",
+    "Search Results": "Search Results",
+    "Type any student name, IC, parent, phone, receipt number, class, payment method, or note in the search box above to find matching records across the system.": "Type any student name, IC, parent, phone, receipt number, class, payment method, or note in the search box above to find matching records across the system.",
+    "Interpreted as: ": "Interpreted as: ",
+    "Student Matches": "Student Matches",
+    "Payment Matches": "Payment Matches",
+    "Development Matches": "Development Matches",
+    "Class Matches": "Class Matches",
+    "No matches found for \"{query}\". Try another name, receipt, phone number or class.": "No matches found for \"{query}\". Try another name, receipt, phone number or class.",
+    "Receipt Preview": "Receipt Preview",
+    "Send WhatsApp": "Send WhatsApp",
+    "Print / PDF": "Print / PDF",
+    "Latest reading progress by student": "Latest reading progress by student",
+    "Parent's phone number is missing for this student.": "Parent's phone number is missing for this student.",
+    "Parent's phone number is not valid for WhatsApp.": "Parent's phone number is not valid for WhatsApp.",
+    "All Receipts": "All Receipts",
+    "Search student...": "Search student...",
+    "All Types": "All Types",
+    "No receipts yet. Record a payment to generate one.": "No receipts yet. Record a payment to generate one.",
+    "Dashboard": "Dashboard",
+    "Students": "Students",
+    "Classes": "Classes",
+    "Payments": "Payments",
+    "Receipts": "Receipts",
+    "Development": "Development",
+    "Backup": "Backup",
+    "Settings": "Settings",
+    "Logout": "Logout",
+    "Good": "Good",
+    "Administrator": "Administrator",
+    "Toggle Theme": "Toggle Theme",
+    "Manage Classes": "Classes",
+    "Class Name": "Class Name",
+    "Class List": "Class List",
+    "Class Names": "Class Names",
+    "Rename the existing age-group classes. Students assigned to a renamed class are updated automatically; the age grouping remains unchanged.": "Rename the existing age-group classes. Students assigned to a renamed class are updated automatically; the age grouping remains unchanged.",
+    "Save Class Names": "Save Class Names",
+    "Class names saved successfully.": "Class names saved successfully.",
+    "Class names must be unique.": "Class names must be unique.",
+    "Each class name is required and must be 80 characters or fewer.": "Each class name is required and must be 80 characters or fewer.",
+    "One class is used for each age year. Administrators can rename these class labels from Settings > General while the age grouping remains unchanged.": "One class is used for each age year. Administrators can rename these class labels from Settings > General while the age grouping remains unchanged.",
+    "Students Enrolled": "Students Enrolled",
+    "None": "None",
+    "students": "students",
+    "Add Class": "Add Class",
+    "Cancel": "Cancel",
+    "Loading…": "Loading…",
+    "View": "View",
+    "Parent / Guardian": "Parent / Guardian",
+    "Period": "Period",
+    "Description": "Description",
+    "Amount (RM)": "Amount (RM)",
+    "Total Received": "Total Received",
+    "Payment Details": "Payment Details",
+    "Method": "Method",
+    "Method *": "Method *",
+    "Ref": "Ref",
+    "Notes": "Notes",
+    "Notes (optional)": "Notes (optional)",
+    "Any remarks…": "Any remarks…",
+    "Any additional notes…": "Any additional notes…",
+    "Payment Date *": "Payment Date *",
+    "Amount to Pay (RM) *": "Amount to Pay (RM) *",
+    "Default amount is the selected outstanding balance. You may enter a smaller amount for a partial payment.": "Default amount is the selected outstanding balance. You may enter a smaller amount for a partial payment.",
+    "Payment amount must be greater than zero and cannot exceed the selected outstanding balance.": "Payment amount must be greater than zero and cannot exceed the selected outstanding balance.",
+    "Payment Date": "Payment Date",
+    "Payment Method": "Payment Method",
+    "Reference No.": "Reference No.",
+    "Bank ref / slip no.": "Bank ref / slip no.",
+    "Save & Generate Receipt": "Save & Generate Receipt",
+    "Save Payment": "Save Payment",
+    "Update Payment": "Update Payment",
+    "Fee Period": "Fee Period",
+    "Paid Fee Months": "Paid Fee Months",
+    "No month fully settled": "No month fully settled",
+    "Total Outstanding Balance": "TOTAL OUTSTANDING BALANCE",
+    "Month Balance": "{month} Balance",
+    "Fee months covered": "Fee months covered",
+    "months": "months",
+    "Cash": "Cash",
+    "Bank Transfer": "Bank Transfer",
+    "QR DuitNow": "QR DuitNow",
+    "Cheque": "Cheque",
+    "Monthly Fee": "Monthly Fee",
+    "Registration Fee": "Registration Fee",
+    "Books": "Books",
+    "Uniform": "Uniform",
+    "Activities": "Activities",
+    "Others": "Others",
+    "(select from → to month; all months in range are included)": "(select from → to month; all months in range are included)",
+    "From": "From",
+    "To": "To",
+    "Invalid range — 'From' must be before or equal to 'To'.": "Invalid range — 'From' must be before or equal to 'To'.",
+    "No signature required. This is a digital receipt.": "No signature required. This is a digital receipt.",
+    "Generated by KinderVault": "Generated by KinderVault",
+    "Thank you for your payment.": "Thank you for your payment.",
+    "Official Receipt": "Official Receipt",
+    "Class name is required.": "Class name is required.",
+    "Class updated successfully.": "Class updated successfully.",
+    "Class deleted.": "Class deleted.",
+    "Failed to delete class.": "Failed to delete class.",
+    "Please fill in all required fields.": "Please fill in all required fields.",
+    "Student updated successfully.": "Student updated successfully.",
+    "Student deleted.": "Student deleted.",
+    "Failed to delete student.": "Failed to delete student.",
+    "Unable to load receipt details.": "Unable to load receipt details.",
+    "Please select a student and enter an amount.": "Please select a student and enter an amount.",
+    "Invalid month range. Make sure 'From' is before or equal to the 'To'.": "Invalid month range. Make sure 'From' is before or equal to the 'To'.",
+    "Payment recorded successfully.": "Payment recorded successfully.",
+    "Payment updated successfully.": "Payment updated successfully.",
+    "Payment action succeeded, but the latest payment data could not be refreshed. Retry the refresh.": "Payment action succeeded, but the latest payment data could not be refreshed. Retry the refresh.",
+    "Unable to refresh payment data. Please try again.": "Unable to refresh payment data. Please try again.",
+    "Payment data refreshed successfully.": "Payment data refreshed successfully.",
+    "Retry refresh": "Retry refresh",
+    "Refreshing...": "Refreshing...",
+    "Payment deleted.": "Payment deleted.",
+    "Failed to delete payment.": "Failed to delete payment.",
+    "Invalid month range! The 'To' month must be equal to or after the 'From' month.": "Invalid month range! The 'To' month must be equal to or after the 'From' month.",
+    "Please select a student.": "Please select a student.",
+    "Development record updated.": "Development record updated.",
+    "Development record saved.": "Development record saved.",
+    "Passwords do not match.": "Passwords do not match.",
+    "Password must be at least 8 characters.": "Password must be at least 8 characters.",
+    "Settings saved successfully.": "Settings saved successfully.",
+    "added successfully.": "added successfully.",
+    "Cash": "Cash",
+    "Type": "Type",
+    "Date": "Date",
+    "Actions": "Actions",
+    "RECEIPT DETAILS": "RECEIPT DETAILS",
+    "Receipt No.:": "Receipt No.",
+    "Date Issued:": "Date Issued.",
+    "Payment Type:": "Payment Type.",
+    "Student": "Student",
+    "Class": "Class",
+    "Actions": "Actions"
+  },
+  ms: {
+    Dashboard: "Laporan",
+    Students: "Pelajar",
+    Classes: "Kelas",
+    Payments: "Pembayaran",
+    Receipts: "Resit",
+    Development: "Pembangunan Pelajar",
+    Backup: "Sandaran",
+    Settings: "Tetapan",
+    Logout: "Log Keluar",
+    "Good": "Baik",
+    "Administrator": "Pentadbir",
+    "Search everything…": "Cari semuanya…",
+    "Record Payment": "Rekod Pembayaran",
+    "Search Results": "Keputusan Carian",
+    "Type any student name, IC, parent, phone, receipt number, class, payment method, or note in the search box above to find matching records across the system.": "Taip nama pelajar, IC, ibu bapa, telefon, nombor resit, kelas, kaedah pembayaran, atau nota dalam kotak carian untuk mencari padanan dalam sistem.",
+    "Interpreted as: ": "Di tafsirkan sebagai: ",
+    "Student Matches": "Padanan Pelajar",
+    "Payment Matches": "Padanan Pembayaran",
+    "Development Matches": "Padanan Pembangunan",
+    "Class Matches": "Padanan Kelas",
+    "No matches found for \"{query}\". Try another name, receipt, phone number or class.": "Tiada padanan ditemui untuk \"{query}\". Cuba nama, resit, nombor telefon atau kelas lain.",
+    "Receipt Preview": "Pratonton Resit",
+    "Send WhatsApp": "Hantar WhatsApp",
+    "Print / PDF": "Cetak / PDF",
+    "Parent's phone number is missing for this student.": "Nombor telefon ibu bapa tidak ada untuk pelajar ini.",
+    "Parent's phone number is not valid for WhatsApp.": "Nombor telefon ibu bapa tidak sah untuk WhatsApp.",
+    "Loading…": "Sedang dimuatkan…",
+    "All Receipts": "Semua Resit",
+    "Search student...": "Cari pelajar...",
+    "All Types": "Semua Jenis",
+    "No receipts yet. Record a payment to generate one.": "Tiada resit lagi. Rekod pembayaran untuk menjana resit.",
+    "Toggle Theme": "Tukar Tema",
+    "View": "Lihat",
+    "Parent / Guardian": "Ibu Bapa / Penjaga",
+    "Period": "Tempoh",
+    "Description": "Perihalan",
+    "Amount (RM)": "Jumlah (RM)",
+    "Total Received": "Jumlah Diterima",
+    "Payment Details": "Butiran Pembayaran",
+    "Method": "Kaedah",
+    "Method *": "Kaedah *",
+    "Ref": "Rujukan",
+    "Notes": "Nota",
+    "Notes (optional)": "Nota (pilihan)",
+    "Any remarks…": "Sebarang catatan…",
+    "Any additional notes…": "Sebarang nota tambahan…",
+    "Payment Date *": "Tarikh Pembayaran *",
+    "Amount to Pay (RM) *": "Jumlah Bayaran (RM) *",
+    "Default amount is the selected outstanding balance. You may enter a smaller amount for a partial payment.": "Jumlah asal ialah baki tertunggak yang dipilih. Anda boleh masukkan jumlah lebih rendah untuk bayaran sebahagian.",
+    "Payment amount must be greater than zero and cannot exceed the selected outstanding balance.": "Jumlah bayaran mesti melebihi sifar dan tidak boleh melebihi baki tertunggak yang dipilih.",
+    "Payment Date": "Tarikh Pembayaran",
+    "Payment Method": "Kaedah Pembayaran",
+    "Reference No.": "No. Rujukan",
+    "Bank ref / slip no.": "Rujukan bank / no slip",
+    "Save & Generate Receipt": "Simpan & Jana Resit",
+    "Save Payment": "Simpan Pembayaran",
+    "Update Payment": "Kemas kini Pembayaran",
+    "Fee Period": "Tempoh Yuran",
+    "Paid Fee Months": "Bulan Yuran Yang Dibayar",
+    "No month fully settled": "Tiada bulan diselesaikan sepenuhnya",
+    "Total Outstanding Balance": "JUMLAH BAKI TERTUNGGAK",
+    "Month Balance": "Baki {month}",
+    "Fee months covered": "Bulan yuran yang dibayar",
+    "months": "bulan",
+    "Cash": "Tunai",
+    "Bank Transfer": "Pemindahan Bank",
+    "QR DuitNow": "QR DuitNow",
+    "Cheque": "Cek",
+    "Monthly Fee": "Yuran Bulanan",
+    "Registration Fee": "Yuran Pendaftaran",
+    "Books": "Buku",
+    "Uniform": "Uniform",
+    "Activities": "Aktiviti",
+    "Others": "Lain-lain",
+    "(select from → to month; all months in range are included)": "(pilih dari → ke bulan; semua bulan dalam julat termasuk)",
+    "From": "Dari",
+    "To": "Ke",
+    "Invalid range — 'From' must be before or equal to 'To'.": "Julat tidak sah — 'Dari' mesti sebelum atau sama dengan 'Ke'.",
+    "No signature required. This is a digital receipt.": "Tiada tandatangan diperlukan. Ini adalah resit digital.",
+    "Generated by KinderVault": "Dihasilkan oleh KinderVault",
+    "Thank you for your payment.": "Terima kasih atas pembayaran anda.",
+    "Official Receipt": "Resit Rasmi",
+    "Class name is required.": "Nama kelas diperlukan.",
+    "Add New Class": "Tambah Kelas Baru",
+    "Edit Class": "Edit Kelas",
+    "Save Class": "Simpan Kelas",
+    "Saving…": "Sedang menyimpan…",
+    "No classes yet.": "Tiada kelas lagi.",
+    "Add First Class": "Tambah Kelas Pertama",
+    "Class updated successfully.": "Kelas dikemas kini dengan jayanya.",
+    "Class deleted.": "Kelas dipadamkan.",
+    "Failed to delete class.": "Gagal memadam kelas.",
+    "Please fill in all required fields.": "Sila isi semua medan yang diperlukan.",
+    "Manage Classes": "Kelas",
+    "Class Name": "Nama Kelas",
+    "Class List": "Senarai Kelas",
+    "Class Names": "Nama Kelas",
+    "Rename the existing age-group classes. Students assigned to a renamed class are updated automatically; the age grouping remains unchanged.": "Namakan semula kelas mengikut umur. Murid dalam kelas tersebut akan dikemas kini secara automatik; kumpulan umur kekal sama.",
+    "Save Class Names": "Simpan Nama Kelas",
+    "Class names saved successfully.": "Nama kelas berjaya disimpan.",
+    "Class names must be unique.": "Nama kelas mesti unik.",
+    "Each class name is required and must be 80 characters or fewer.": "Setiap nama kelas diperlukan dan mestilah tidak melebihi 80 aksara.",
+    "One class is used for each age year. Administrators can rename these class labels from Settings > General while the age grouping remains unchanged.": "Satu kelas digunakan untuk setiap umur. Pentadbir boleh menamakan semula label kelas ini melalui Tetapan > Umum tanpa mengubah kumpulan umur.",
+    "Students Enrolled": "Pelajar Berdaftar",
+    "None": "Tiada",
+    "students": "pelajar",
+    "Add Class": "Tambah Kelas",
+    "Please select a student and enter an amount.": "Sila pilih pelajar dan masukkan jumlah.",
+    "Student updated successfully.": "Pelajar dikemas kini dengan jayanya.",
+    "Student deleted.": "Pelajar dipadamkan.",
+    "Failed to delete student.": "Gagal memadam pelajar.",
+    "Unable to load receipt details.": "Tidak dapat memuatkan butiran resit.",
+    "Add New Student": "Tambah Pelajar Baru",
+    "Edit Student": "Edit Pelajar",
+    "Student Information": "Maklumat Pelajar",
+    "Full Name *": "Nama Penuh *",
+    "Gender *": "Jantina *",
+    "♂ Male": "♂ Lelaki",
+    "♀ Female": "♀ Perempuan",
+    "IC / Birth Cert": "No IC / Sijil Lahir",
+    "Date of Birth *": "Tarikh Lahir *",
+    "Class *": "Kelas *",
+    "Enrolment Date": "Tarikh Daftar",
+    "Parent / Guardian": "Ibu Bapa / Penjaga",
+    "Parent Name *": "Nama Ibu Bapa *",
+    "Phone Number": "Nombor Telefon",
+    "012-3456789": "012-3456789",
+    "Address": "Alamat",
+    "Monthly Fee (RM)": "Yuran Bulanan (RM)",
+    "Status": "Status",
+    "Active": "Aktif",
+    "Inactive": "Tidak Aktif",
+    "Graduated": "Tamat",
+    "Manage Classes": "Urus Kelas",
+    "Class Name": "Nama Kelas",
+    "Class List": "Senarai Kelas",
+    "Students Enrolled": "Pelajar Berdaftar",
+    "None": "Tiada",
+    "students": "pelajar",
+    "Add Class": "Tambah Kelas",
+    "Cancel": "Batal",
+    "Saving…": "Sedang menyimpan…",
+    "Save Student": "Simpan Pelajar",
+    "Students": "Pelajar",
+    "Add Student": "Tambah Pelajar",
+    "Search name, IC, parent…": "Cari nama, IC, penjaga…",
+    "All Classes": "Semua Kelas",
+    "Student List": "Senarai Pelajar",
+    "IC Number": "No IC",
+    "Parent": "Ibu Bapa",
+    "Phone": "Telefon",
+    "Fee": "Bayaran",
+    "No students match your search.": "Tiada pelajar sepadan dengan carian anda.",
+    "Add First Student": "Tambah Pelajar Pertama",
+    "Please select a student and enter an amount.": "Sila pilih pelajar dan masukkan jumlah.",
+    "Invalid month range. Make sure 'From' is before or equal to the 'To'.": "Jarak bulan tidak sah. Pastikan 'Dari' sebelum atau sama dengan 'Ke'.",
+    "Payment recorded successfully.": "Pembayaran direkodkan dengan jayanya.",
+    "Payment updated successfully.": "Pembayaran dikemas kini dengan jayanya.",
+    "Payment action succeeded, but the latest payment data could not be refreshed. Retry the refresh.": "Tindakan bayaran berjaya, tetapi data bayaran terkini tidak dapat dimuat semula. Cuba muat semula.",
+    "Unable to refresh payment data. Please try again.": "Data bayaran tidak dapat dimuat semula. Sila cuba lagi.",
+    "Payment data refreshed successfully.": "Data bayaran berjaya dimuat semula.",
+    "Retry refresh": "Cuba muat semula",
+    "Refreshing...": "Sedang memuat semula...",
+    "Payment deleted.": "Pembayaran dipadamkan.",
+    "Failed to delete payment.": "Gagal memadam pembayaran.",
+    "Invalid month range! The 'To' month must be equal to or after the 'From' month.": "Jarak bulan tidak sah! 'Ke' mesti sama atau selepas 'Dari'.",
+    "Please select a student.": "Sila pilih pelajar.",
+    "Development record updated.": "Rekod pembangunan dikemas kini.",
+    "Development record saved.": "Rekod pembangunan disimpan.",
+    "Passwords do not match.": "Kata laluan tidak sepadan.",
+    "Password must be at least 8 characters.": "Kata laluan mesti sekurang-kurangnya 8 aksara.",
+    "Settings saved successfully.": "Tetapan disimpan dengan jayanya.",
+    "added successfully.": "ditambah dengan jayanya.",
+    "Cash": "Tunai",
+    "Type": "Jenis",
+    "Date": "Tarikh",
+    "Actions": "Tindakan",
+    "RECEIPT DETAILS": "MAKLUMAT RESIT",
+    "Receipt No.:": "No. Resit:",
+    "Date Issued:": "Tarikh Dikeluarkan:",
+    "Payment Type:": "Jenis Pembayaran:",
+    "Student": "Pelajar",
+    "Class": "Kelas",
+    "Actions": "Tindakan"
+  }
+};
+Object.assign(TRANSLATIONS.ms, {
+  "Dashboard": "Papan Pemuka",
+  "Students": "Murid",
+  "students": "murid",
+  "Student": "Murid",
+  "Student Management": "Pengurusan Murid",
+  "Student Profile": "Profil Murid",
+  "Student Development": "Perkembangan Murid",
+  "Development": "Perkembangan Murid",
+  "Development records": "Rekod Perkembangan",
+  "Classes": "Kelas",
+  "Manage Classes": "Urus Kelas",
+  "Class": "Kelas",
+  "Class List": "Senarai Kelas",
+  "Class Name": "Nama Kelas",
+  "Students Enrolled": "Murid Berdaftar",
+  "Payments": "Bayaran",
+  "Payment": "Bayaran",
+  "Receipts": "Resit",
+  "Receipt": "Resit",
+  "Settings": "Tetapan",
+  "Search": "Cari",
+  "Workspace": "Ruang Kerja",
+  "System": "Sistem",
+  "Logout": "Log Keluar",
+  "Go to main dashboard": "Ke papan pemuka utama",
+  "Go to Dashboard": "Ke Papan Pemuka",
+  "Open navigation": "Buka navigasi",
+  "Close navigation": "Tutup navigasi",
+  "Primary navigation": "Navigasi utama",
+  "Search everything...": "Cari semua...",
+  "Toggle Theme": "Tukar Tema",
+  "Display language": "Bahasa paparan",
+  "Dismiss message": "Tutup mesej",
+  "Loading...": "Memuatkan...",
+  "Administrator": "Pentadbir",
+  "Teacher": "Guru",
+  "Authorized Staff": "Staf Diberi Kuasa",
+  "Active": "Aktif",
+  "Inactive": "Tidak Aktif",
+  "Graduated": "Tamat",
+  "Paid": "Sudah Dibayar",
+  "Unpaid": "Belum Dibayar",
+  "Overdue": "Tertunggak",
+  "Advance": "Bayaran Awal",
+  "Partial": "Bayaran Sebahagian",
+  "Partial Payment": "Bayaran Sebahagian",
+  "Voided": "Dibatalkan",
+  "Voided Receipt": "Resit Dibatalkan",
+  "Voided Amount": "Jumlah Dibatalkan",
+  "Payment Voided": "Bayaran Dibatalkan",
+  "This payment has been cancelled and is not included in the student paid balance.": "Bayaran ini telah dibatalkan dan tidak dikira dalam baki bayaran murid.",
+  "This receipt is retained for audit purposes only.": "Resit ini dikekalkan untuk tujuan audit sahaja.",
+  "Void payment": "Batalkan bayaran",
+  "Payment voided and retained for audit.": "Bayaran dibatalkan dan dikekalkan untuk audit.",
+  "Void this payment? The record and receipt will be retained for audit, but excluded from balances.": "Batalkan bayaran ini? Rekod dan resit akan dikekalkan untuk audit tetapi tidak dikira dalam baki.",
+  "Advance Payment": "Bayaran Pendahuluan",
+  "Outstanding Balance": "Baki Tertunggak",
+  "Partial Payment Received": "Bayaran Sebahagian Diterima",
+  "This receipt confirms a partial payment. The remaining balance is still outstanding.": "Resit ini mengesahkan bayaran sebahagian. Baki yang tinggal masih belum dijelaskan.",
+  "Success": "Berjaya",
+  "Successful": "Berjaya",
+  "Failed": "Gagal",
+  "Running": "Sedang Berjalan",
+  "Pending": "Menunggu",
+  "Unknown": "Tidak diketahui",
+  "None": "Tiada",
+  "No backup recorded": "Tiada sandaran direkodkan",
+  "Not recorded": "Belum direkodkan",
+  "Open": "Buka",
+  "Close": "Tutup",
+  "Back": "Kembali",
+  "Save": "Simpan",
+  "Cancel": "Batal",
+  "Edit": "Edit",
+  "Delete": "Padam",
+  "View": "Lihat",
+  "Add": "Tambah",
+  "Create": "Cipta",
+  "Update": "Kemas Kini",
+  "Actions": "Tindakan",
+  "Details": "Butiran",
+  "Date": "Tarikh",
+  "Time": "Masa",
+  "Status": "Status",
+  "Gender": "Jantina",
+  "Male": "Lelaki",
+  "Female": "Perempuan",
+  "Amount": "Jumlah",
+  "Method not allowed": "Kaedah tidak dibenarkan.",
+  "Unauthorized": "Tidak dibenarkan.",
+  "Not found": "Tidak ditemui.",
+  "ID required": "ID diperlukan.",
+  "Access Denied": "Akses Ditolak",
+  "Access Denied. You do not have permission to access this section.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk mengakses bahagian ini.",
+  "Unable to save the language preference.": "Tidak dapat menyimpan pilihan bahasa.",
+  "Failed to load data from server. Check your database connection.": "Gagal memuatkan data daripada pelayan. Semak sambungan pangkalan data anda.",
+  "Active Students": "Murid Aktif",
+  "Currently enrolled": "Sedang berdaftar",
+  "Collected This Month": "Kutipan Bulan Ini",
+  "{count} payment(s) received": "{count} bayaran diterima",
+  "Fee Follow-up": "Susulan Yuran",
+  "{count} unpaid or overdue item(s)": "{count} item belum dibayar atau tertunggak",
+  "Development Due": "Perkembangan Perlu Direkodkan",
+  "{completed}/{total} completed for {year}": "{completed}/{total} siap untuk {year}",
+  "Add Student": "Tambah Murid",
+  "Backups": "Sandaran",
+  "Admin Workspace": "Ruang Kerja Pentadbir",
+  "Current student, payment and development work at a glance.": "Ringkasan kerja murid, bayaran dan perkembangan semasa.",
+  "Current student and payment work at a glance.": "Ringkasan kerja murid dan bayaran semasa.",
+  "Your dashboard shows the areas assigned to your account.": "Papan pemuka anda memaparkan bahagian yang diberikan kepada akaun anda.",
+  "Key statistics": "Statistik utama",
+  "Daily priority": "Keutamaan harian",
+  "Needs attention": "Perlu diberi perhatian",
+  "{count} item(s)": "{count} item",
+  "{count} student(s) need payment attention": "{count} murid memerlukan perhatian bayaran",
+  "No payment follow-up right now.": "Tiada susulan bayaran buat masa ini.",
+  "Review Payments": "Semak Bayaran",
+  "{completed}/{total} active students completed for {year}": "{completed}/{total} rekod murid aktif siap untuk {year}",
+  "All active student records are complete.": "Semua rekod murid aktif telah lengkap.",
+  "Open Development": "Buka Perkembangan Murid",
+  "Quick actions": "Tindakan pantas",
+  "Common admin tasks": "Tugasan pentadbir yang kerap digunakan",
+  "Available actions": "Tindakan tersedia",
+  "No workspace modules are available for this account.": "Tiada modul ruang kerja tersedia untuk akaun ini.",
+  "Ask an Administrator to assign the access needed for your work.": "Minta Pentadbir memberikan akses yang diperlukan untuk kerja anda.",
+  "Operational overview": "Ringkasan operasi",
+  "Recent collections": "Kutipan terkini",
+  "Latest payment records received": "Rekod bayaran terkini diterima",
+  "View Receipts": "Lihat Resit",
+  "No recent payments.": "Tiada bayaran terkini.",
+  "Class enrolment": "Pendaftaran kelas",
+  "Active students by class": "Murid aktif mengikut kelas",
+  "{count} student(s)": "{count} murid",
+  "{count} month(s)": "{count} bulan",
+  "No class enrolment data.": "Tiada data pendaftaran kelas.",
+  "Backup status": "Status sandaran",
+  "Latest local backup record": "Rekod sandaran tempatan terkini",
+  "Students in this class": "Murid dalam kelas ini",
+  "{count} student(s) enrolled": "{count} murid berdaftar",
+  "Close student list": "Tutup senarai murid",
+  "No students are enrolled in this class yet.": "Belum ada murid yang didaftarkan dalam kelas ini.",
+  "Age Group": "Kumpulan Umur",
+  "Roster": "Senarai Murid",
+  "View students": "Lihat murid",
+  "View students enrolled in {className}": "Lihat murid yang didaftarkan dalam {className}",
+  "4 years old": "4 tahun",
+  "5 years old": "5 tahun",
+  "6 years old": "6 tahun",
+  "The class structure is fixed based on the owner's decision. Only one class is used for each age year.": "Struktur kelas adalah tetap mengikut keputusan pemilik. Satu kelas digunakan bagi setiap kumpulan umur.",
+  "Backup & Restore": "Sandaran & Pemulihan",
+  "Create database backups and use the local recovery guidance to restore a saved .sql file.": "Cipta sandaran pangkalan data dan gunakan panduan pemulihan tempatan untuk memulihkan fail .sql yang disimpan.",
+  "Create downloadable SQL backups of current database records.": "Cipta sandaran SQL rekod pangkalan data semasa untuk dimuat turun.",
+  "Database Status": "Status Pangkalan Data",
+  "Backup downloaded successfully and saved in the backup folder.": "Sandaran berjaya dimuat turun dan disimpan dalam folder backup.",
+  "Backup generated successfully.": "Sandaran berjaya dijana.",
+  "Database": "Pangkalan Data",
+  "Total Students": "Jumlah Murid",
+  "Total Payments": "Jumlah Bayaran",
+  "Dev Records": "Rekod Perkembangan",
+  "Preparing download...": "Menyediakan muat turun...",
+  "Download Backup Now (.sql)": "Muat Turun Sandaran Sekarang (.sql)",
+  "Exports current database records as a downloadable SQL backup file.": "Mengeksport rekod pangkalan data semasa sebagai fail sandaran SQL untuk dimuat turun.",
+  "Restore from Backup": "Pulihkan daripada Sandaran",
+  "Restore Guidance": "Panduan Pemulihan",
+  "Warning:": "Amaran:",
+  "Restoring will overwrite all current data.": "Pemulihan akan menulis ganti semua data semasa.",
+  "To restore, import a .sql backup using local Adminer.": "Untuk memulihkan data, import sandaran .sql menggunakan Adminer tempatan.",
+  "A saved SQL backup can be restored by an authorised administrator or developer using approved database administration tools.": "Sandaran SQL yang disimpan boleh dipulihkan oleh Pentadbir atau pembangun yang diberi kuasa menggunakan alat pentadbiran pangkalan data yang diluluskan.",
+  "Direct SQL file upload and execution are not provided through the web interface to reduce the risk of malicious SQL execution, accidental database overwrite, and incorrect restoration.": "Muat naik dan pelaksanaan fail SQL secara terus tidak disediakan melalui antara muka web bagi mengurangkan risiko pelaksanaan SQL berniat jahat, data tertulis ganti secara tidak sengaja dan pemulihan yang salah.",
+  "Restore is a controlled administrative recovery process rather than an automatic browser-based restore feature.": "Pemulihan ialah proses pemulihan pentadbiran terkawal dan bukan ciri pemulihan automatik berasaskan pelayar.",
+  "Local Adminer access": "Akses Adminer tempatan",
+  "Reveal details": "Papar butiran",
+  "URL": "URL",
+  "Server": "Pelayan",
+  "Username": "Nama Pengguna",
+  "Password": "Kata Laluan",
+  "This is a local database-maintenance login, not a KinderVault user account.": "Ini ialah log masuk penyelenggaraan pangkalan data tempatan, bukan akaun pengguna KinderVault.",
+  "Local database access details are visible to Administrators only.": "Butiran akses pangkalan data tempatan hanya boleh dilihat oleh Pentadbir.",
+  "Open Adminer.": "Buka Adminer.",
+  "Choose MySQL, enter the local access details above, then sign in.": "Pilih MySQL, masukkan butiran akses tempatan di atas, kemudian log masuk.",
+  "Select the kindervault database.": "Pilih pangkalan data kindervault.",
+  "Choose Import, upload your .sql file, then run the import.": "Pilih Import, muat naik fail .sql anda, kemudian jalankan import.",
+  "Auto-Backup Setup": "Persediaan Sandaran Automatik",
+  "Use Windows Task Scheduler to auto-backup daily. Create a backup.bat file with:": "Gunakan Windows Task Scheduler untuk membuat sandaran automatik setiap hari. Cipta fail backup.bat dengan:",
+  "Schedule it in Task Scheduler to run nightly at 2:00 AM.": "Jadualkannya dalam Task Scheduler untuk dijalankan setiap malam pada jam 2:00 pagi.",
+  "Backup failed: server returned {status}": "Sandaran gagal: pelayan mengembalikan {status}",
+  "Network error while downloading backup.": "Ralat rangkaian semasa memuat turun sandaran.",
+  "Unable to load local database credentials.": "Tidak dapat memuatkan kelayakan pangkalan data tempatan.",
+  "You do not have permission to access this section.": "Anda tidak mempunyai kebenaran untuk mengakses bahagian ini.",
+  "Search Everything": "Cari Semua",
+  "Type any student name, IC, parent, phone, receipt number, class, payment method, or note in the search box above to find matching records across the system.": "Taip nama murid, IC, ibu bapa, nombor telefon, nombor resit, kelas, kaedah bayaran atau nota dalam kotak carian di atas untuk mencari rekod yang sepadan di seluruh sistem.",
+  "Search Results": "Hasil Carian",
+  "{students} student(s), {payments} payment(s), {development} development record(s), {classes} class(es) found for \"{query}\".": "{students} murid, {payments} bayaran, {development} rekod perkembangan dan {classes} kelas ditemui untuk \"{query}\".",
+  "Student Matches": "Padanan Murid",
+  "Payment Matches": "Padanan Bayaran",
+  "Development Matches": "Padanan Perkembangan",
+  "Class Matches": "Padanan Kelas",
+  "Name": "Nama",
+  "Parent": "Ibu Bapa / Penjaga",
+  "Phone": "Telefon",
+  "Fee": "Yuran",
+  "Enrol": "Daftar",
+  "Type": "Jenis",
+  "Month": "Bulan",
+  "Method": "Kaedah",
+  "Notes": "Nota",
+  "Action": "Tindakan",
+  "No matches found for \"{query}\". Try another name, receipt, phone number or class.": "Tiada padanan ditemui untuk \"{query}\". Cuba nama, resit, nombor telefon atau kelas lain.",
+  "Interpreted as: {filters}.": "Ditafsir sebagai: {filters}.",
+  "overdue payments": "bayaran tertunggak",
+  "paid payments": "bayaran telah dibayar",
+  "this month": "bulan ini",
+  "last month": "bulan lepas",
+  "payment method {method}": "kaedah bayaran {method}",
+  "receipt numbers": "nombor resit",
+  "Access Denied. You do not have permission to add students.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk menambah murid.",
+  "Access Denied. You do not have permission to edit students.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk mengedit murid.",
+  "Access Denied. You do not have permission to save this student.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk menyimpan murid ini.",
+  "Access Denied. You do not have permission to delete students.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk memadam murid.",
+  "Access Denied. You do not have permission to record payments.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk merekod bayaran.",
+  "Student {name} added successfully.": "Murid {name} berjaya ditambah.",
+  "Student updated successfully.": "Maklumat murid berjaya dikemas kini.",
+  "Network error. Please try again.": "Ralat rangkaian. Sila cuba lagi.",
+  "Delete {name}? This will also remove their payment records.": "Padam {name}? Rekod bayaran murid ini juga akan dipadam.",
+  "Student deleted.": "Murid berjaya dipadam.",
+  "Failed to delete student.": "Gagal memadam murid.",
+  "Annual Registration": "Pendaftaran Tahunan",
+  "Books / Materials": "Buku / Bahan",
+  "Uniform": "Uniform",
+  "Sports Uniform": "Baju Sukan",
+  "Educational Visit": "Lawatan",
+  "Sports Day": "Hari Sukan",
+  "Awards Ceremony": "Penyampaian Hadiah",
+  "Photo Package": "Pakej Gambar",
+  "IQRA Class": "Kelas IQRA",
+  "Registration Fee {year}": "Yuran Pendaftaran {year}",
+  "Books / Activity Materials {year}": "Buku / Bahan Aktiviti {year}",
+  "Uniform {year}": "Uniform {year}",
+  "Sports Uniform {year}": "Baju Sukan {year}",
+  "Tudung {year}": "Tudung {year}",
+  "Educational Visit {year}": "Lawatan {year}",
+  "Sports Day {year}": "Hari Sukan {year}",
+  "Awards Ceremony {year}": "Penyampaian Hadiah {year}",
+  "Photo Package {year}": "Pakej Gambar {year}",
+  "IQRA Class {year}": "Kelas IQRA {year}",
+  "Overdue Monthly Fee ({count} month(s): {months})": "Yuran Bulanan Tertunggak ({count} bulan: {months})",
+  "Monthly Fee - {month}": "Yuran Bulanan - {month}",
+  "Monthly Fee": "Yuran Bulanan",
+  "Due this month": "Perlu dibayar bulan ini",
+  "Back to student profile": "Kembali ke profil murid",
+  "Back to students": "Kembali ke murid",
+  "Receipt Preview": "Pratonton Resit",
+  "Send WhatsApp": "Hantar WhatsApp",
+  "Print / PDF": "Cetak / PDF",
+  "Done": "Selesai",
+  "Official Receipt": "Resit Rasmi",
+  "RECEIPT DETAILS": "BUTIRAN RESIT",
+  "Payment Summary": "Ringkasan Bayaran",
+  "Official payment document": "Dokumen bayaran rasmi",
+  "Payment Confirmed": "Bayaran Disahkan",
+  "This receipt confirms that the payment above has been received and recorded in KinderVault.": "Resit ini mengesahkan bahawa bayaran di atas telah diterima dan direkodkan dalam KinderVault.",
+  "Receipt No.": "No. Resit",
+  "Date Issued:": "Tarikh Dikeluarkan:",
+  "Payment Type:": "Jenis Bayaran:",
+  "Parent / Guardian": "Ibu Bapa / Penjaga",
+  "Period": "Tempoh",
+  "Description": "Keterangan",
+  "Amount (RM)": "Jumlah (RM)",
+  "Total Received": "Jumlah Diterima",
+  "Payment Details": "Butiran Bayaran",
+  "Method:": "Kaedah:",
+  "Ref:": "Ruj.:",
+  "Notes:": "Nota:",
+  "Receipt Notes": "Nota Resit",
+  "Payment Allocation": "Agihan Bayaran",
+  "Covered Period": "Tempoh Dilindungi",
+  "Allocated": "Diperuntukkan",
+  "Settled": "Selesai",
+  "Fully settled": "Selesai sepenuhnya",
+  "Covered": "Dilindungi",
+  "Balance": "Baki",
+  "Partial Payment": "Bayaran Sebahagian",
+  "Voided transaction; original allocation is shown for audit only.": "Transaksi dibatalkan; agihan asal dipaparkan untuk tujuan audit sahaja.",
+  "Detailed allocation is unavailable; showing the recorded transaction amount and balance.": "Butiran agihan tidak tersedia; jumlah transaksi dan baki yang direkodkan dipaparkan.",
+  "No signature required. This is a digital receipt.": "Tiada tandatangan diperlukan. Ini ialah resit digital.",
+  "Generated by KinderVault": "Dijana oleh KinderVault",
+  "Thank you for your payment.": "Terima kasih atas bayaran anda.",
+  "Confirm Payment": "Sahkan Bayaran",
+  "TOTAL": "JUMLAH",
+  "Outstanding": "Tertunggak",
+  "Paid History": "Sejarah Bayaran",
+  "Outstanding Fees": "Yuran Tertunggak",
+  "Select All": "Pilih Semua",
+  "Clear All": "Nyahpilih Semua",
+  "Pay Selected ({count}) - RM {amount}": "Bayar Pilihan ({count}) - RM {amount}",
+  "All fees paid up to date!": "Semua yuran telah dibayar sehingga kini!",
+  "Pay {count} item(s) - RM {amount}": "Bayar {count} item - RM {amount}",
+  "Payment History": "Sejarah Bayaran",
+  "No payment records yet.": "Belum ada rekod bayaran.",
+  "View Receipt": "Lihat Resit",
+  "Student Details": "Butiran Murid",
+  "Student Code": "Kod Murid",
+  "IC / Birth Cert": "IC / Sijil Lahir",
+  "Date of Birth": "Tarikh Lahir",
+  "Enrolment": "Pendaftaran",
+  "Monthly Fee": "Yuran Bulanan",
+  "Father": "Bapa",
+  "Father Phone": "Telefon Bapa",
+  "Mother": "Ibu",
+  "Mother Phone": "Telefon Ibu",
+  "Address": "Alamat",
+  "Student Information": "Maklumat Murid",
+  "Child's Name *": "Nama Murid *",
+  "MyKid No.": "No. MyKid",
+  "Birth Certificate No.": "No. Sijil Lahir",
+  "Date of Birth *": "Tarikh Lahir *",
+  "Gender *": "Jantina *",
+  "Birth Order": "Anak ke",
+  "Enrolment Date": "Tarikh Daftar",
+  "Programme Age": "Kemasukan untuk",
+  "{age} years": "{age} tahun",
+  "Monthly Package": "Pakej Bulanan",
+  "Annual Fee Options": "Pilihan Yuran Tahunan",
+  "Parent / Guardian Information": "Maklumat Ibu Bapa / Penjaga",
+  "IC No.": "No. Kad Pengenalan",
+  "Home Address": "Alamat Rumah",
+  "Occupation": "Pekerjaan",
+  "Employer Name and Address": "Nama dan Alamat Majikan",
+  "Phone No.": "No. Telefon",
+  "Parent / Guardian Summary": "Ringkasan Ibu Bapa / Penjaga",
+  "Scan Physical Registration Form": "Imbas Borang Pendaftaran Fizikal",
+  "Experimental local OCR": "OCR lokal eksperimental",
+  "AI-Assisted Registration Form Scanner": "Pengimbas Borang Pendaftaran Berbantu AI",
+  "The image is processed locally and is deleted after OCR. No student record will be created automatically.": "Imej diproses secara lokal dan dipadam selepas OCR. Tiada rekod murid akan dicipta secara automatik.",
+  "Scanner progress": "Kemajuan pengimbas",
+  "Upload Image": "Muat Naik Imej",
+  "Local Extraction": "Pengekstrakan Lokal",
+  "Review Information": "Semak Maklumat",
+  "Preview & Process": "Pratonton & Proses",
+  "OCR Result": "Hasil OCR",
+  "Registration Form Image": "Imej Borang Pendaftaran",
+  "Choose another image": "Pilih imej lain",
+  "Upload a completed physical registration form": "Muat naik borang pendaftaran fizikal yang telah lengkap",
+  "JPG, JPEG or PNG, up to 10 MB": "JPG, JPEG atau PNG, sehingga 10 MB",
+  "Registration form preview": "Pratonton borang pendaftaran",
+  "Local processing only. The uploaded form is not permanently stored.": "Pemprosesan lokal sahaja. Borang yang dimuat naik tidak disimpan secara kekal.",
+  "Ready for local OCR": "Sedia untuk OCR lokal",
+  "Select a clear, straight image showing the entire form.": "Pilih imej yang jelas, lurus dan menunjukkan keseluruhan borang.",
+  "Processing form locally...": "Memproses borang secara lokal...",
+  "Handwriting extraction may take up to one minute.": "Pengekstrakan tulisan tangan mungkin mengambil masa sehingga satu minit.",
+  "This may take several seconds.": "Proses ini mungkin mengambil masa beberapa saat.",
+  "Registration Form Detected": "Borang Pendaftaran Dikesan",
+  "Unrecognized Registration Form": "Borang Pendaftaran Tidak Dikenali",
+  "The expected KinderVault form headings were found.": "Tajuk borang KinderVault yang dijangka telah ditemui.",
+  "The expected form structure was not detected. You can continue with manual registration.": "Struktur borang yang dijangka tidak dikesan. Anda boleh meneruskan pendaftaran secara manual.",
+  "The form was recognized, but structured handwriting extraction is unavailable.": "Borang dikenali, tetapi pengekstrakan tulisan tangan berstruktur tidak tersedia.",
+  "Review Extracted Registration Information": "Semak Maklumat Pendaftaran yang Diekstrak",
+  "Review every value before filling the student form. Nothing has been saved yet.": "Semak setiap nilai sebelum mengisi borang murid. Tiada apa-apa yang disimpan lagi.",
+  "Possible Existing Student: {name}": "Kemungkinan Murid Sedia Ada: {name}",
+  "Detected": "Dikesan",
+  "Needs Review": "Perlu Disemak",
+  "Not Found": "Tidak Ditemui",
+  "Detected checked": "Dikesan bertanda",
+  "Detected unchecked": "Dikesan tidak bertanda",
+  "Edit Value": "Edit Nilai",
+  "Continue": "Teruskan",
+  "Select": "Pilih",
+  "Father Information": "Maklumat Bapa",
+  "Mother Information": "Maklumat Ibu",
+  "Supporting Documents": "Dokumen Sokongan",
+  "Written Age": "Umur Ditulis",
+  "Written age is shown for comparison only; KinderVault derives age from the date of birth.": "Umur yang ditulis ditunjukkan untuk perbandingan sahaja; KinderVault mengira umur daripada tarikh lahir.",
+  "Birth Certificate Copy": "Salinan Surat Beranak",
+  "Father IC Copy": "Salinan Kad Pengenalan Bapa",
+  "Mother IC Copy": "Salinan Kad Pengenalan Ibu",
+  "Passport Photos": "Gambar Berukuran Pasport",
+  "Provided": "Disediakan",
+  "Not Provided": "Tidak Disediakan",
+  "Document checklist values are review-only and will not be stored in the Student database.": "Nilai senarai semak dokumen hanya untuk semakan dan tidak akan disimpan dalam pangkalan data Murid.",
+  "Local vision: {seconds}s": "Penglihatan lokal: {seconds}s",
+  "Regional OCR Debug Output": "Output Nyahpepijat OCR Mengikut Kawasan",
+  "Confirming only fills the existing form. You must still review it and click Save Student.": "Pengesahan hanya mengisi borang sedia ada. Anda masih perlu menyemaknya dan klik Simpan Murid.",
+  "The manual registration form remains available at all times.": "Borang pendaftaran manual kekal tersedia pada setiap masa.",
+  "Confirm & Fill Student Form": "Sahkan & Isi Borang Murid",
+  "Reviewed scan values filled the student form. Check every field before saving.": "Nilai imbasan yang disemak telah diisi ke dalam borang murid. Semak setiap medan sebelum menyimpan.",
+  "Image quality may reduce extraction accuracy.": "Kualiti imej mungkin mengurangkan ketepatan pengekstrakan.",
+  "The image resolution is low and may reduce OCR accuracy.": "Resolusi imej rendah dan mungkin mengurangkan ketepatan OCR.",
+  "The image is very dark and may reduce OCR accuracy.": "Imej terlalu gelap dan mungkin mengurangkan ketepatan OCR.",
+  "The image is very bright and may reduce OCR accuracy.": "Imej terlalu terang dan mungkin mengurangkan ketepatan OCR.",
+  "OCR: {seconds}s": "OCR: {seconds}s",
+  "Total: {seconds}s": "Jumlah: {seconds}s",
+  "Raw OCR Output": "Output Mentah OCR",
+  "Administrator debug view": "Paparan nyahpepijat Pentadbir",
+  "No text detected": "Tiada teks dikesan",
+  "Phase B tests OCR only. Extracted values are not yet transferred to the student form.": "Fasa B hanya menguji OCR. Nilai yang diekstrak belum dipindahkan ke borang murid.",
+  "Return to Manual Form": "Kembali ke Borang Manual",
+  "Processing...": "Sedang memproses...",
+  "Use Camera": "Gunakan Kamera",
+  "Upload Image": "Muat Naik Imej",
+  "Camera Preview": "Pratonton Kamera",
+  "Select Camera": "Pilih Kamera",
+  "Align form inside the frame": "Sejajarkan borang di dalam bingkai",
+  "Align the registration form inside the frame": "Sejajarkan borang pendaftaran di dalam bingkai",
+  "Capture Form": "Ambil Gambar Borang",
+  "Captured Image": "Imej Diambil",
+  "Captured Form Preview": "Pratonton Borang",
+  "Use This Image": "Gunakan Imej Ini",
+  "Retake": "Ambil Semula",
+  "Camera Permission Required": "Kebenaran Kamera Diperlukan",
+  "Camera Permission Denied": "Kebenaran Kamera Ditolak",
+  "No Camera Found": "Kamera Tidak Ditemui",
+  "Camera Error": "Ralat Kamera",
+  "Stop Camera": "Hentikan Kamera",
+  "Switch to Upload": "Tukar ke Muat Naik",
+  "Switch to Camera": "Tukar ke Kamera",
+  "Choose Input Method": "Pilih Kaedah Input",
+  "Camera access was not allowed.": "Akses kamera tidak dibenarkan.",
+  "Continue Anyway": "Teruskan Jua",
+  "Camera is currently in use by another application or unavailable.": "Kamera sedang digunakan oleh aplikasi lain atau tidak tersedia.",
+  "No camera found on this device. Please upload an image instead.": "Tiada kamera ditemui pada peranti ini. Sila muat naik imej.",
+  "Camera permission denied. You can still upload an image of the form.": "Kebenaran kamera ditolak. Anda masih boleh memuat naik imej borang.",
+  "Camera access requires a secure connection (HTTPS or localhost).": "Akses kamera memerlukan sambungan selamat (HTTPS atau localhost).",
+  "Image quality may reduce OCR accuracy.": "Kualiti imej mungkin mengurangkan ketepatan OCR.",
+  "Default Camera": "Kamera Lalai",
+  "Camera {index}": "Kamera {index}",
+  "Take photo of physical registration form": "Ambil foto borang pendaftaran fizikal",
+  "Select an existing image file": "Pilih fail imej sedia ada",
+  "Captured image is ready for review.": "Imej yang diambil sedia untuk semakan.",
+  "Retake photo": "Ambil semula foto",
+  "Retry Camera": "Cuba Semula Kamera",
+  "Process Form": "Proses Borang",
+  "Only valid JPG, JPEG, and PNG images are accepted.": "Hanya imej JPG, JPEG dan PNG yang sah diterima.",
+  "The image must be 10 MB or smaller.": "Saiz imej mestilah 10 MB atau lebih kecil.",
+  "OCR processing failed.": "Pemprosesan OCR gagal.",
+  "OCR processing failed. Manual registration is still available.": "Pemprosesan OCR gagal. Pendaftaran manual masih boleh digunakan.",
+  "Please choose a registration form image.": "Sila pilih imej borang pendaftaran.",
+  "The registration form image could not be uploaded.": "Imej borang pendaftaran tidak dapat dimuat naik.",
+  "The image dimensions are invalid or too large.": "Dimensi imej tidak sah atau terlalu besar.",
+  "A secure temporary workspace could not be created.": "Ruang kerja sementara yang selamat tidak dapat dicipta.",
+  "The registration form image could not be secured for processing.": "Imej borang pendaftaran tidak dapat dilindungi untuk pemprosesan.",
+  "OCR is unavailable on this KinderVault installation.": "OCR tidak tersedia pada pemasangan KinderVault ini.",
+  "The uploaded image could not be decoded.": "Imej yang dimuat naik tidak dapat dibaca.",
+  "Image preprocessing failed.": "Prapemprosesan imej gagal.",
+  "OCR process could not be started.": "Proses OCR tidak dapat dimulakan.",
+  "OCR processing timed out.": "Pemprosesan OCR tamat masa.",
+  "Edit student": "Edit murid",
+  "Delete student": "Padam murid",
+  "Search name, IC, parent...": "Cari nama, IC, ibu bapa...",
+  "All Classes": "Semua Kelas",
+  "Clear": "Kosongkan",
+  "Student List": "Senarai Murid",
+  "No students match your search.": "Tiada murid sepadan dengan carian anda.",
+  "No students yet.": "Belum ada murid.",
+  "Add First Student": "Tambah Murid Pertama",
+  "Cash": "Tunai",
+  "Bank Transfer": "Pindahan Bank",
+  "Cheque": "Cek",
+  "Saving...": "Menyimpan...",
+  "Monthly Fee ({period})": "Yuran Bulanan ({period})",
+  "Access Denied. You do not have permission to edit payments.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk mengedit bayaran.",
+  "Access Denied. You do not have permission to save this payment.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk menyimpan bayaran ini.",
+  "Access Denied. You do not have permission to delete payments.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk memadam bayaran.",
+  "Please select a student and enter an amount.": "Sila pilih murid dan masukkan jumlah bayaran.",
+  "Invalid month range. Make sure 'From' is before or equal to 'To'.": "Julat bulan tidak sah. Pastikan 'Dari' sebelum atau sama dengan 'Hingga'.",
+  "Payment recorded. Receipt {receipt} generated.": "Bayaran direkodkan. Resit {receipt} telah dijana.",
+  "Multiple Payments": "Pelbagai Bayaran",
+  "Bahasa Melayu": "Bahasa Melayu",
+  "Child": "Kanak-kanak",
+  "Module": "Modul",
+  "Multi-Factor Authentication": "Pengesahan Berbilang Faktor",
+  "No reading progress records yet.": "Belum ada rekod kemajuan membaca.",
+  "Select at least one language to record reading progress.": "Pilih sekurang-kurangnya satu bahasa untuk merekodkan kemajuan membaca.",
+  "Turn off MFA": "Matikan MFA",
+  "User": "Pengguna",
+  "Payment recorded successfully.": "Bayaran berjaya direkodkan.",
+  "Payment updated successfully.": "Bayaran berjaya dikemas kini.",
+  "Delete this payment and its receipt?": "Padam bayaran ini dan resitnya?",
+  "Payment deleted.": "Bayaran berjaya dipadam.",
+  "Failed to delete payment.": "Gagal memadam bayaran.",
+  "Invalid month range! The 'To' month must be equal to or after the 'From' month.": "Julat bulan tidak sah. Bulan 'Hingga' mestilah sama atau selepas bulan 'Dari'.",
+  "Back to payments": "Kembali ke bayaran",
+  "Record New Payment": "Rekod Bayaran Baharu",
+  "Edit Payment": "Edit Bayaran",
+  "Select Student *": "Pilih Murid *",
+  "- Select student -": "- Pilih murid -",
+  "Payment Details": "Butiran Bayaran",
+  "Payment Type *": "Jenis Bayaran *",
+  "Fee Period": "Tempoh Yuran",
+  "(select from -> to month; all months in range are included)": "(pilih bulan Dari hingga Hingga; semua bulan dalam julat akan disertakan)",
+  "From": "Dari",
+  "To": "Hingga",
+  "{count} month(s) selected: {months}": "{count} bulan dipilih: {months}",
+  "Invalid range - 'From' must be before or equal to 'To'.": "Julat tidak sah - 'Dari' mesti sebelum atau sama dengan 'Hingga'.",
+  "Amount (RM) *": "Jumlah (RM) *",
+  "Payment Date": "Tarikh Bayaran",
+  "Payment Method": "Kaedah Bayaran",
+  "Reference No.": "No. Rujukan",
+  "Bank ref / slip no.": "Rujukan bank / no. slip",
+  "Notes (optional)": "Nota (pilihan)",
+  "Any remarks...": "Sebarang catatan...",
+  "Any additional notes...": "Sebarang nota tambahan...",
+  "Save & Generate Receipt": "Simpan & Jana Resit",
+  "Save Payment": "Simpan Bayaran",
+  "Update Payment": "Kemas Kini Bayaran",
+  "Record Payment": "Rekod Bayaran",
+  "Total Collected": "Jumlah Kutipan",
+  "Total Overdue": "Jumlah Tertunggak",
+  "Total Records": "Jumlah Rekod",
+  "Payment Records": "Rekod Bayaran",
+  "Outstanding Dues": "Yuran Tertunggak",
+  "All Status": "Semua Status",
+  "All Types": "Semua Jenis",
+  "Send": "Hantar",
+  "Pay": "Bayar",
+  "Edit payment": "Edit bayaran",
+  "Delete payment": "Padam bayaran",
+  "No payment records found.": "Tiada rekod bayaran ditemui.",
+  "Record First Payment": "Rekod Bayaran Pertama",
+  "Students with Outstanding Dues": "Murid dengan Yuran Tertunggak",
+  "Overdue Months": "Bulan Tertunggak",
+  "Month / Year": "Bulan / Tahun",
+  "All overdue months": "Semua bulan tertunggak",
+  "Show all months": "Papar semua bulan",
+  "Print": "Cetak",
+  "Showing unpaid students for the selected month.": "Memaparkan murid yang belum membayar bagi bulan dipilih.",
+  "Showing all overdue months.": "Memaparkan semua bulan tertunggak.",
+  "Total Owed": "Jumlah Tertunggak",
+  "No outstanding dues! All active students have paid up to date.": "Tiada yuran tertunggak. Semua murid aktif telah membuat bayaran sehingga kini.",
+  "No outstanding dues found.": "Tiada tunggakan ditemui.",
+  "No outstanding dues found for the selected payment type.": "Tiada tunggakan untuk jenis bayaran yang dipilih.",
+  "Parent's phone number is missing for this student.": "Nombor telefon ibu bapa/penjaga tiada untuk murid ini.",
+  "Parent's phone number is not valid for WhatsApp.": "Nombor telefon ibu bapa/penjaga tidak sah untuk WhatsApp.",
+  "Salam/Hi, this is a gentle reminder from {school} that there is {status} payment of RM {amount} for {student}'s {type} ({period}). Please make the payment at your earliest convenience. Thank you!": "Salam, ini peringatan mesra daripada {school} bahawa terdapat bayaran {status} sebanyak RM {amount} untuk {type} {student} ({period}). Sila buat bayaran secepat mungkin. Terima kasih!",
+  "an overdue": "tertunggak",
+  "an unpaid": "belum dibayar",
+  "Others": "Lain-lain",
+  "Back to receipts": "Kembali ke resit",
+  "All Receipts": "Semua Resit",
+  "Search student...": "Cari murid...",
+  "No receipts yet. Record a payment to generate one.": "Belum ada resit. Rekod bayaran untuk menjana resit.",
+  "Hello from *{school}*. We have received your payment of RM {amount} for {type}{period}. Thank you. Your receipt number is {receipt}, issued on {date}. Please keep this number for your records.": "Salam daripada *{school}*. Kami telah menerima bayaran anda sebanyak RM {amount} untuk {type}{period}. Terima kasih. Nombor resit anda ialah {receipt}, dikeluarkan pada {date}. Sila simpan nombor ini untuk rujukan anda.",
+  "Saved": "Disimpan",
+  "KPM Development Checklist History": "Sejarah Borang KPM",
+  "Age": "Umur",
+  "Assessment Date": "Tarikh Penilaian",
+  "Legacy record": "Rekod lama",
+  "Delete KPM development checklist": "Padam borang KPM",
+  "No development records yet.": "Belum ada rekod perkembangan.",
+  "Reading Progress": "Kemajuan Membaca",
+  "Reading Progress History": "Sejarah Kemajuan Membaca",
+  "Reading Records": "Rekod Kemajuan Membaca",
+  "Latest reading progress by student": "Kemajuan membaca terkini mengikut murid",
+  "Student Reading History": "Sejarah Bacaan Murid",
+  "{count} reading record(s)": "{count} rekod bacaan",
+  "Review each student's latest and historical reading progress.": "Semak kemajuan membaca terkini dan sejarah setiap murid.",
+  "Add Reading Record": "Tambah Rekod Membaca",
+  "Edit Reading Record": "Edit Rekod Membaca",
+  "Reading Record Details": "Butiran Rekod Membaca",
+  "Student Information": "Maklumat Murid",
+  "Record Information": "Maklumat Rekod",
+  "Search student or student code": "Cari murid atau kod murid",
+  "All Quarters": "Semua Suku Tahun",
+  "Sort records": "Susun rekod",
+  "Newest first": "Terbaharu dahulu",
+  "Student name": "Nama murid",
+  "Class name": "Nama kelas",
+  "Clear filters": "Kosongkan penapis",
+  "No records match your search.": "Tiada rekod yang sepadan dengan carian anda.",
+  "{count} record(s)": "{count} rekod",
+  "Page {page}": "Halaman {page}",
+  "Showing reading records for {student}.": "Memaparkan rekod membaca untuk {student}.",
+  "Add observations about the student's reading progress.": "Tambah pemerhatian tentang kemajuan membaca murid.",
+  "View and manage student reading progress records.": "Lihat dan urus rekod kemajuan membaca murid.",
+  "Quarter": "Suku Tahun",
+  "Record Date": "Tarikh Rekod",
+  "Not recorded": "Tidak direkodkan",
+  "Book {level}, page {page}": "Buku {level}, halaman {page}",
+  "Book": "Buku",
+  "Book {level}": "Buku {level}",
+  "English": "Bahasa Inggeris",
+  "Page": "Halaman",
+  "You have unsaved changes. Discard them?": "Anda mempunyai perubahan yang belum disimpan. Buang perubahan tersebut?",
+  "Access Denied. You do not have permission to edit development records.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk mengedit rekod perkembangan.",
+  "Access Denied. You do not have permission to add development records.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk menambah rekod perkembangan.",
+  "Access Denied. You do not have permission to save this development record.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk menyimpan rekod perkembangan ini.",
+  "Access Denied. You do not have permission to save this reading progress record.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk menyimpan rekod kemajuan membaca ini.",
+  "Access Denied. You do not have permission to delete development records.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk memadam rekod perkembangan.",
+  "Please select a student aged 4 to 6 years old.": "Sila pilih murid berumur 4 hingga 6 tahun.",
+  "Please select a student and record date.": "Sila pilih murid dan tarikh rekod.",
+  "Development record updated.": "Rekod perkembangan berjaya dikemas kini.",
+  "Development record saved.": "Rekod perkembangan berjaya disimpan.",
+  "Reading progress updated.": "Kemajuan membaca berjaya dikemas kini.",
+  "Reading progress saved.": "Kemajuan membaca berjaya disimpan.",
+  "Delete reading progress record for {student}?": "Padam rekod kemajuan membaca untuk {student}?",
+  "Reading progress deleted.": "Rekod kemajuan membaca berjaya dipadam.",
+  "Failed to delete reading progress.": "Gagal memadam rekod kemajuan membaca.",
+  "Delete KPM development checklist for {student}?": "Padam borang KPM untuk {student}?",
+  "KPM development checklist deleted.": "Borang KPM berjaya dipadam.",
+  "Failed to delete KPM development checklist.": "Gagal memadam borang KPM.",
+  "KPM Development Checklist": "Borang KPM",
+  "New KPM Development Checklist": "Borang KPM Baharu",
+  "New Reading Progress": "Kemajuan Membaca Baharu",
+  "Complete this record, then return to its history.": "Lengkapkan rekod ini, kemudian kembali ke sejarahnya.",
+  "Select a record type to view its history.": "Pilih jenis rekod untuk melihat sejarahnya.",
+  "Complete Checklist": "Isi Borang",
+  "Print Output": "Output Cetakan",
+  "Back to History": "Kembali ke Sejarah",
+  "Save Checklist": "Simpan Borang",
+  "Save Record": "Simpan Rekod",
+  "{student}'s Reading Progress": "Kemajuan Membaca {student}",
+  "{student}'s KPM Development Checklist History": "Sejarah Borang KPM {student}",
+  "this student": "murid ini",
+  "Reading Progress Track Record": "Rekod Kemajuan Membaca",
+  "A 3-month reading record for Bahasa Melayu, English, or both languages.": "Rekod kemajuan membaca selama 3 bulan untuk Bahasa Melayu, English atau kedua-dua bahasa.",
+  "Reading Record Setup": "Persediaan Rekod Membaca",
+  "Student *": "Murid *",
+  "-- Select active student --": "-- Pilih murid aktif --",
+  "Previous progress from {date} was filled in automatically. Choose the new record date and update the book or page.": "Kemajuan terdahulu pada {date} telah diisi secara automatik. Pilih tarikh rekod baharu, kemudian kemas kini buku atau halaman.",
+  "Record Date *": "Tarikh Rekod *",
+  "Quarter / 3 Months": "Suku Tahun / 3 Bulan",
+  "Languages to record": "Bahasa untuk direkodkan",
+  "Book Level": "Tahap Buku",
+  "Last Page": "Halaman Terakhir",
+  "Notes": "Nota",
+  "Student Development History": "Sejarah Perkembangan Murid",
+  "One KPM development checklist is kept for each student and assessment month. Legacy score records remain read-only history.": "Satu borang KPM disimpan bagi setiap murid dan bulan penilaian. Rekod skor lama kekal sebagai sejarah baca sahaja.",
+  "Assessment Setup": "Persediaan Penilaian",
+  "-- Select student from Permata / Intelek / Ceria --": "-- Pilih murid daripada Permata / Intelek / Ceria --",
+  "Assessment date *": "Tarikh penilaian *",
+  "Assessment place": "Tempat penilaian",
+  "Assessor name": "Nama penilai",
+  "Form age:": "Umur borang:",
+  "Date of birth:": "Tarikh lahir:",
+  "Parent / guardian:": "Ibu bapa/penjaga:",
+  "Phone:": "Telefon:",
+  "Select a student from Permata, Intelek or Ceria. The borang age now follows the class name.": "Pilih murid daripada Permata, Intelek atau Ceria. Umur borang mengikut nama kelas.",
+  "Complete KPM Development Checklist": "Isi Senarai Semak Borang",
+  "/ Achieved": "/ Tercapai",
+  "X Not achieved": "X Tidak tercapai",
+  "Choose a student from Tadika 4, 5 or 6 to start filling the borang.": "Pilih murid dari Tadika 4, 5 atau 6 untuk mula mengisi borang.",
+  "This page is the formal KPM checklist print output only. Use Complete Checklist to edit answers, then return here for print/PDF.": "Halaman ini hanya untuk output cetakan rasmi KPM. Gunakan Isi Borang untuk mengedit jawapan, kemudian kembali ke sini untuk cetak/PDF.",
+  "Please choose an active student whose age falls within 4 to 6 years old.": "Sila pilih murid aktif yang berumur antara 4 hingga 6 tahun.",
+  "General": "Umum",
+  "User Management": "Pengurusan Pengguna",
+  "Roles & Permissions": "Peranan & Kebenaran",
+  "Security": "Keselamatan",
+  "Audit Log": "Log Audit",
+  "Close dialog": "Tutup dialog",
+  "Full access to all KinderVault features.": "Akses penuh kepada semua ciri KinderVault.",
+  "Student viewing and development work by default.": "Akses melihat murid dan kerja perkembangan secara lalai.",
+  "A configurable restricted role.": "Peranan terhad yang boleh dikonfigurasi.",
+  "Administrator accounts always have full access to KinderVault.": "Akaun Pentadbir sentiasa mempunyai akses penuh kepada KinderVault.",
+  "{selected} of {total} permissions selected": "{selected} daripada {total} kebenaran dipilih",
+  "Create User": "Cipta Pengguna",
+  "Edit User": "Edit Pengguna",
+  "Full Name *": "Nama Penuh *",
+  "Username / Login ID *": "Nama Pengguna / ID Log Masuk *",
+  "Initial Password *": "Kata Laluan Awal *",
+  "Confirm Password *": "Sahkan Kata Laluan *",
+  "Role": "Peranan",
+  "Account Status": "Status Akaun",
+  "Individual Permissions": "Kebenaran Individu",
+  "Role permissions are the default. These selections save the effective access for this user.": "Kebenaran peranan digunakan secara lalai. Pilihan ini menyimpan akses berkesan untuk pengguna ini.",
+  "Save User": "Simpan Pengguna",
+  "Reset Password: {user}": "Tetapkan Semula Kata Laluan: {user}",
+  "Set a new password for this account. The existing password is never displayed.": "Tetapkan kata laluan baharu untuk akaun ini. Kata laluan sedia ada tidak akan dipaparkan.",
+  "New Password *": "Kata Laluan Baharu *",
+  "Reset Password": "Tetapkan Semula Kata Laluan",
+  "Set Up Authenticator App": "Sediakan Aplikasi Pengesah",
+  "Protect your KinderVault account": "Lindungi akaun KinderVault anda",
+  "Use Google Authenticator, Microsoft Authenticator, Authy, or another TOTP app.": "Gunakan Google Authenticator, Microsoft Authenticator, Authy atau aplikasi TOTP lain.",
+  "In your authenticator app, choose to add an account with a setup key.": "Dalam aplikasi pengesah anda, pilih untuk menambah akaun menggunakan kunci persediaan.",
+  "Use {account} as the account name and choose a time-based code.": "Gunakan {account} sebagai nama akaun dan pilih kod berasaskan masa.",
+  "Copy the setup key below, then enter the six-digit code your app shows.": "Salin kunci persediaan di bawah, kemudian masukkan kod enam digit yang dipaparkan oleh aplikasi anda.",
+  "In your authenticator app, choose to add an account.": "Dalam aplikasi pengesah anda, pilih untuk menambah akaun.",
+  "Scan the QR code below with your device.": "Imbas kod QR di bawah menggunakan peranti anda.",
+  "Enter the six-digit code your app shows to finish setup.": "Masukkan kod enam digit yang dipaparkan oleh aplikasi anda untuk melengkapkan persediaan.",
+  "Authenticator setup QR code": "Kod QR persediaan pengesah",
+  "Scan with your authenticator app": "Imbas dengan aplikasi pengesah anda",
+  "The QR code contains the same account name and secret key shown below.": "Kod QR mengandungi nama akaun dan kunci rahsia yang sama seperti yang dipaparkan di bawah.",
+  "QR code could not be generated. Use the setup key below.": "Kod QR tidak dapat dijana. Gunakan kunci persediaan di bawah.",
+  "Or enter the setup key manually": "Atau masukkan kunci persediaan secara manual",
+  "Setup key": "Kunci persediaan",
+  "Copied": "Disalin",
+  "Copy": "Salin",
+  "Current six-digit code": "Kod enam digit semasa",
+  "Your setup key expires after 10 minutes. The authenticator code changes every 30 seconds.": "Kunci persediaan anda tamat selepas 10 minit. Kod pengesah berubah setiap 30 saat.",
+  "Verifying...": "Mengesahkan...",
+  "Verify and enable MFA": "Sahkan dan aktifkan MFA",
+  "Save Your Recovery Codes": "Simpan Kod Pemulihan Anda",
+  "Each code works once. Store them somewhere safe and offline. They will not be shown again.": "Setiap kod hanya boleh digunakan sekali. Simpannya di tempat yang selamat dan luar talian. Kod ini tidak akan dipaparkan lagi.",
+  "Copy all codes": "Salin semua kod",
+  "I've stored them safely": "Saya telah menyimpannya dengan selamat",
+  "Turn Off Multi-Factor Authentication": "Matikan Pengesahan Berbilang Faktor",
+  "Generate New Recovery Codes": "Jana Kod Pemulihan Baharu",
+  "Confirm your current password and authenticator code before removing this protection.": "Sahkan kata laluan semasa dan kod pengesah sebelum membuang perlindungan ini.",
+  "Your existing recovery codes will stop working after new ones are generated.": "Kod pemulihan sedia ada akan berhenti berfungsi selepas kod baharu dijana.",
+  "Current Password *": "Kata Laluan Semasa *",
+  "Authenticator Code *": "Kod Pengesah *",
+  "Confirming...": "Mengesahkan...",
+  "Turn Off MFA": "Matikan MFA",
+  "Generate New Codes": "Jana Kod Baharu",
+  "Activity LOG-{id}": "Aktiviti LOG-{id}",
+  "Record": "Rekod",
+  "Date & Time": "Tarikh & Masa",
+  "IP Address": "Alamat IP",
+  "Not collected": "Tidak dikumpulkan",
+  "Changed Fields": "Medan Diubah",
+  "Permission Changes": "Perubahan Kebenaran",
+  "Added": "Ditambah",
+  "Removed": "Dibuang",
+  "Browser:": "Pelayar:",
+  "Unable to load user management data.": "Tidak dapat memuatkan data pengurusan pengguna.",
+  "Unable to load security settings.": "Tidak dapat memuatkan tetapan keselamatan.",
+  "Unable to load multi-factor authentication status.": "Tidak dapat memuatkan status pengesahan berbilang faktor.",
+  "Unable to load audit activity.": "Tidak dapat memuatkan aktiviti audit.",
+  "Settings saved successfully.": "Tetapan berjaya disimpan.",
+  "User created successfully.": "Pengguna berjaya dicipta.",
+  "User updated successfully.": "Pengguna berjaya dikemas kini.",
+  "Unable to save the user account.": "Tidak dapat menyimpan akaun pengguna.",
+  "Deactivate {user}?": "Nyahaktifkan {user}?",
+  "User activated.": "Pengguna diaktifkan.",
+  "User deactivated.": "Pengguna dinyahaktifkan.",
+  "Unable to update account status.": "Tidak dapat mengemas kini status akaun.",
+  "Password reset successfully.": "Kata laluan berjaya ditetapkan semula.",
+  "Unable to reset the password.": "Tidak dapat menetapkan semula kata laluan.",
+  "Role permissions saved successfully.": "Kebenaran peranan berjaya disimpan.",
+  "Unable to save role permissions.": "Tidak dapat menyimpan kebenaran peranan.",
+  "Security settings saved successfully.": "Tetapan keselamatan berjaya disimpan.",
+  "Unable to save security settings.": "Tidak dapat menyimpan tetapan keselamatan.",
+  "Unable to start MFA setup.": "Tidak dapat memulakan persediaan MFA.",
+  "Unable to verify the authenticator code.": "Tidak dapat mengesahkan kod pengesah.",
+  "Multi-factor authentication has been turned off.": "Pengesahan berbilang faktor telah dimatikan.",
+  "Unable to update multi-factor authentication.": "Tidak dapat mengemas kini pengesahan berbilang faktor.",
+  "Unable to load activity details.": "Tidak dapat memuatkan butiran aktiviti.",
+  "Never": "Belum pernah",
+  "My Account": "Akaun Saya",
+  "Full Name": "Nama Penuh",
+  "Change Password": "Tukar Kata Laluan",
+  "New Password": "Kata Laluan Baharu",
+  "Leave blank to keep the current password": "Biarkan kosong untuk mengekalkan kata laluan semasa",
+  "Confirm Password": "Sahkan Kata Laluan",
+  "Repeat new password": "Ulang kata laluan baharu",
+  "Checking MFA protection for this account...": "Menyemak perlindungan MFA untuk akaun ini...",
+  "Authenticator app enabled": "Aplikasi pengesah diaktifkan",
+  "Authenticator app not set up": "Aplikasi pengesah belum disediakan",
+  "Required": "Diperlukan",
+  "{count} recovery codes remaining": "{count} kod pemulihan berbaki",
+  "Enabled {date}": "Diaktifkan {date}",
+  "MFA setup is unavailable until KinderVault can access its local encryption key.": "Persediaan MFA tidak tersedia sehingga KinderVault dapat mengakses kunci penyulitan tempatan.",
+  "New recovery codes": "Kod pemulihan baharu",
+  "Starting setup...": "Memulakan persediaan...",
+  "Set up authenticator app": "Sediakan aplikasi pengesah",
+  "Fee Structure": "Struktur Yuran",
+  "Annual Fees": "Yuran Tahunan",
+  "Registration": "Pendaftaran",
+  "Books / Materials - {age} years": "Buku / Bahan - {age} tahun",
+  "Monthly Fees": "Yuran Bulanan",
+  "Package {code}": "Pakej {code}",
+  "Save Settings": "Simpan Tetapan",
+  "User Accounts": "Akaun Pengguna",
+  "MFA": "MFA",
+  "Last Login": "Log Masuk Terakhir",
+  "Enabled": "Diaktifkan",
+  "Not set": "Belum disediakan",
+  "View or edit user": "Lihat atau edit pengguna",
+  "Manage permissions": "Urus kebenaran",
+  "Reset password": "Tetapkan semula kata laluan",
+  "Deactivate account": "Nyahaktifkan akaun",
+  "Activate account": "Aktifkan akaun",
+  "No user accounts found.": "Tiada akaun pengguna ditemui.",
+  "Set the default access granted to each role. Individual users can still have overrides.": "Tetapkan akses lalai bagi setiap peranan. Pengguna individu masih boleh mempunyai kebenaran tersendiri.",
+  "Full access": "Akses penuh",
+  "{count} default permissions": "{count} kebenaran lalai",
+  "View Access": "Lihat Akses",
+  "Edit Defaults": "Edit Lalai",
+  "Security Settings": "Tetapan Keselamatan",
+  "Control session duration, password rules, and failed-login protection.": "Kawal tempoh sesi, peraturan kata laluan dan perlindungan log masuk gagal.",
+  "Manage your authenticator app and account protection.": "Urus aplikasi pengesah dan perlindungan akaun anda.",
+  "Login & Session Security": "Keselamatan Log Masuk & Sesi",
+  "Session Timeout (minutes)": "Tamat Sesi (minit)",
+  "Maximum Failed Logins": "Maksimum Log Masuk Gagal",
+  "Lockout Duration (minutes)": "Tempoh Sekatan (minit)",
+  "Password Rules": "Peraturan Kata Laluan",
+  "Minimum Password Length": "Panjang Minimum Kata Laluan",
+  "Require mixed case": "Perlu huruf besar dan kecil",
+  "Passwords must include upper- and lower-case letters.": "Kata laluan mesti mengandungi huruf besar dan kecil.",
+  "Require a number": "Perlu nombor",
+  "Passwords must include at least one number.": "Kata laluan mesti mengandungi sekurang-kurangnya satu nombor.",
+  "Checking MFA readiness...": "Menyemak kesediaan MFA...",
+  "Require MFA for all Administrators": "Wajibkan MFA untuk semua Pentadbir",
+  "{active} active Administrator account(s); {unenrolled} still need MFA setup.": "{active} akaun Pentadbir aktif; {unenrolled} masih perlu menyediakan MFA.",
+  "Load security details to manage MFA enforcement.": "Muatkan butiran keselamatan untuk mengurus penguatkuasaan MFA.",
+  "Save Security Settings": "Simpan Tetapan Keselamatan",
+  "Read-only activity records created automatically by KinderVault.": "Rekod aktiviti baca sahaja yang dicipta secara automatik oleh KinderVault.",
+  "Print Audit History": "Cetak Sejarah Audit",
+  "Preparing print...": "Menyediakan cetakan...",
+  "Unable to prepare the audit history for printing.": "Tidak dapat menyediakan sejarah audit untuk dicetak.",
+  "Security Audit History": "Sejarah Audit Keselamatan",
+  "Generated": "Dijana",
+  "Total Events": "Jumlah Peristiwa",
+  "Applied Filters": "Penapis Digunakan",
+  "None": "Tiada",
+  "No filters applied; this report contains the complete audit history.": "Tiada penapis digunakan; laporan ini mengandungi sejarah audit lengkap.",
+  "Search": "Carian",
+  "From date": "Dari tarikh",
+  "To date": "Hingga tarikh",
+  "User ID": "ID Pengguna",
+  "Description": "Penerangan",
+  "User Agent": "Ejen Pengguna",
+  "Event Metadata": "Metadata Peristiwa",
+  "Today": "Hari Ini",
+  "Failed Logins": "Log Masuk Gagal",
+  "Security Events": "Peristiwa Keselamatan",
+  "All Activity": "Semua Aktiviti",
+  "Search activity": "Cari aktiviti",
+  "All users": "Semua pengguna",
+  "All roles": "Semua peranan",
+  "All modules": "Semua modul",
+  "All actions": "Semua tindakan",
+  "All statuses": "Semua status",
+  "Apply": "Guna",
+  "Activity Log": "Log Aktiviti",
+  "No activity matches the selected filters.": "Tiada aktiviti sepadan dengan penapis yang dipilih.",
+  "Page {page} of {total}": "Halaman {page} daripada {total}",
+  "Manage your account and KinderVault administration.": "Urus akaun anda dan pentadbiran KinderVault.",
+  "Settings sections": "Bahagian tetapan",
+  "MFA recovery codes are ready for secure storage.": "Kod pemulihan MFA sedia untuk disimpan dengan selamat.",
+  "{role} Default Permissions": "Kebenaran Lalai {role}",
+  "Save Changes": "Simpan Perubahan",
+  "Network error. Please try again.": "Ralat rangkaian. Sila cuba lagi.",
+  "Create and manage access for KinderVault accounts.": "Cipta dan urus akses untuk akaun KinderVault.",
+  "System": "Sistem",
+  "Details": "Butiran",
+  "Previous page": "Halaman sebelumnya",
+  "Next page": "Halaman seterusnya",
+  "View activity details": "Lihat butiran aktiviti",
+  "View or edit {user}": "Lihat atau edit {user}",
+  "Manage permissions for {user}": "Urus kebenaran untuk {user}",
+  "Reset password for {user}": "Tetapkan semula kata laluan untuk {user}",
+  "Deactivate {user}": "Nyahaktifkan {user}",
+  "Activate {user}": "Aktifkan {user}",
+  "Uniform": "Pakaian seragam",
+  "Sports Uniform": "Baju sukan",
+  "Tudung": "Tudung",
+  "Success": "Berjaya",
+  "Failed": "Gagal",
+  "Authentication": "Pengesahan",
+  "Payment Management": "Pengurusan Bayaran",
+  "Receipt Management": "Pengurusan Resit",
+  "Administrator Area": "Kawasan Pentadbir",
+  "Security Settings": "Tetapan Keselamatan",
+  "Session timeout": "Tamat sesi",
+  "Minimum password length": "Panjang minimum kata laluan",
+  "Mixed-case password rule": "Peraturan huruf besar dan kecil",
+  "Number password rule": "Peraturan nombor kata laluan",
+  "Maximum failed logins": "Maksimum log masuk gagal",
+  "Account lockout duration": "Tempoh sekatan akaun",
+  "Require MFA for Administrators": "Wajibkan MFA untuk Pentadbir",
+  "CREATE": "Cipta",
+  "UPDATE": "Kemas kini",
+  "DELETE": "Padam",
+  "LOGIN": "Log masuk",
+  "LOGIN_FAILED": "Log masuk gagal",
+  "MFA_CHALLENGE_STARTED": "Cabaran MFA dimulakan",
+  "MFA_CHALLENGE_FAILED": "Cabaran MFA gagal",
+  "MFA_ENABLED": "MFA diaktifkan",
+  "MFA_DISABLED": "MFA dimatikan",
+  "MFA_RECOVERY_CODES_REGENERATED": "Kod pemulihan MFA dijana semula",
+  "MFA_ENROLLMENT_REQUIRED": "Pendaftaran MFA diperlukan",
+  "LOGOUT": "Log keluar",
+  "PASSWORD_RESET": "Kata laluan ditetapkan semula",
+  "PASSWORD_CHANGED": "Kata laluan ditukar",
+  "ROLE_CHANGED": "Peranan ditukar",
+  "PERMISSIONS_CHANGED": "Kebenaran ditukar",
+  "ROLE_PERMISSIONS_CHANGED": "Kebenaran peranan ditukar",
+  "ACCOUNT_ACTIVATED": "Akaun diaktifkan",
+  "ACCOUNT_DEACTIVATED": "Akaun dinyahaktifkan",
+  "ACCESS_DENIED": "Akses ditolak",
+  "BACKUP_EXPORTED": "Sandaran dieksport",
+  "BACKUP_CREDENTIALS_VIEWED": "Kelayakan sandaran dilihat",
+  "LANGUAGE_CHANGED": "Bahasa paparan ditukar",
+  "SECURITY_SETTINGS_CHANGED": "Tetapan keselamatan dikemas kini",
+  "SESSION_REVOKED": "Sesi dibatalkan",
+  "SESSION_TIMEOUT": "Sesi tamat tempoh",
+  "CHATBOT_QUERY": "Pertanyaan chatbot",
+  "CHATBOT_ACCESS_DENIED": "Akses chatbot ditolak",
+  "CHATBOT_SECURITY_BLOCKED": "Ancaman chatbot disekat",
+  "Use KinderVault chatbot": "Gunakan chatbot KinderVault",
+  "Chatbot": "Chatbot",
+  "KinderVault Chatbot": "Chatbot KinderVault",
+  "Enable KinderVault Chatbot": "Aktifkan Chatbot KinderVault",
+  "Show the chatbot to permitted users and allow chatbot requests. Turn this off to disable it for everyone.": "Paparkan chatbot kepada pengguna yang dibenarkan dan benarkan permintaan chatbot. Matikan suis ini untuk menyahaktifkannya bagi semua pengguna.",
+  "The KinderVault chatbot is currently disabled by an Administrator.": "Chatbot KinderVault sedang dimatikan oleh Pentadbir.",
+  "Disabled": "Dimatikan",
+  "KinderVault Assistant": "Pembantu KinderVault",
+  "English, BM & bahasa pasar": "Bahasa Inggeris, BM dan bahasa pasar",
+  "Clear conversation": "Kosongkan perbualan",
+  "Close assistant": "Tutup pembantu",
+  "Hi! Ask me about students, fees, KPM development, reading progress, receipts, MFA, or where to find something in KinderVault.": "Hai! Tanya saya tentang murid, yuran, perkembangan KPM, kemajuan bacaan, resit, MFA atau lokasi sesuatu dalam KinderVault.",
+  "Hi! I'm your KinderVault Assistant. You can ask me naturally in English, BM, or bahasa pasar. What would you like help with today?": "Hai! Saya Pembantu KinderVault anda. Anda boleh tanya secara biasa dalam Bahasa Inggeris, BM atau bahasa pasar. Apa yang anda mahu saya bantu hari ini?",
+  "Security protection": "Perlindungan keselamatan",
+  "I could not prepare a response.": "Saya tidak dapat menyediakan jawapan.",
+  "The assistant is unavailable right now. Please try again.": "Pembantu tidak tersedia sekarang. Sila cuba lagi.",
+  "Thinking...": "Sedang berfikir...",
+  "Try asking": "Cuba tanya",
+  "Ask in English, BM, or bahasa pasar...": "Tanya dalam Bahasa Inggeris, BM atau bahasa pasar...",
+  "Chatbot message": "Mesej chatbot",
+  "Send message": "Hantar mesej",
+  "Read-only answers follow {user}'s permissions.": "Jawapan baca sahaja mengikut kebenaran {user}.",
+  "your account": "akaun anda",
+  "Open KinderVault Assistant": "Buka Pembantu KinderVault",
+  "Ask KinderVault": "Tanya KinderVault",
+  "Who has not completed KPM this year?": "Siapa belum melengkapkan KPM tahun ini?",
+  "What can this system do?": "Apa yang sistem ini boleh lakukan?",
+  "Give me a system summary": "Beri saya ringkasan sistem",
+  "How many students are there?": "Ada berapa orang murid?",
+  "Who has not paid this month?": "Siapa belum bayar bulan ini?",
+  "How do roles and permissions work?": "Bagaimana peranan dan kebenaran berfungsi?",
+  "Which fees are overdue?": "Yuran mana yang tertunggak?",
+  "Why is a fee overdue?": "Kenapa yuran menjadi tertunggak?",
+  "Who has no reading record this quarter?": "Siapa belum mempunyai rekod bacaan suku ini?",
+  "How do I enable MFA?": "Bagaimana saya mengaktifkan MFA?",
+  "KPM development due": "Perkembangan KPM yang belum selesai",
+  "Reading progress due": "Kemajuan bacaan yang belum selesai",
+  "Open Dashboard": "Buka Papan Pemuka",
+  "Open Students": "Buka Murid",
+  "Open Classes": "Buka Kelas",
+  "Open Payments": "Buka Bayaran",
+  "Open KPM Development": "Buka Perkembangan KPM",
+  "Open Reading Progress": "Buka Kemajuan Bacaan",
+  "Open Security Settings": "Buka Tetapan Keselamatan",
+  "Open Settings": "Buka Tetapan",
+  "Open User Management": "Buka Pengurusan Pengguna",
+  "Open Roles & Permissions": "Buka Peranan & Kebenaran",
+  "Open Audit Log": "Buka Log Audit",
+  "Open Backup & Restore": "Buka Sandaran & Pemulihan",
+  "Open Receipts": "Buka Resit",
+  "Please enter a message.": "Sila masukkan mesej.",
+  "Your message is too long. Please keep it under 500 characters.": "Mesej anda terlalu panjang. Sila hadkan kepada 500 aksara.",
+  "Too many chatbot requests. Please wait a few minutes and try again.": "Terlalu banyak permintaan chatbot. Sila tunggu beberapa minit dan cuba lagi.",
+  "Multi-factor authentication is enabled for this account.": "Pengesahan berbilang faktor diaktifkan untuk akaun ini.",
+  "Protect this account with an authenticator app and recovery codes.": "Lindungi akaun ini dengan aplikasi pengesah dan kod pemulihan.",
+  "Multi-factor authentication is unavailable because the local encryption key could not be prepared.": "Pengesahan berbilang faktor tidak tersedia kerana kunci penyulitan tempatan tidak dapat disediakan.",
+  "MFA is unavailable because KinderVault could not prepare its local encryption key.": "MFA tidak tersedia kerana KinderVault tidak dapat menyediakan kunci penyulitan tempatan.",
+  "Each active Administrator must enable MFA before it can be required for all Administrators.": "Setiap Pentadbir aktif mesti mengaktifkan MFA sebelum ia diwajibkan untuk semua Pentadbir.",
+  "All active Administrator accounts are ready for MFA enforcement.": "Semua akaun Pentadbir aktif sedia untuk penguatkuasaan MFA.",
+  "Access Denied. You do not have permission to add students.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk menambah murid.",
+  "Access Denied. You do not have permission to use search.": "Akses ditolak. Anda tidak mempunyai kebenaran untuk menggunakan carian.",
+  "This page hit an error.": "Halaman ini mengalami ralat.",
+  "Try Again": "Cuba Lagi",
+  "Loading KinderVault": "Memuatkan KinderVault",
+  "Loading KinderVault.": "Memuatkan KinderVault.",
+  "Session expiring soon": "Sesi akan tamat tidak lama lagi",
+  "Your session will expire in {time} due to inactivity.": "Sesi anda akan tamat dalam {time} kerana tiada aktiviti.",
+  "Select Stay signed in to continue working, or log out now.": "Pilih Kekal log masuk untuk terus bekerja, atau log keluar sekarang.",
+  "Stay signed in": "Kekal log masuk",
+  "Staying signed in...": "Mengekalkan sesi...",
+  "Unable to renew your session. Check your connection and try again.": "Sesi anda tidak dapat diperbaharui. Semak sambungan dan cuba lagi.",
+  "Unable to renew your session. Please sign in again.": "Sesi anda tidak dapat diperbaharui. Sila log masuk semula.",
+  "Session security warning": "Amaran keselamatan sesi",
+  "Session timeout preset": "Tetapan masa tamat sesi",
+  "Session timeout": "Masa tamat sesi",
+  "Custom timeout (minutes)": "Masa tamat tersuai (minit)",
+  "Choose a preset or enter minutes": "Pilih tempoh atau masukkan minit",
+  "Choose a common duration or type any value from 5 to 1,440 minutes.": "Pilih tempoh biasa atau masukkan nilai antara 5 hingga 1,440 minit.",
+  "Custom duration": "Tempoh tersuai",
+  "5 minutes": "5 minit",
+  "15 minutes": "15 minit",
+  "30 minutes": "30 minit",
+  "45 minutes": "45 minit",
+  "1 hour": "1 jam",
+  "2 hours": "2 jam",
+  "3 hours": "3 jam",
+  "6 hours": "6 jam",
+  "8 hours": "8 jam",
+  "12 hours": "12 jam",
+  "24 hours": "24 jam",
+  "minutes": "minit",
+  "Enter a session timeout from 5 to 1,440 minutes.": "Masukkan masa tamat sesi antara 5 hingga 1,440 minit.",
+  "Language": "Bahasa"
+});
+Object.assign(TRANSLATIONS.en, {
+  "Create downloadable SQL backups of current database records.": "Create downloadable SQL backups of current database records.",
+  "Backup generated successfully.": "Backup generated successfully.",
+  "Exports current database records as a downloadable SQL backup file.": "Exports current database records as a downloadable SQL backup file.",
+  "Restore Guidance": "Restore Guidance",
+  "A saved SQL backup can be restored by an authorised administrator or developer using approved database administration tools.": "A saved SQL backup can be restored by an authorised administrator or developer using approved database administration tools.",
+  "Direct SQL file upload and execution are not provided through the web interface to reduce the risk of malicious SQL execution, accidental database overwrite, and incorrect restoration.": "Direct SQL file upload and execution are not provided through the web interface to reduce the risk of malicious SQL execution, accidental database overwrite, and incorrect restoration.",
+  "Restore is a controlled administrative recovery process rather than an automatic browser-based restore feature.": "Restore is a controlled administrative recovery process rather than an automatic browser-based restore feature.",
+  "Maklumat Pelajar": "Student Information",
+  "Nama Kanak-Kanak *": "Child's Name *",
+  "No MyKid": "MyKid No.",
+  "No. Surat Beranak": "Birth Certificate No.",
+  "Tarikh Lahir *": "Date of Birth *",
+  "Jantina *": "Gender *",
+  "Anak ke": "Birth Order",
+  "Tarikh Daftar": "Enrolment Date",
+  "Kemasukan untuk": "Programme Age",
+  "Pakej Bulanan": "Monthly Package",
+  "Pilihan Yuran Tahunan": "Annual Fee Options",
+  "Maklumat Ibubapa Penjaga": "Parent / Guardian Information",
+  "Bapa": "Father",
+  "Ibu": "Mother",
+  "No. Kad Pengenalan": "IC No.",
+  "Alamat Rumah": "Home Address",
+  "Pekerjaan": "Occupation",
+  "Nama dan Alamat Majikan": "Employer Name and Address",
+  "No. Telefon / Phone": "Phone No.",
+  "Nama Penjaga untuk sistem": "Parent / Guardian Summary",
+  "Tadika Sahaja": "Kindergarten Only",
+  "Tadika + Half Daycare": "Kindergarten + Half Daycare",
+  "Tadika + Full Daycare": "Kindergarten + Full Daycare",
+  "Baju Sukan": "Sports Uniform",
+  "Kelas IQRA": "IQRA Class",
+  "Lawatan": "Educational Visit",
+  "Sukan": "Sports Day",
+  "Penyampaian Hadiah": "Awards Ceremony",
+  "Pakej Gambar": "Photo Package",
+  "Session expiring soon": "Session expiring soon",
+  "Your session will expire in {time} due to inactivity.": "Your session will expire in {time} due to inactivity.",
+  "Select Stay signed in to continue working, or log out now.": "Select Stay signed in to continue working, or log out now.",
+  "Stay signed in": "Stay signed in",
+  "Staying signed in...": "Staying signed in...",
+  "Unable to renew your session. Check your connection and try again.": "Unable to renew your session. Check your connection and try again.",
+  "Unable to renew your session. Please sign in again.": "Unable to renew your session. Please sign in again.",
+  "Session security warning": "Session security warning",
+  "Session timeout preset": "Session timeout preset",
+  "Session timeout": "Session timeout",
+  "Custom timeout (minutes)": "Custom timeout (minutes)",
+  "Choose a preset or enter minutes": "Choose a preset or enter minutes",
+  "Choose a common duration or type any value from 5 to 1,440 minutes.": "Choose a common duration or type any value from 5 to 1,440 minutes.",
+  "Custom duration": "Custom duration",
+  "5 minutes": "5 minutes",
+  "15 minutes": "15 minutes",
+  "30 minutes": "30 minutes",
+  "45 minutes": "45 minutes",
+  "1 hour": "1 hour",
+  "2 hours": "2 hours",
+  "3 hours": "3 hours",
+  "6 hours": "6 hours",
+  "8 hours": "8 hours",
+  "12 hours": "12 hours",
+  "24 hours": "24 hours",
+  "minutes": "minutes",
+  "Enter a session timeout from 5 to 1,440 minutes.": "Enter a session timeout from 5 to 1,440 minutes."
+});
+const DEFAULT_LOCALE = 'en';
+window.kvNormalizeLocale = locale => locale === 'ms' ? 'ms' : DEFAULT_LOCALE;
+window.kvLang = window.kvNormalizeLocale(window.KV_LOCALE || localStorage.getItem('lang') || DEFAULT_LOCALE);
+window.kvT = (key, values = {}) => {
+  const lang = window.kvNormalizeLocale(window.kvLang);
+  const translated = TRANSLATIONS[lang] && TRANSLATIONS[lang][key] ? TRANSLATIONS[lang][key] : key;
+  return Object.entries(values).reduce((text, [name, value]) => text.split(`{${name}}`).join(String(value)), translated);
+};
+window.kvDateLocale = () => window.kvLang === 'ms' ? 'ms-MY' : 'en-MY';
+window.kvDate = (value, options = {}, fallback = '') => {
+  if (value === null || value === undefined || value === '') return fallback;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? fallback || value : date.toLocaleDateString(window.kvDateLocale(), options);
+};
+window.kvDateTime = (value, options = {}, fallback = '') => {
+  if (value === null || value === undefined || value === '') return fallback;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? fallback || value : date.toLocaleString(window.kvDateLocale(), options);
+};
+window.kvPaymentItemLabel = (type, month = '', fallback = '') => {
+  const rawType = String(type || '').trim();
+  const months = String(month || '').split(',').map(value => value.trim()).filter(Boolean);
+  const period = months.map(value => window.kvDate(new Date(`${value}-01`), {
+    month: 'short',
+    year: 'numeric'
+  }, value));
+  const range = period.length <= 1 ? period[0] || '' : `${period[0]} - ${period[period.length - 1]}`;
+  const year = (months[0] || '').slice(0, 4);
+  const annualLabels = {
+    'Annual Registration': 'Registration Fee {year}',
+    'Registration Fee': 'Registration Fee {year}',
+    'Books / Materials': 'Books / Activity Materials {year}',
+    'Books': 'Books / Activity Materials {year}',
+    'Uniform': 'Uniform {year}',
+    'Sports Uniform': 'Sports Uniform {year}',
+    'Tudung': 'Tudung {year}',
+    'Lawatan': 'Educational Visit {year}',
+    'Sukan': 'Sports Day {year}',
+    'Penyampaian Hadiah': 'Awards Ceremony {year}',
+    'Pakej Gambar': 'Photo Package {year}',
+    'IQRA Class': 'IQRA Class {year}',
+    'Kelas IQRA': 'IQRA Class {year}'
+  };
+  if (rawType === 'Monthly Fee') {
+    return range ? window.kvT('Monthly Fee ({period})', {
+      period: range
+    }) : window.kvT(rawType);
+  }
+  if (annualLabels[rawType] && year) {
+    return window.kvT(annualLabels[rawType], {
+      year
+    });
+  }
+  return window.kvT(rawType || fallback);
+};
+window.kvParseAllocationJson = value => {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (_) {}
+  }
+  return [];
+};
+window.kvGetFullySettledReceiptMonths = payment => window.kvParseAllocationJson(payment?.allocation_json).filter(allocation => {
+  const amount = Number(allocation?.amount);
+  const balanceAfter = allocation?.balance_after;
+  return String(allocation?.month || '').trim() && Number.isFinite(amount) && amount > 0 && balanceAfter !== null && balanceAfter !== undefined && balanceAfter !== '' && Number.isFinite(Number(balanceAfter)) && Number(balanceAfter) <= 0.005;
+}).map(allocation => String(allocation.month).trim());
+window.kvReceiptAllocationCard = ({
+  items = [],
+  receiptStatus,
+  student
+}) => {
+  const parseAmount = value => {
+    if (value === null || value === undefined || value === '') return null;
+    if (typeof value !== 'number' && typeof value !== 'string') return null;
+    const amount = Number(value);
+    return Number.isFinite(amount) ? Math.max(0, amount) : null;
+  };
+  const formatPeriod = values => {
+    const months = [...new Set((values || []).map(value => String(value || '').trim()).filter(Boolean))];
+    if (!months.length) return '';
+    const parsed = months.map(value => {
+      const key = /^\d{4}$/.test(value) ? `${value}-01` : value;
+      const match = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(key);
+      if (!match) return null;
+      const date = new Date(Number(match[1]), Number(match[2]) - 1, 1);
+      return Number.isNaN(date.getTime()) ? null : {
+        key: value,
+        date,
+        index: date.getFullYear() * 12 + date.getMonth()
+      };
+    }).filter(Boolean).sort((a, b) => a.index - b.index);
+    if (parsed.length !== months.length) return months.join(', ');
+    const labels = parsed.map(item => window.kvDate(item.date, {
+      month: 'short',
+      year: 'numeric'
+    }, item.key));
+    if (labels.length < 2) return labels[0];
+    const contiguous = parsed.every((item, index) => index === 0 || item.index - parsed[index - 1].index === 1);
+    return contiguous ? `${labels[0]} - ${labels[labels.length - 1]}` : labels.join(', ');
+  };
+  const isVoided = String(receiptStatus || '').toLowerCase() === 'voided';
+  const rows = [];
+  items.forEach((item, itemIndex) => {
+    const amount = parseAmount(item?.amount) || 0;
+    const storedAllocations = window.kvParseAllocationJson(item?.allocation_json).map(allocation => ({
+      month: String(allocation?.month || ''),
+      amount: parseAmount(allocation?.amount),
+      balance: parseAmount(allocation?.balance_after)
+    })).filter(allocation => allocation.month && allocation.amount !== null && allocation.amount > 0);
+    const isMonthly = item?.type === 'Monthly Fee';
+    const isAdvance = isMonthly && (String(item?.status || '').toLowerCase() === 'advance' || String(receiptStatus || '').toLowerCase() === 'advance');
+    if (storedAllocations.length) {
+      const allocations = storedAllocations.sort((a, b) => a.month.localeCompare(b.month));
+      if (isAdvance) {
+        const period = formatPeriod(allocations.map(allocation => allocation.month));
+        rows.push({
+          key: `${item?.id || itemIndex}-advance`,
+          label: period || window.kvPaymentItemLabel(item?.type, item?.month, item?.desc),
+          coveredPeriod: period,
+          allocations,
+          advance: true
+        });
+        return;
+      }
+      let settledGroup = [];
+      const flushSettledGroup = () => {
+        if (!settledGroup.length) return;
+        const group = settledGroup;
+        settledGroup = [];
+        rows.push({
+          key: `${item?.id || itemIndex}-${group[0].month}`,
+          label: isMonthly ? formatPeriod(group.map(allocation => allocation.month)) : window.kvPaymentItemLabel(item?.type, item?.month, item?.desc),
+          allocations: group,
+          fullySettled: group.length > 1
+        });
+      };
+      allocations.forEach(allocation => {
+        if (allocation.balance !== null && allocation.balance <= 0.005) {
+          settledGroup.push(allocation);
+          return;
+        }
+        flushSettledGroup();
+        rows.push({
+          key: `${item?.id || itemIndex}-${allocation.month}`,
+          label: isMonthly ? formatPeriod([allocation.month]) : window.kvPaymentItemLabel(item?.type, item?.month, item?.desc),
+          allocations: [allocation]
+        });
+      });
+      flushSettledGroup();
+      return;
+    }
+    const balance = parseAmount(item?.balance_after);
+    const fallbackMonths = isMonthly ? isAdvance ? window.kvExpandAdvanceMonths(item, parseAmount(student?.fee) || 0) : String(item?.month || '').split(',').map(value => value.trim()).filter(Boolean) : [];
+    const period = isMonthly ? formatPeriod(fallbackMonths) : '';
+    rows.push({
+      key: `${item?.id || itemIndex}-fallback`,
+      label: isMonthly ? period || window.kvPaymentItemLabel(item?.type, item?.month, item?.desc) : window.kvPaymentItemLabel(item?.type, item?.month, item?.desc),
+      coveredPeriod: isAdvance ? period : '',
+      allocations: [{
+        amount,
+        balance
+      }],
+      advance: isAdvance,
+      fallback: true
+    });
+  });
+  return React.createElement("div", {
+    className: "kv-receipt-info-card kv-receipt-allocation-card"
+  }, React.createElement("div", {
+    className: "kv-receipt-info-icon"
+  }, React.createElement("i", {
+    className: "ti ti-arrows-exchange",
+    "aria-hidden": "true"
+  })), React.createElement("div", {
+    className: "kv-receipt-allocation-content"
+  }, React.createElement("h4", null, window.kvT(rows.length ? 'Payment Allocation' : 'Receipt Notes')), isVoided && React.createElement("p", {
+    className: "kv-receipt-allocation-notice"
+  }, window.kvT('Voided transaction; original allocation is shown for audit only.')), rows.some(row => row.fallback) && React.createElement("p", {
+    className: "kv-receipt-allocation-notice"
+  }, window.kvT('Detailed allocation is unavailable; showing the recorded transaction amount and balance.')), rows.map(row => {
+    const amount = row.allocations.reduce((sum, allocation) => sum + (allocation.amount || 0), 0);
+    const balanceKnown = row.allocations.every(allocation => allocation.balance !== null);
+    const balance = row.allocations.reduce((sum, allocation) => sum + (allocation.balance || 0), 0);
+    const due = amount + balance;
+    const amountLine = balanceKnown ? `RM ${amount.toFixed(2)} / RM ${due.toFixed(2)}` : `${window.kvT('Allocated')}: RM ${amount.toFixed(2)}`;
+    const fullySettled = balanceKnown && balance <= 0.005;
+    const advance = row.advance;
+    return React.createElement("div", {
+      className: "kv-receipt-allocation-row",
+      key: row.key
+    }, React.createElement("div", {
+      className: "kv-receipt-allocation-label"
+    }, row.coveredPeriod && React.createElement("span", null, window.kvT('Covered Period'), ": "), React.createElement("strong", null, row.label)), React.createElement("div", {
+      className: "kv-receipt-allocation-values"
+    }, advance && row.allocations.length > 1 ? row.allocations.map(allocation => {
+      const allocationDue = allocation.balance === null ? null : allocation.amount + allocation.balance;
+      return React.createElement("span", {
+        className: "kv-receipt-allocation-month",
+        key: allocation.month
+      }, window.kvDate(new Date(`${allocation.month}-01`), {
+        month: 'short',
+        year: 'numeric'
+      }, allocation.month), ": ", allocationDue === null ? `RM ${allocation.amount.toFixed(2)}` : `RM ${allocation.amount.toFixed(2)} / RM ${allocationDue.toFixed(2)}`);
+    }) : React.createElement("strong", null, amountLine), !isVoided && fullySettled && React.createElement("small", null, window.kvT(advance ? 'Covered' : row.fullySettled ? 'Fully settled' : 'Settled')), !isVoided && balanceKnown && balance > 0.005 && row.allocations.filter(allocation => (allocation.balance || 0) > 0.005).map(allocation => {
+      const allocationDate = allocation.month ? new Date(`${allocation.month}-01`) : null;
+      const month = allocationDate && !Number.isNaN(allocationDate.getTime()) ? allocationDate.toLocaleDateString(window.kvLang === 'ms' ? 'ms-MY' : 'en-US', {
+        month: 'short',
+        year: 'numeric'
+      }) : '';
+      return React.createElement("small", {
+        key: `${row.key}-${allocation.month}`
+      }, month ? window.kvT('Month Balance', {
+        month
+      }) : window.kvT('Balance'), ": RM ", allocation.balance.toFixed(2));
+    }), isVoided && React.createElement("small", null, window.kvT('Voided'))));
+  }), React.createElement("p", {
+    className: "kv-receipt-digital-note"
+  }, window.kvT('No signature required. This is a digital receipt.'))));
+};
+window.kvExpandAdvanceMonths = (payment, monthlyFee) => {
+  const storedAllocations = window.kvParseAllocationJson(payment?.allocation_json);
+  if (storedAllocations.length) {
+    const settled = storedAllocations.filter(a => parseFloat(a.balance_after || 0) <= 0.005 && parseFloat(a.amount || 0) > 0).map(a => a.month);
+    return settled.length ? settled : [storedAllocations[0].month];
+  }
+  const explicit = String(payment?.month || '').split(',').map(v => v.trim()).filter(Boolean);
+  const status = String(payment?.status || '').toLowerCase();
+  const fee = parseFloat(monthlyFee || 0);
+  const amount = parseFloat(payment?.amount || 0);
+  if (explicit.length !== 1 || payment?.type !== 'Monthly Fee' || status !== 'advance' || fee <= 0 || amount <= fee) {
+    return explicit;
+  }
+  const start = explicit[0];
+  if (!/^\d{4}-(?:0[1-9]|1[0-2])$/.test(start)) return explicit;
+  const count = Math.round(amount / fee);
+  if (count < 2 || count > 60 || Math.abs(amount - count * fee) > 0.01) return explicit;
+  const [year, month] = start.split('-').map(Number);
+  return Array.from({
+    length: count
+  }, (_, index) => {
+    const date = new Date(year, month - 1 + index, 1);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  });
+};
+window.kvAllocateMonthlyPaidAmounts = (studentPayments, monthlyFee) => {
+  const fee = parseFloat(monthlyFee || 0);
+  const paidAmounts = {};
+  if (!Array.isArray(studentPayments) || fee <= 0) return paidAmounts;
+  const sorted = [...studentPayments].sort((a, b) => parseInt(a?.id || 0) - parseInt(b?.id || 0));
+  sorted.forEach(p => {
+    if (p.type !== 'Monthly Fee') return;
+    const status = String(p.status || '').toLowerCase();
+    if (!['paid', 'advance', 'partial'].includes(status)) return;
+    const storedAllocations = window.kvParseAllocationJson(p.allocation_json);
+    if (storedAllocations.length) {
+      storedAllocations.forEach(allocation => {
+        const m = allocation?.month;
+        const amt = parseFloat(allocation?.amount || 0);
+        if (m && amt > 0) {
+          paidAmounts[m] = parseFloat(((paidAmounts[m] || 0) + amt).toFixed(2));
+        }
+      });
+      return;
+    }
+    const months = window.kvExpandAdvanceMonths(p, fee);
+    let remaining = parseFloat(p.amount || 0);
+    months.forEach(m => {
+      if (remaining <= 0) return;
+      const already = paidAmounts[m] || 0;
+      const available = Math.max(0, fee - already);
+      const applied = Math.min(available, remaining);
+      if (applied > 0) {
+        paidAmounts[m] = parseFloat((already + applied).toFixed(2));
+        remaining = parseFloat((remaining - applied).toFixed(2));
+      }
+    });
+  });
+  return paidAmounts;
+};
+window.kvComputeStudentOutstanding = (student, payments, feeConfig, options = {}) => {
+  if (!student) return [];
+  const groupMonthly = options.groupMonthly !== false;
+  const today = new Date();
+  const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  const currentYear = String(today.getFullYear());
+  const stuPays = (payments || []).filter(p => parseInt(p.student_id) === parseInt(student.id));
+  const fee = parseFloat(student.fee || 0);
+  const paidAmounts = window.kvAllocateMonthlyPaidAmounts(stuPays, fee);
+  let startStr = student.enrol ? student.enrol.substring(0, 7) : currentMonthStr;
+  if (startStr > currentMonthStr) return [];
+  const fmt = m => window.kvDate(new Date(m + "-01"), {
+    month: "short",
+    year: "numeric"
+  }, m);
+  const items = [];
+  const annual = feeConfig?.annual || {};
+  const annualItems = [{
+    id: "annual_reg",
+    type: "Annual Registration",
+    desc: window.kvT("Registration Fee {year}", {
+      year: currentYear
+    }),
+    amount: parseFloat(annual.registration || 0),
+    include: true
+  }, {
+    id: "annual_books",
+    type: "Books / Materials",
+    desc: window.kvT("Books / Activity Materials {year}", {
+      year: currentYear
+    }),
+    amount: parseFloat((annual.books || {})[student.program_age || "5"] || 0),
+    include: true
+  }, {
+    id: "annual_uniform",
+    type: "Uniform",
+    desc: window.kvT("Uniform {year}", {
+      year: currentYear
+    }),
+    amount: parseFloat(annual.uniform || 0),
+    include: !!parseInt(student.wants_uniform ?? 1)
+  }, {
+    id: "annual_sports_uniform",
+    type: "Sports Uniform",
+    desc: window.kvT("Sports Uniform {year}", {
+      year: currentYear
+    }),
+    amount: parseFloat(annual.sports_uniform || 0),
+    include: !!parseInt(student.wants_sports_uniform ?? 1)
+  }, {
+    id: "annual_tudung",
+    type: "Tudung",
+    desc: window.kvT("Tudung {year}", {
+      year: currentYear
+    }),
+    amount: parseFloat(annual.tudung || 0),
+    include: student.gender === "F" && !!parseInt(student.wants_tudung ?? 1)
+  }, {
+    id: "annual_lawatan",
+    type: "Lawatan",
+    desc: window.kvT("Educational Visit {year}", {
+      year: currentYear
+    }),
+    amount: parseFloat(annual.lawatan || 0),
+    include: true
+  }, {
+    id: "annual_sukan",
+    type: "Sukan",
+    desc: window.kvT("Sports Day {year}", {
+      year: currentYear
+    }),
+    amount: parseFloat(annual.sukan || 0),
+    include: true
+  }, {
+    id: "annual_hadiah",
+    type: "Penyampaian Hadiah",
+    desc: window.kvT("Awards Ceremony {year}", {
+      year: currentYear
+    }),
+    amount: parseFloat(annual.hadiah || 0),
+    include: true
+  }, {
+    id: "annual_gambar",
+    type: "Pakej Gambar",
+    desc: window.kvT("Photo Package {year}", {
+      year: currentYear
+    }),
+    amount: parseFloat(annual.gambar || 0),
+    include: true
+  }, {
+    id: "annual_iqra",
+    type: "IQRA Class",
+    desc: window.kvT("IQRA Class {year}", {
+      year: currentYear
+    }),
+    amount: parseFloat(annual.iqra || 0),
+    include: !!parseInt(student.wants_iqra ?? 0)
+  }];
+  annualItems.forEach(item => {
+    const received = stuPays.filter(p => p.type === item.type && (String(p.month || "") === currentYear || !p.month && String(p.date || "").substring(0, 4) === currentYear) && ["paid", "advance", "partial"].includes(String(p.status || "").toLowerCase())).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+    const remaining = Math.max(0, parseFloat((item.amount - Math.min(item.amount, received)).toFixed(2)));
+    if (item.include && remaining > 0.005) {
+      const isPartial = received > 0.005;
+      const isOverdue = false;
+      const status = isPartial ? "Partial" : isOverdue ? "Overdue" : "Unpaid";
+      items.push({
+        id: item.id,
+        target_payment_id: undefined,
+        student_id: student.id,
+        student_name: student.name,
+        student_class: student.class,
+        student: student,
+        type: item.type,
+        desc: item.desc,
+        month: currentYear,
+        originalDue: item.amount,
+        paidAmount: received,
+        amount: remaining,
+        status: status,
+        isOverdue: isOverdue
+      });
+    }
+  });
+  const annualTypes = annualItems.map(a => a.type);
+  stuPays.forEach(p => {
+    if (p.type !== "Monthly Fee" && !annualTypes.includes(p.type) && (p.status === "Unpaid" || p.status === "Overdue")) {
+      const amt = parseFloat(p.amount || 0);
+      if (amt > 0.005) {
+        items.push({
+          id: `due_rec_${p.id}`,
+          target_payment_id: p.id,
+          student_id: student.id,
+          student_name: student.name,
+          student_class: student.class,
+          student: student,
+          type: p.type,
+          desc: window.kvPaymentItemLabel(p.type, p.month),
+          month: p.month || "",
+          originalDue: amt,
+          paidAmount: 0,
+          amount: amt,
+          status: p.status,
+          isOverdue: p.status === "Overdue"
+        });
+      }
+    }
+  });
+  let [sy, sm] = startStr.split("-").map(Number);
+  let [cy, cm] = currentMonthStr.split("-").map(Number);
+  const missingMonths = [];
+  while (sy < cy || sy === cy && sm <= cm) {
+    const mStr = `${sy}-${String(sm).padStart(2, '0')}`;
+    const paid = paidAmounts[mStr] || 0;
+    const due = Math.max(0, fee - paid);
+    if (due > 0.005) {
+      const isOverdue = mStr < currentMonthStr;
+      const isPartial = paid > 0.005;
+      const status = isPartial ? "Partial" : isOverdue ? "Overdue" : "Unpaid";
+      missingMonths.push({
+        month: mStr,
+        due: parseFloat(due.toFixed(2)),
+        paid: parseFloat(paid.toFixed(2)),
+        originalDue: fee,
+        isOverdue,
+        isPartial,
+        status
+      });
+    }
+    sm++;
+    if (sm > 12) {
+      sm = 1;
+      sy++;
+    }
+  }
+  if (missingMonths.length > 0) {
+    if (groupMonthly) {
+      const overdueMs = missingMonths.filter(m => m.isOverdue);
+      const currentM = missingMonths.filter(m => !m.isOverdue);
+      if (overdueMs.length > 0) {
+        const hasPartial = overdueMs.some(item => item.isPartial);
+        const overdueTotal = overdueMs.reduce((sum, item) => sum + item.due, 0);
+        const overdueOriginal = overdueMs.reduce((sum, item) => sum + item.originalDue, 0);
+        const overduePaid = overdueMs.reduce((sum, item) => sum + item.paid, 0);
+        items.push({
+          id: "overdue",
+          student_id: student.id,
+          student_name: student.name,
+          student_class: student.class,
+          student: student,
+          type: "Monthly Fee",
+          desc: window.kvT(hasPartial ? "Overdue Monthly Fee ({count} month(s): {months}) (Partial)" : "Overdue Monthly Fee ({count} month(s): {months})", {
+            count: overdueMs.length,
+            months: overdueMs.map(item => fmt(item.month)).join(", ")
+          }),
+          month: overdueMs.map(item => item.month).join(","),
+          originalDue: parseFloat(overdueOriginal.toFixed(2)),
+          paidAmount: parseFloat(overduePaid.toFixed(2)),
+          amount: parseFloat(overdueTotal.toFixed(2)),
+          months: overdueMs.map(item => item.month),
+          isOverdue: true,
+          status: hasPartial ? "Partial" : "Overdue"
+        });
+      }
+      if (currentM.length > 0) {
+        const cur = currentM[0];
+        items.push({
+          id: "current",
+          student_id: student.id,
+          student_name: student.name,
+          student_class: student.class,
+          student: student,
+          type: "Monthly Fee",
+          desc: window.kvT(cur.isPartial ? "Monthly Fee - {month} (Partial)" : "Monthly Fee - {month}", {
+            month: fmt(cur.month)
+          }),
+          month: cur.month,
+          originalDue: cur.originalDue,
+          paidAmount: cur.paid,
+          amount: cur.due,
+          months: [cur.month],
+          isOverdue: false,
+          status: cur.status
+        });
+      }
+    } else {
+      missingMonths.forEach(m => {
+        items.push({
+          id: `due_${student.id}_${m.month}`,
+          student_id: student.id,
+          student_name: student.name,
+          student_class: student.class,
+          student: student,
+          type: "Monthly Fee",
+          desc: window.kvT(m.isPartial ? "Monthly Fee - {month} (Partial)" : "Monthly Fee - {month}", {
+            month: fmt(m.month)
+          }),
+          month: m.month,
+          originalDue: m.originalDue,
+          paidAmount: m.paid,
+          amount: m.due,
+          isOverdue: m.isOverdue,
+          status: m.status
+        });
+      });
+    }
+  }
+  return items;
+};
+const C = {
+  blue: "#6B3FA0",
+  blueD: "#4e2d78",
+  blueBg: "#E8DCF5",
+  blueTx: "#3d1a70",
+  amber: "#E5A813",
+  amberD: "#b88400",
+  amberBg: "#FBF0D0",
+  amberTx: "#6b4e05",
+  green: "#28a745",
+  greenBg: "#EAF3DE",
+  greenTx: "#27500A",
+  red: "#dc3545",
+  redBg: "#FCEBEB",
+  redTx: "#791F1F",
+  gray: "#888780",
+  grayBg: "#F1EFE8",
+  grayTx: "#444441",
+  purple: "#6B3FA0",
+  purpleBg: "#E8DCF5",
+  purpleTx: "#3d1a70",
+  teal: "#1D9E75",
+  tealBg: "#E1F5EE",
+  tealTx: "#085041",
+  sidebar: "#2a1250",
+  sidebarH: "#361865"
+};
+const apiHeaders = () => ({
+  'Content-Type': 'application/json',
+  'X-CSRF-Token': window.KV_CSRF_TOKEN || ''
+});
+const parseApiResponse = async response => {
+  let data;
+  try {
+    data = await response.json();
+  } catch (error) {
+    data = response.ok ? {} : {
+      error: `Request failed (${response.status})`
+    };
+  }
+  if (response.status === 401) {
+    window.dispatchEvent(new CustomEvent('kv:session-unauthorized', {
+      detail: data
+    }));
+  } else if (response.ok) {
+    window.dispatchEvent(new CustomEvent('kv:session-confirmed'));
+  }
+  if (data && typeof data.error === 'string') data.error = window.kvT(data.error);
+  return data;
+};
+const api = {
+  get: url => fetch(url).then(parseApiResponse),
+  post: (url, body) => fetch(url, {
+    method: 'POST',
+    headers: apiHeaders(),
+    body: JSON.stringify(body)
+  }).then(parseApiResponse),
+  put: (url, body) => fetch(url, {
+    method: 'PUT',
+    headers: apiHeaders(),
+    body: JSON.stringify(body)
+  }).then(parseApiResponse),
+  delete: url => fetch(url, {
+    method: 'DELETE',
+    headers: apiHeaders()
+  }).then(parseApiResponse)
+};
+const canUsePermission = (permissions, permission, isAdministrator = false) => isAdministrator || (permissions || []).includes(permission);
+const statusBadge = s => {
+  const raw = String(s || "").trim();
+  const lower = raw.toLowerCase();
+  let canonical = raw;
+  if (lower === "partial") canonical = "Partial";else if (lower === "paid") canonical = "Paid";else if (lower === "unpaid") canonical = "Unpaid";else if (lower === "overdue") canonical = "Overdue";else if (lower === "advance") canonical = "Advance";else if (lower === "voided") canonical = "Voided";else if (lower === "active") canonical = "Active";else if (lower === "inactive") canonical = "Inactive";else if (lower === "graduated") canonical = "Graduated";
+  const map = {
+    Paid: "green",
+    Partial: "amber",
+    Unpaid: "amber",
+    Overdue: "red",
+    Advance: "teal",
+    Voided: "gray",
+    Active: "green",
+    Inactive: "amber",
+    Graduated: "gray",
+    Excellent: "teal",
+    Good: "blue",
+    Satisfactory: "amber",
+    "Needs Improvement": "red"
+  };
+  const col = map[canonical] || "gray";
+  const label = canonical || "Unknown";
+  return React.createElement("span", {
+    className: `kv-badge kv-badge--${col}`
+  }, window.kvT(label));
+};
+const scoreBadge = n => {
+  const labels = {
+    1: "Needs Support",
+    2: "Developing",
+    3: "Proficient",
+    4: "Advanced",
+    5: "Excellent"
+  };
+  const bgMap = {
+    1: C.redBg,
+    2: C.amberBg,
+    3: C.blueBg,
+    4: C.purpleBg,
+    5: C.tealBg
+  };
+  const txMap = {
+    1: C.redTx,
+    2: C.amberTx,
+    3: C.blueTx,
+    4: C.purpleTx,
+    5: C.tealTx
+  };
+  return React.createElement("span", {
+    style: {
+      background: bgMap[n],
+      color: txMap[n],
+      fontSize: 11,
+      padding: "2px 8px",
+      borderRadius: 12,
+      fontWeight: 500
+    }
+  }, n, " \u2013 ", window.kvT(labels[n]));
+};
+const Card = ({
+  children,
+  style = {},
+  className = ""
+}) => React.createElement("div", {
+  className: `kv-card ${className}`.trim(),
+  style: style
+}, children);
+const CardHead = ({
+  children,
+  style = {},
+  className = ""
+}) => React.createElement("div", {
+  className: `kv-card-head ${className}`.trim(),
+  style: style
+}, children);
+const Btn = ({
+  children,
+  onClick,
+  variant = "primary",
+  small,
+  style = {},
+  className = "",
+  ...props
+}) => {
+  return React.createElement("button", _extends({
+    onClick: onClick,
+    className: `kv-btn kv-btn--${variant}${small ? " kv-btn--small" : ""} ${className}`.trim(),
+    style: style
+  }, props), children);
+};
+const renderFieldLabel = label => {
+  if (!label) return null;
+  if (typeof label !== "string" || !label.includes("*")) return label;
+  const parts = label.split("*");
+  return React.createElement(React.Fragment, null, parts[0].trimEnd(), " ", React.createElement("span", {
+    style: {
+      color: C.red,
+      fontWeight: 700
+    }
+  }, "*"), parts.slice(1).join("*") ? ` ${parts.slice(1).join("*").trimStart()}` : "");
+};
+const Input = ({
+  label,
+  className = "",
+  style = {},
+  ...props
+}) => React.createElement("div", {
+  className: "kv-field"
+}, label && React.createElement("div", {
+  className: "kv-field-label"
+}, renderFieldLabel(label)), React.createElement("input", _extends({
+  className: `kv-form-control ${className}`.trim(),
+  style: style
+}, props)));
+const Select = ({
+  label,
+  options,
+  value,
+  onChange,
+  className = "",
+  style = {},
+  ...props
+}) => React.createElement("div", {
+  className: "kv-field"
+}, label && React.createElement("div", {
+  className: "kv-field-label"
+}, renderFieldLabel(label)), React.createElement("select", _extends({
+  value: value,
+  onChange: onChange,
+  className: `kv-form-control ${className}`.trim(),
+  style: style
+}, props), options.map(o => {
+  const optionValue = o && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, "value") ? o.value : o;
+  const optionLabel = o && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, "label") ? o.label : o;
+  return React.createElement("option", {
+    key: String(optionValue),
+    value: optionValue
+  }, optionLabel);
+})));
+const EmptyState = ({
+  icon,
+  text,
+  action
+}) => React.createElement("div", {
+  className: "kv-empty-state"
+}, React.createElement("i", {
+  className: `ti ti-${icon}`,
+  "aria-hidden": "true"
+}), React.createElement("div", null, text), action);
+const Spinner = () => React.createElement("div", {
+  className: "kv-spinner"
+}, React.createElement("i", {
+  className: "ti ti-loader",
+  "aria-hidden": "true"
+}), React.createElement("style", null, `@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`), React.createElement("div", {
+  style: {
+    fontSize: 12
+  }
+}, window.kvT('Loading...')));
+const navItems = [{
+  page: "dashboard",
+  icon: "layout-dashboard",
+  label: "Dashboard",
+  permission: "dashboard.view"
+}, {
+  page: "students",
+  icon: "users",
+  label: "Students",
+  permission: "students.view"
+}, {
+  page: "classes",
+  icon: "chalkboard",
+  label: "Classes",
+  permission: "classes.view"
+}, {
+  page: "payments",
+  icon: "credit-card",
+  label: "Payments",
+  permission: "payments.view"
+}, {
+  page: "receipts",
+  icon: "receipt",
+  label: "Receipts",
+  permission: "receipts.view"
+}, {
+  page: "development",
+  icon: "chart-line",
+  label: "Development",
+  permission: "development.view"
+}, {
+  page: "settings",
+  icon: "settings",
+  label: "Settings",
+  permission: "settings.access"
+}];
+const Sidebar = ({
+  page,
+  setPage,
+  mobileOpen,
+  onClose,
+  permissions = [],
+  isAdministrator = false
+}) => {
+  const visibleItems = navItems.filter(item => canUsePermission(permissions, item.permission, isAdministrator));
+  const workspaceItems = visibleItems.filter(item => item.page !== "settings");
+  const systemItems = visibleItems.filter(item => item.page === "settings");
+  return React.createElement("aside", {
+    className: `kv-sidebar${mobileOpen ? " is-open" : ""}`,
+    "aria-label": window.kvT("Primary navigation")
+  }, React.createElement("div", {
+    className: "kv-sidebar-brand"
+  }, React.createElement("button", {
+    type: "button",
+    className: "kv-sidebar-brand-link",
+    onClick: () => {
+      setPage("dashboard");
+      onClose && onClose();
+    },
+    "aria-label": window.kvT("Go to main dashboard"),
+    title: window.kvT("Go to Dashboard")
+  }, React.createElement("div", {
+    className: "kv-brand-name"
+  }, "Kinder", React.createElement("span", {
+    className: "brand-vault"
+  }, "Vault")), React.createElement("div", {
+    className: "kv-brand-school"
+  }, SCHOOL)), React.createElement("button", {
+    type: "button",
+    className: "kv-sidebar-close",
+    onClick: onClose,
+    "aria-label": window.kvT("Close navigation")
+  }, React.createElement("i", {
+    className: "ti ti-x",
+    "aria-hidden": "true"
+  }))), React.createElement("nav", {
+    className: "kv-sidebar-nav"
+  }, React.createElement("div", {
+    className: "kv-nav-group"
+  }, React.createElement("div", {
+    className: "kv-nav-group-label"
+  }, window.kvT("Workspace")), workspaceItems.map(n => React.createElement("button", {
+    key: n.page,
+    onClick: () => {
+      setPage(n.page);
+      onClose && onClose();
+    },
+    className: `nav-btn${page === n.page ? ' active' : ''}`,
+    "aria-current": page === n.page ? "page" : undefined
+  }, React.createElement("i", {
+    className: `ti ti-${n.icon}`,
+    "aria-hidden": "true"
+  }), React.createElement("span", null, window.kvT(n.label))))), systemItems.length > 0 && React.createElement("div", {
+    className: "kv-nav-group"
+  }, React.createElement("div", {
+    className: "kv-nav-group-label"
+  }, window.kvT("System")), systemItems.map(n => React.createElement("button", {
+    key: n.page,
+    onClick: () => {
+      setPage(n.page);
+      onClose && onClose();
+    },
+    className: `nav-btn${page === n.page ? ' active' : ''}`,
+    "aria-current": page === n.page ? "page" : undefined
+  }, React.createElement("i", {
+    className: `ti ti-${n.icon}`,
+    "aria-hidden": "true"
+  }), React.createElement("span", null, window.kvT(n.label)))))), React.createElement("div", {
+    className: "kv-sidebar-footer"
+  }, React.createElement("a", {
+    href: "logout.php"
+  }, React.createElement("i", {
+    className: "ti ti-logout",
+    "aria-hidden": "true"
+  }), " ", window.kvT('Logout'))));
+};
+const Topbar = ({
+  title,
+  onSearch,
+  searchQuery,
+  userName,
+  lang,
+  onLanguageChange,
+  onMenuClick,
+  canSearch = true
+}) => {
+  const [theme, setTheme] = React.useState(localStorage.getItem('theme') || 'light');
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+  const initial = (userName || 'A').charAt(0).toUpperCase();
+  return React.createElement("div", {
+    className: "topbar"
+  }, React.createElement("button", {
+    type: "button",
+    className: "kv-menu-toggle kv-icon-btn",
+    onClick: onMenuClick,
+    "aria-label": window.kvT("Open navigation")
+  }, React.createElement("i", {
+    className: "ti ti-menu-2",
+    "aria-hidden": "true"
+  })), React.createElement("div", {
+    className: "kv-topbar-title"
+  }, title), canSearch && React.createElement("div", {
+    className: "kv-topbar-search"
+  }, React.createElement("i", {
+    className: "ti ti-search",
+    "aria-hidden": "true"
+  }), React.createElement("input", {
+    value: searchQuery || "",
+    placeholder: window.kvT('Search everything...'),
+    onChange: e => onSearch && onSearch(e.target.value),
+    style: {
+      padding: "6px 10px 6px 28px",
+      fontSize: 12,
+      border: "0.5px solid var(--color-border-secondary)",
+      borderRadius: 8,
+      background: "var(--color-background-secondary)",
+      color: "var(--color-text-primary)",
+      width: 220
+    }
+  })), React.createElement("div", {
+    className: "kv-topbar-actions"
+  }, React.createElement("button", {
+    type: "button",
+    onClick: () => setTheme(theme === 'light' ? 'dark' : 'light'),
+    className: "kv-icon-btn",
+    title: window.kvT('Toggle Theme')
+  }, React.createElement("i", {
+    className: theme === 'light' ? 'ti ti-moon' : 'ti ti-sun'
+  })), React.createElement("select", {
+    value: lang,
+    onChange: e => onLanguageChange(e.target.value),
+    className: "kv-language-select",
+    "aria-label": window.kvT('Display language')
+  }, React.createElement("option", {
+    value: "en"
+  }, "EN"), React.createElement("option", {
+    value: "ms"
+  }, "BM")), React.createElement("div", {
+    className: "kv-user-chip"
+  }, React.createElement("div", null, initial), React.createElement("span", null, userName || window.kvT('Administrator')))));
+};
+const Flash = ({
+  msg,
+  type,
+  onClose
+}) => msg ? React.createElement("div", {
+  className: `kv-flash kv-flash--${type === "success" ? "success" : "danger"}`,
+  role: "status"
+}, React.createElement("i", {
+  className: `ti ti-${type === "success" ? "circle-check" : "alert-triangle"}`,
+  "aria-hidden": "true"
+}), React.createElement("span", {
+  style: {
+    flex: 1
+  }
+}, msg), React.createElement("button", {
+  type: "button",
+  onClick: onClose,
+  className: "kv-flash-close",
+  "aria-label": window.kvT("Dismiss message")
+}, React.createElement("i", {
+  className: "ti ti-x",
+  "aria-hidden": "true"
+}))) : null;
+class PageErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      hasError: false,
+      errorMessage: ""
+    };
+  }
+  static getDerivedStateFromError(error) {
+    return {
+      hasError: true,
+      errorMessage: error && error.message ? error.message : "Unknown error"
+    };
+  }
+  componentDidCatch(error) {
+    console.error("PageErrorBoundary caught:", error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return React.createElement("div", {
+        className: "kv-page kv-page--error"
+      }, React.createElement(Card, null, React.createElement("div", {
+        style: {
+          padding: 20
+        }
+      }, React.createElement("div", {
+        style: {
+          fontSize: 16,
+          fontWeight: 600,
+          color: C.redTx,
+          marginBottom: 8
+        }
+      }, window.kvT("This page hit an error.")), React.createElement("div", {
+        style: {
+          fontSize: 13,
+          color: "var(--color-text-secondary)",
+          marginBottom: 10
+        }
+      }, this.state.errorMessage), React.createElement(Btn, {
+        variant: "outline",
+        onClick: () => this.setState({
+          hasError: false,
+          errorMessage: ""
+        })
+      }, window.kvT("Try Again")))));
+    }
+    return this.props.children;
+  }
+}

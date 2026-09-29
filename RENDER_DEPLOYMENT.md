@@ -14,6 +14,23 @@ when following the TiDB path.
 
 ## 1. Validate locally first
 
+### Build the production JavaScript
+
+The editable React/JSX sources are in `pages/*.jsx`; the application root
+component is in `pages/app.jsx`. Before testing or deploying frontend changes,
+run:
+
+```powershell
+npm install
+npm run build:js
+```
+
+This writes browser-ready scripts to `assets/js/dist/`. Commit both the JSX
+sources and generated scripts. The PHP page serves those compiled files
+directly, so Node/npm are build-time tools only; Render continues to run PHP
+and Apache without a Node process. No Babel Standalone runtime compilation is
+used in the production page.
+
 Install and start Docker Desktop. From this folder, create temporary test
 values in your shell (never in a committed file):
 

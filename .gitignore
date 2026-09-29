@@ -5,6 +5,8 @@
 .kindervault-mfa.key
 
 # Runtime and local infrastructure
+node_modules/
+assets/js/dev/
 backup/*.sql
 testing/
 testing/sess_*
