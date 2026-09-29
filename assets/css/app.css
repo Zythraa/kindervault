@@ -7578,7 +7578,7 @@ button[disabled] {
     page-break-inside: auto;
   }
 
-  /* Compact layout for receipts with multiple payments or extensive allocations */
+  /* Compact middle-content layout for receipts with multiple payments or extensive allocations */
   .receipt--compact-print.kv-receipt-print-area,
   .receipt--compact-print .kv-receipt-sheet,
   .kv-receipt-sheet.receipt--compact-print,
@@ -7594,34 +7594,35 @@ button[disabled] {
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-layout {
     height: auto !important;
     min-height: 0 !important;
-    padding-top: 5mm !important;
-    padding-bottom: 2mm !important;
-    padding-left: 10mm !important;
-    padding-right: 10mm !important;
+    padding-top: 8mm !important;
+    padding-bottom: 3mm !important;
+    padding-left: 14mm !important;
+    padding-right: 14mm !important;
   }
 
+  /* Header remains normal size; comfortable spacing */
   .receipt--compact-print .kv-receipt-header,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-header,
   .kv-receipt-sheet--compact .kv-receipt-header,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-header {
-    margin-bottom: 8px !important;
-    gap: 16px !important;
+    margin-bottom: 14px !important;
+    gap: 32px !important;
   }
 
   .receipt--compact-print .kv-receipt-document-label,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-document-label,
   .kv-receipt-sheet--compact .kv-receipt-document-label,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-document-label {
-    margin-bottom: 4px !important;
-    padding: 3px 8px !important;
-    font-size: 8.5px !important;
+    margin-bottom: 10px !important;
+    padding: 5px 10px !important;
+    font-size: 10px !important;
   }
 
   .receipt--compact-print .kv-receipt-school-name,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-school-name,
   .kv-receipt-sheet--compact .kv-receipt-school-name,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-school-name {
-    font-size: 16px !important;
+    font-size: 19px !important;
     line-height: 1.15 !important;
   }
 
@@ -7629,111 +7630,113 @@ button[disabled] {
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-school-address,
   .kv-receipt-sheet--compact .kv-receipt-school-address,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-school-address {
-    margin-top: 4px !important;
-    font-size: 9.5px !important;
-    line-height: 1.35 !important;
+    margin-top: 10px !important;
+    font-size: 10.5px !important;
+    line-height: 1.5 !important;
   }
 
   .receipt--compact-print .kv-receipt-meta-card,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-meta-card,
   .kv-receipt-sheet--compact .kv-receipt-meta-card,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-meta-card {
-    padding: 8px 12px !important;
-    border-radius: 10px !important;
+    padding: 14px 16px !important;
+    border-radius: 14px !important;
   }
 
   .receipt--compact-print .kv-receipt-meta-title,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-meta-title,
   .kv-receipt-sheet--compact .kv-receipt-meta-title,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-meta-title {
-    margin-bottom: 4px !important;
-    font-size: 8.5px !important;
+    margin-bottom: 8px !important;
+    font-size: 9.5px !important;
   }
 
   .receipt--compact-print .kv-receipt-meta-grid,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-meta-grid,
   .kv-receipt-sheet--compact .kv-receipt-meta-grid,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-meta-grid {
-    gap: 3px 10px !important;
-    font-size: 9px !important;
+    gap: 5px 12px !important;
+    font-size: 10px !important;
   }
 
+  /* Student card remains clear, readable, and properly proportioned */
   .receipt--compact-print .kv-receipt-student-card,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-student-card,
   .kv-receipt-sheet--compact .kv-receipt-student-card,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-student-card {
-    margin-bottom: 8px !important;
-    padding: 8px 14px !important;
-    border-radius: 10px !important;
+    margin-bottom: 12px !important;
+    padding: 11px 18px !important;
+    border-radius: 12px !important;
   }
 
   .receipt--compact-print .kv-receipt-student-grid,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-student-grid,
   .kv-receipt-sheet--compact .kv-receipt-student-grid,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-student-grid {
-    gap: 5px 18px !important;
+    gap: 8px 24px !important;
   }
 
   .receipt--compact-print .kv-receipt-field-label,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-field-label,
   .kv-receipt-sheet--compact .kv-receipt-field-label,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-field-label {
-    margin-bottom: 2px !important;
-    font-size: 8px !important;
+    margin-bottom: 3px !important;
+    font-size: 8.5px !important;
   }
 
   .receipt--compact-print .kv-receipt-field-value,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-field-value,
   .kv-receipt-sheet--compact .kv-receipt-field-value,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-field-value {
-    font-size: 11px !important;
-    line-height: 1.25 !important;
+    font-size: 11.5px !important;
+    line-height: 1.35 !important;
   }
 
   .receipt--compact-print .kv-receipt-period-banner,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-period-banner,
   .kv-receipt-sheet--compact .kv-receipt-period-banner,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-period-banner {
-    margin: 4px 0 6px !important;
-    padding: 5px 12px !important;
+    margin: 5px 0 7px !important;
+    padding: 6px 14px !important;
     border-radius: 8px !important;
   }
 
+  /* Payment Summary table compaction */
   .receipt--compact-print .kv-receipt-payment-section,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-payment-section,
   .kv-receipt-sheet--compact .kv-receipt-payment-section,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-payment-section {
-    margin-bottom: 8px !important;
+    margin-bottom: 10px !important;
   }
 
   .receipt--compact-print .kv-receipt-section-heading,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-section-heading,
   .kv-receipt-sheet--compact .kv-receipt-section-heading,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-section-heading {
-    margin-bottom: 4px !important;
+    margin-bottom: 6px !important;
   }
 
   .receipt--compact-print .kv-receipt-section-heading span,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-section-heading span,
   .kv-receipt-sheet--compact .kv-receipt-section-heading span,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-section-heading span {
-    font-size: 13px !important;
+    font-size: 14px !important;
   }
 
   .receipt--compact-print .kv-receipt-items-table th,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-items-table th,
   .kv-receipt-sheet--compact .kv-receipt-items-table th,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-items-table th {
-    padding: 4px 8px !important;
-    font-size: 8.5px !important;
+    padding: 5px 12px !important;
+    font-size: 9px !important;
   }
 
   .receipt--compact-print .kv-receipt-items-table tbody td,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-items-table tbody td,
   .kv-receipt-sheet--compact .kv-receipt-items-table tbody td,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-items-table tbody td {
-    padding: 4px 8px !important;
-    font-size: 10px !important;
+    padding: 5px 12px !important;
+    font-size: 10.5px !important;
     line-height: 1.25 !important;
   }
 
@@ -7741,22 +7744,23 @@ button[disabled] {
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-items-table tfoot td,
   .kv-receipt-sheet--compact .kv-receipt-items-table tfoot td,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-items-table tfoot td {
-    padding: 5px 8px !important;
-    font-size: 10px !important;
+    padding: 7px 12px !important;
+    font-size: 11px !important;
   }
 
   .receipt--compact-print .kv-receipt-items-table tfoot td:last-child,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-items-table tfoot td:last-child,
   .kv-receipt-sheet--compact .kv-receipt-items-table tfoot td:last-child,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-items-table tfoot td:last-child {
-    font-size: 13px !important;
+    font-size: 14px !important;
   }
 
+  /* Payment Allocation card & lower grid compaction */
   .receipt--compact-print .kv-receipt-lower-grid,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-lower-grid,
   .kv-receipt-sheet--compact .kv-receipt-lower-grid,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-lower-grid {
-    gap: 8px !important;
+    gap: 12px !important;
   }
 
   .receipt--compact-print .kv-receipt-info-card,
@@ -7764,50 +7768,50 @@ button[disabled] {
   .kv-receipt-sheet--compact .kv-receipt-info-card,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-info-card {
     min-height: 0 !important;
-    padding: 7px 10px !important;
-    border-radius: 9px !important;
-    gap: 8px !important;
+    padding: 9px 14px !important;
+    border-radius: 11px !important;
+    gap: 10px !important;
   }
 
   .receipt--compact-print .kv-receipt-info-icon,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-info-icon,
   .kv-receipt-sheet--compact .kv-receipt-info-icon,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-info-icon {
-    width: 22px !important;
-    height: 22px !important;
-    font-size: 11px !important;
-    border-radius: 6px !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
   }
 
   .receipt--compact-print .kv-receipt-info-card h4,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-info-card h4,
   .kv-receipt-sheet--compact .kv-receipt-info-card h4,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-info-card h4 {
-    margin: 0 0 3px !important;
-    font-size: 9.5px !important;
+    margin: 0 0 4px !important;
+    font-size: 10px !important;
   }
 
   .receipt--compact-print .kv-receipt-info-card dl,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-info-card dl,
   .kv-receipt-sheet--compact .kv-receipt-info-card dl,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-info-card dl {
-    gap: 2px !important;
+    gap: 3px !important;
   }
 
   .receipt--compact-print .kv-receipt-info-card dl > div,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-info-card dl > div,
   .kv-receipt-sheet--compact .kv-receipt-info-card dl > div,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-info-card dl > div {
-    font-size: 8.5px !important;
+    font-size: 9px !important;
   }
 
   .receipt--compact-print .kv-receipt-allocation-row,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-allocation-row,
   .kv-receipt-sheet--compact .kv-receipt-allocation-row,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-allocation-row {
-    padding: 2.5px 0 !important;
-    font-size: 8.5px !important;
-    gap: 2px 8px !important;
+    padding: 3px 0 !important;
+    font-size: 9px !important;
+    gap: 2px 10px !important;
   }
 
   .receipt--compact-print .kv-receipt-allocation-values,
@@ -7821,26 +7825,27 @@ button[disabled] {
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-allocation-values small,
   .kv-receipt-sheet--compact .kv-receipt-allocation-values small,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-allocation-values small {
-    font-size: 7.5px !important;
+    font-size: 8px !important;
   }
 
   .receipt--compact-print .kv-receipt-digital-note,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-digital-note,
   .kv-receipt-sheet--compact .kv-receipt-digital-note,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-digital-note {
-    margin-top: 3px !important;
-    padding-top: 3px !important;
-    font-size: 7.5px !important;
+    margin-top: 4px !important;
+    padding-top: 4px !important;
+    font-size: 8px !important;
   }
 
+  /* Status banner remains clearly readable and well-proportioned */
   .receipt--compact-print .kv-receipt-confirmation,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-confirmation,
   .kv-receipt-sheet--compact .kv-receipt-confirmation,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-confirmation {
-    margin-top: 6px !important;
-    padding: 6px 12px !important;
-    border-radius: 9px !important;
-    gap: 8px !important;
+    margin-top: 10px !important;
+    padding: 10px 18px !important;
+    border-radius: 12px !important;
+    gap: 12px !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
@@ -7849,41 +7854,42 @@ button[disabled] {
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-confirmation-mark,
   .kv-receipt-sheet--compact .kv-receipt-confirmation-mark,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-confirmation-mark {
-    width: 26px !important;
-    height: 26px !important;
-    font-size: 14px !important;
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 18px !important;
   }
 
   .receipt--compact-print .kv-receipt-confirmation span,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-confirmation span,
   .kv-receipt-sheet--compact .kv-receipt-confirmation span,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-confirmation span {
-    font-size: 10.5px !important;
-    margin-bottom: 1px !important;
+    font-size: 11px !important;
+    margin-bottom: 2px !important;
   }
 
   .receipt--compact-print .kv-receipt-confirmation p,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-confirmation p,
   .kv-receipt-sheet--compact .kv-receipt-confirmation p,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-confirmation p {
-    font-size: 8px !important;
-    line-height: 1.2 !important;
+    font-size: 8.5px !important;
+    line-height: 1.3 !important;
   }
 
   .receipt--compact-print .kv-receipt-confirmation > strong,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-confirmation > strong,
   .kv-receipt-sheet--compact .kv-receipt-confirmation > strong,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-confirmation > strong {
-    font-size: 13.5px !important;
+    font-size: 16px !important;
   }
 
+  /* Footer keeps normal size and readability */
   .receipt--compact-print .kv-receipt-footer,
   .kv-receipt-sheet.receipt--compact-print .kv-receipt-footer,
   .kv-receipt-sheet--compact .kv-receipt-footer,
   .kv-receipt-sheet:has(.kv-receipt-items-table tbody tr:nth-child(2)) .kv-receipt-footer {
-    margin-top: 6px !important;
-    padding-top: 4px !important;
-    font-size: 8px !important;
+    margin-top: 10px !important;
+    padding-top: 8px !important;
+    font-size: 9px !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
