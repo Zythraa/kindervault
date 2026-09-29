@@ -480,6 +480,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
         ? window.kvDate(profileReceipt.date, {day:"numeric", month:"short", year:"numeric"}, profileReceipt.date)
         : window.kvDate(new Date(), {day:"numeric", month:"short", year:"numeric"});
       const receiptType = receiptItems.length > 1 ? window.kvT("Multiple Payments") : window.kvT(receiptItems[0]?.type || "Payment");
+      const isCompactReceipt = receiptItems.length > 1 || receiptItems.some(item => window.kvParseAllocationJson(item?.allocation_json).length > 2);
       return (
         <div className="kv-page kv-page--receipt-preview kv-page--student-receipt">
           <div className="kv-page-header kv-receipt-actions no-print" style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
@@ -499,8 +500,8 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
             <Btn small variant="outline" onClick={()=>goBack({page:"students", state:profileState()})}><i className="ti ti-check" aria-hidden="true"/> {window.kvT("Done")}</Btn>
           </div>
           {paymentRefreshNotice}
-          <div className="print-area kv-receipt-print-area">
-            <Card className="kv-receipt-sheet">
+          <div className={`print-area kv-receipt-print-area ${isCompactReceipt ? "receipt--compact-print kv-receipt-print-area--compact" : ""}`}>
+            <Card className={`kv-receipt-sheet ${isCompactReceipt ? "receipt--compact-print kv-receipt-sheet--compact" : ""}`}>
               <div className="kv-receipt-top-accent" aria-hidden="true"/>
               <div className="kv-receipt-layout">
                 <header className="kv-receipt-header">

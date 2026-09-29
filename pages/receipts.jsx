@@ -295,6 +295,8 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
         ? 'Partial'
         : (receiptItems.some(item => String(item.status || '').toLowerCase() === 'advance') ? 'Advance' : 'Paid'));
 
+    const isCompactReceipt = receiptItems.length > 1 || receiptItems.some(item => parseAllocationJson(item?.allocation_json).length > 2);
+
     return (
       <div className="kv-page kv-page--receipt-preview">
         <div className="kv-page-header kv-receipt-actions no-print" style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
@@ -307,8 +309,8 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
             <i className="ti ti-printer" aria-hidden="true"/> {window.kvT('Print / PDF')}
           </Btn>}
         </div>
-        <div className="print-area kv-receipt-print-area">
-          <Card className="kv-receipt-sheet">
+        <div className={`print-area kv-receipt-print-area ${isCompactReceipt ? "receipt--compact-print kv-receipt-print-area--compact" : ""}`}>
+          <Card className={`kv-receipt-sheet ${isCompactReceipt ? "receipt--compact-print kv-receipt-sheet--compact" : ""}`}>
             <div className="kv-receipt-top-accent" aria-hidden="true"/>
             <div className="kv-receipt-layout">
               <header className="kv-receipt-header">
