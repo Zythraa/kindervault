@@ -83,7 +83,7 @@ switch ($method) {
                 : '';
             if ($receipt !== '') {
                 $placeholders = implode(',', array_fill(0, count($insertedIds), '?'));
-                $setReceipt = $pdo->prepare("UPDATE paymentsSET receipt = ? WHERE id IN ($placeholders)");
+                $setReceipt = $pdo->prepare("UPDATE payments SET receipt = ? WHERE id IN ($placeholders)");
                 $setReceipt->execute(array_merge([$receipt], $insertedIds));
                 foreach ($inserted as &$payment) $payment['receipt'] = $receipt;
                 unset($payment);
@@ -115,7 +115,13 @@ switch ($method) {
             jsonResponse(['error' => $e->getMessage() === 'Student not found.' ? $e->getMessage() : 'Unable to record the payment.'], $e->getMessage() === 'Student not found.' ? 404 : 500);
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
-            error_log('KinderVault payment creation failed.');
+            error_log(sprintf(
+                'KinderVault payment creation failed: student_id=%d, type=%s, error=%s, sqlstate=%s',
+                $studentId,
+                $item['type'] ?? ($d['type'] ?? 'unknown'),
+                $e->getMessage(),
+                $e instanceof PDOException ? (string)$e->getCode() : 'none'
+            ));
             jsonResponse(['error' => 'Unable to record the payment.'], 500);
         }
     case 'PUT':
@@ -141,7 +147,7 @@ switch ($method) {
         }
 
         $stmt = db()->prepare('
-            UPDATE paymentsSET student_id=?,type=?,amount=?,month=?,date=?,status=?,method=?,ref=?,notes=?,receipt=?
+            UPDATE payments SET student_id=?,type=?,amount=?,month=?,date=?,status=?,method=?,ref=?,notes=?,receipt=?
             WHERE id=?
         ');
         $stmt->execute([
@@ -196,7 +202,7 @@ switch ($method) {
                 $pdo->rollBack();
                 jsonResponse(['error' => 'This payment has already been voided.'], 409);
             }
-            $stmt = $pdo->prepare("UPDATE paymentsSET status = 'Voided' WHERE id = ?");
+            $stmt = $pdo->prepare("UPDATE payments SET status = 'Voided' WHERE id = ?");
             $stmt->execute([$id]);
             auditLog('PAYMENT_VOIDED', 'Payment Management', 'Payment', 'PAY-' . $id, 'Voided a payment transaction without removing its audit history.', 'Success', [
                 'receipt' => $current['receipt'] ?? '',
@@ -206,7 +212,12 @@ switch ($method) {
             jsonResponse(['success' => true, 'status' => 'Voided']);
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
-            error_log('KinderVault payment void failed.');
+            error_log(sprintf(
+                'KinderVault payment void failed: id=%d, error=%s, sqlstate=%s',
+                $id,
+                $e->getMessage(),
+                $e instanceof PDOException ? (string)$e->getCode() : 'none'
+            ));
             jsonResponse(['error' => 'Unable to void the payment.'], 500);
         }
     default:
