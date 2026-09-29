@@ -31,7 +31,23 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
     }
     return {label, count: parsed.length};
   };
+  const parseAllocationJson = (value) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string' && value.trim()) {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (_) {}
+    }
+    return [];
+  };
+
   const expandAdvanceMonths = (item, student) => {
+    const storedAllocations = parseAllocationJson(item?.allocation_json);
+    if (storedAllocations.length) {
+      const settled = storedAllocations.filter(allocation => parseFloat(allocation.balance_after || 0) <= 0.005 && parseFloat(allocation.amount || 0) > 0).map(allocation => allocation.month);
+      return settled.length ? settled : [storedAllocations[0].month];
+    }
     const explicit = String(item?.month || '').split(',').map(value => value.trim()).filter(Boolean);
     if (explicit.length !== 1 || item?.type !== 'Monthly Fee' || item?.status !== 'Advance') return explicit;
     const start = explicit[0];
@@ -57,7 +73,7 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
     payments.filter(p => parseInt(p.student_id) === parseInt(student?.id) && p.type === "Monthly Fee" && ["Unpaid", "Overdue"].includes(p.status)).forEach(p => { const covered = String(p.month || "").split(",").map(m => m.trim()).filter(Boolean); const perMonth = parseFloat(p.amount || 0) / Math.max(covered.length, 1); covered.forEach(month => { if (target.has(month)) obligationDue[month] = Math.max(obligationDue[month] || 0, perMonth); }); });
     const receiptMaxId = Math.max(...items.map(item => parseInt(item.id || 0)).filter(Number.isFinite), 0);
     const receiptHistory = [...payments, ...items.map(item => ({...item, student_id: student?.id}))].reduce((list, payment) => { const key = String(payment.id || [payment.type, payment.month, payment.amount].join("-")); if (!list.some(existing => String(existing.id || [existing.type, existing.month, existing.amount].join("-")) === key)) list.push(payment); return list; }, []);
-    receiptHistory.filter(p => parseInt(p.student_id) === parseInt(student?.id) && p.type === "Monthly Fee" && ["Paid", "Advance", "Partial"].includes(p.status)).sort((a,b) => parseInt(a.id || 0) - parseInt(b.id || 0)).forEach(p => {
+    receiptHistory.filter(p => parseInt(p.student_id) === parseInt(student?.id) && p.type === "Monthly Fee" && ["paid", "advance", "partial"].includes(String(p.status || "").toLowerCase())).sort((a,b) => parseInt(a.id || 0) - parseInt(b.id || 0)).forEach(p => {
       const covered = expandAdvanceMonths(p, student);
       let remaining = parseFloat(p.amount || 0);
       covered.forEach(month => {
@@ -86,10 +102,12 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
       status: payment.status,
       desc: window.kvPaymentItemLabel(payment.type, payment.month),
       amount: parseFloat(payment.amount || 0),
+      balance_after: payment.balance_after,
+      allocation_json: payment.allocation_json,
     }));
     return {
       ...first,
-      status: group.some(payment => payment.status === "Voided") ? "Voided" : (group.some(payment => payment.status === "Partial") ? "Partial" : (group.some(payment => payment.status === "Advance") ? "Advance" : "Paid")),
+      status: group.some(payment => String(payment.status || "").toLowerCase() === "voided") ? "Voided" : (group.some(payment => String(payment.status || "").toLowerCase() === "partial") ? "Partial" : (group.some(payment => String(payment.status || "").toLowerCase() === "advance") ? "Advance" : "Paid")),
       type: group.length > 1 ? "Multiple Payments" : first.type,
       amount: items.reduce((total, item) => total + item.amount, 0),
       items,
@@ -191,24 +209,91 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
     window.open(url, '_blank');
   };
 
-  if (selectedReceipt) {
-    const sel = selectedReceipt;
+  const requestedReceiptId = navigationState?.receiptId || null;
+  const resolvedReceipt = selectedReceipt ? (
+    selectedReceipt.items?.length
+      ? selectedReceipt
+      : (allReceipts.find(r => r.receipt === selectedReceipt.receipt || String(r.id) === String(selectedReceipt.id) || (r.payment_ids || []).map(String).includes(String(selectedReceipt.id))) || selectedReceipt)
+  ) : (
+    requestedReceiptId ? (allReceipts.find(r => r.receipt === requestedReceiptId || String(r.id) === String(requestedReceiptId) || (r.payment_ids || []).map(String).includes(String(requestedReceiptId))) || null) : null
+  );
+
+  if (requestedReceiptId && !resolvedReceipt) {
+    return (
+      <div className="kv-page kv-page--receipt-preview">
+        <div className="kv-page-header kv-receipt-actions no-print" style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
+          <Btn variant="outline" small onClick={backToList} title={window.kvT("Back to receipts")}><i className="ti ti-arrow-left" aria-hidden="true"/></Btn>
+          <h2 className="kv-page-title">{window.kvT('Receipt Preview')}</h2>
+        </div>
+        <Card style={{padding:40,textAlign:"center"}}>
+          <div style={{fontSize:18,fontWeight:600,color:"var(--color-text-primary)",marginBottom:8}}>{window.kvT("Receipt not found.")}</div>
+          <div style={{fontSize:13,color:"var(--color-text-secondary)",marginBottom:20}}>{window.kvT("The requested receipt does not exist or may have been removed.")}</div>
+          <Btn variant="primary" onClick={backToList}>{window.kvT("Back to Receipts")}</Btn>
+        </Card>
+      </div>
+    );
+  }
+
+  if (resolvedReceipt) {
+    const sel = resolvedReceipt;
     const s   = students.find(x=>x.id===sel.student_id||x.id===parseInt(sel.student_id));
     const date = sel.date
       ? window.kvDate(sel.date, {day:'numeric', month:'short', year:'numeric'}, sel.date)
       : window.kvDate(new Date(), {day:'numeric', month:'short', year:'numeric'});
-    const receiptItems = sel.items?.length ? sel.items : [{type:sel.type, month:sel.month, status:sel.status, amount:parseFloat(sel.amount || 0)}];
+    const receiptItems = sel.items?.length ? sel.items : [{
+      id: sel.id,
+      type: sel.type,
+      month: sel.month,
+      status: sel.status,
+      desc: sel.desc || window.kvPaymentItemLabel(sel.type, sel.month),
+      amount: parseFloat(sel.amount || 0),
+      balance_after: sel.balance_after,
+      allocation_json: sel.allocation_json,
+    }];
 
-    const monthlyPeriods = collectReceiptMonths(receiptItems, s);
+    const getItemFullySettledMonths = (item) => window.kvGetFullySettledReceiptMonths(item);
+    const getItemPeriodDetails = (item) => {
+      if (!item) return { label: '—', count: 0 };
+      if (item.type !== 'Monthly Fee') {
+        return { label: item.month || '—', count: 1 };
+      }
+      const settledMonths = getItemFullySettledMonths(item);
+      const settledPeriod = formatPaymentPeriod(settledMonths.join(','));
+      return settledPeriod.label
+        ? settledPeriod
+        : {label: window.kvT('No month fully settled'), count: 0};
+    };
 
-    const overallPeriod = formatPaymentPeriod([...new Set(monthlyPeriods)].join(','));
+    const monthlyItems = receiptItems.filter(item => item.type === 'Monthly Fee');
+    const fullySettledMonths = [...new Set(monthlyItems.flatMap(getItemFullySettledMonths))];
+    const formattedOverallPeriod = formatPaymentPeriod(fullySettledMonths.join(','));
+    const overallPeriod = monthlyItems.length > 0
+      ? (formattedOverallPeriod.label ? formattedOverallPeriod : {label: window.kvT('No month fully settled'), count: 0})
+      : { label: receiptItems[0]?.month || '—', count: 1 };
+
     const receiptTotal = receiptItems.reduce((total, item) => total + parseFloat(item.amount || 0), 0);
-    const receiptStatus = receiptItems.some(item => item.status === 'Voided') ? 'Voided' : (receiptItems.some(item => item.status === 'Partial') ? 'Partial' : (receiptItems.some(item => item.status === 'Advance') ? 'Advance' : 'Paid'));
-    const receiptMaxId = Math.max(...receiptItems.map(item => parseInt(item.id || 0)).filter(Number.isFinite), 0);
     const annualDueByType = {'Annual Registration': parseFloat(feeConfig?.annual?.registration || 0), 'Books / Materials': parseFloat((feeConfig?.annual?.books || {})[s?.program_age || '5'] || 0), 'Uniform': parseFloat(feeConfig?.annual?.uniform || 0), 'Sports Uniform': parseFloat(feeConfig?.annual?.sports_uniform || 0), 'Tudung': parseFloat(feeConfig?.annual?.tudung || 0), 'Lawatan': parseFloat(feeConfig?.annual?.lawatan || 0), 'Sukan': parseFloat(feeConfig?.annual?.sukan || 0), 'Penyampaian Hadiah': parseFloat(feeConfig?.annual?.hadiah || 0), 'Pakej Gambar': parseFloat(feeConfig?.annual?.gambar || 0), 'IQRA Class': parseFloat(feeConfig?.annual?.iqra || 0)};
-    const nonMonthlyBalance = receiptItems.filter(item => item.type !== 'Monthly Fee' && annualDueByType[item.type] > 0).reduce((balance, item) => { const due = annualDueByType[item.type]; const received = receiptHistory.filter(p => parseInt(p.student_id) === parseInt(s?.id) && p.type === item.type && String(p.month || '') === String(item.month || '') && ['Paid', 'Advance', 'Partial'].includes(p.status)).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0); return balance + Math.max(0, due - Math.min(due, received)); }, 0);
-    const monthlyBalance = calculateReceiptBalance(receiptItems, s);
-    const receiptBalance = monthlyBalance === null && nonMonthlyBalance === 0 ? null : (monthlyBalance || 0) + nonMonthlyBalance;
+
+    const hasStoredBalances = receiptItems.length > 0 && receiptItems.every(item => item.balance_after !== null && item.balance_after !== undefined && item.balance_after !== '');
+    const storedBalance = hasStoredBalances ? receiptItems.reduce((sum, item) => sum + parseFloat(item.balance_after || 0), 0) : null;
+
+    let receiptBalance = storedBalance;
+    if (receiptBalance === null) {
+      const studentPayments = (payments || []).filter(p => parseInt(p.student_id) === parseInt(s?.id));
+      const nonMonthlyBalance = receiptItems.filter(item => item.type !== 'Monthly Fee' && annualDueByType[item.type] > 0).reduce((balance, item) => {
+        const due = annualDueByType[item.type];
+        const received = studentPayments.filter(p => p.type === item.type && String(p.month || '') === String(item.month || '') && ['paid', 'advance', 'partial'].includes(String(p.status || '').toLowerCase())).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+        return balance + Math.max(0, due - Math.min(due, received));
+      }, 0);
+      const monthlyBalance = calculateReceiptBalance(receiptItems, s);
+      receiptBalance = (monthlyBalance === null && nonMonthlyBalance === 0) ? null : ((monthlyBalance || 0) + nonMonthlyBalance);
+    }
+
+    const receiptStatus = receiptItems.some(item => String(item.status || '').toLowerCase() === 'voided')
+      ? 'Voided'
+      : (receiptItems.some(item => String(item.status || '').toLowerCase() === 'partial') || (receiptBalance !== null && receiptBalance > 0.005)
+        ? 'Partial'
+        : (receiptItems.some(item => String(item.status || '').toLowerCase() === 'advance') ? 'Advance' : 'Paid'));
 
     return (
       <div className="kv-page kv-page--receipt-preview">
@@ -262,7 +347,7 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
               </section>
 
               {overallPeriod.label && <div className="kv-receipt-period-banner" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,margin:'16px 0',padding:'14px 18px',borderRadius:12,background:'linear-gradient(135deg, #f3edff 0%, #faf8ff 100%)',border:'1px solid #dfd2f5'}}>
-                <div><div style={{fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#7750a8'}}>{window.kvT('Fee months covered')}</div><div style={{fontSize:17,fontWeight:700,color:'var(--color-text-primary)',marginTop:3}}>{overallPeriod.label}</div></div>
+                <div><div style={{fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#7750a8'}}>{window.kvT(monthlyItems.length ? 'Paid Fee Months' : 'Fee months covered')}</div><div style={{fontSize:17,fontWeight:700,color:'var(--color-text-primary)',marginTop:3}}>{overallPeriod.label}</div></div>
                 {overallPeriod.count > 1 && <div style={{fontSize:13,fontWeight:600,color:'#7750a8',whiteSpace:'nowrap'}}>{overallPeriod.count} {window.kvT('months')}</div>}
               </div>}
               <section className="kv-receipt-payment-section">
@@ -273,13 +358,13 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
                 <table className="kv-receipt-items-table">
                   <thead><tr><th>{window.kvT('Description')}</th><th>{window.kvT('Fee Period')}</th><th>{window.kvT('Amount (RM)')}</th></tr></thead>
                   <tbody>
-                    {receiptItems.map((item, index) => { const itemPeriod = item.type === 'Monthly Fee' ? formatPaymentPeriod(item.month) : {label: '', count: 0}; return <tr key={item.id || `${item.type}-${index}`}>
-                      <td>{item.desc || window.kvPaymentItemLabel(item.type, item.month)}</td>
+                    {receiptItems.map((item, index) => { const itemPeriod = getItemPeriodDetails(item); return <tr key={item.id || `${item.type}-${index}`}>
+                      <td>{item.type === 'Monthly Fee' ? window.kvT('Monthly Fee') : (item.desc || window.kvPaymentItemLabel(item.type, item.month))}</td>
                       <td>{itemPeriod.label ? `${itemPeriod.label}${itemPeriod.count > 1 ? ` (${itemPeriod.count} ${window.kvT('months')})` : ""}` : "—"}</td>
                       <td>{parseFloat(item.amount || 0).toFixed(2)}</td>
                     </tr>})}
                   </tbody>
-                  <tfoot><tr><td colSpan="2">{window.kvT(receiptStatus === 'Voided' ? 'Voided Amount' : 'Total Received')}</td><td>RM {receiptTotal.toFixed(2)}</td></tr>{receiptStatus === 'Partial' && receiptBalance !== null && <tr><td colSpan="2" style={{color:'#8a5a00'}}>{window.kvT('Outstanding Balance')}</td><td style={{color:'#8a5a00'}}>RM {receiptBalance.toFixed(2)}</td></tr>}</tfoot>
+                  <tfoot><tr><td colSpan="2">{window.kvT(receiptStatus === 'Voided' ? 'Voided Amount' : 'Total Received')}</td><td>RM {receiptTotal.toFixed(2)}</td></tr>{receiptStatus !== 'Voided' && receiptBalance !== null && <tr><td colSpan="2" style={{color:receiptBalance > 0 ? '#8a5a00' : C.green}}>{window.kvT('Total Outstanding Balance')}</td><td style={{color:receiptBalance > 0 ? '#8a5a00' : C.green}}>RM {receiptBalance.toFixed(2)}</td></tr>}</tfoot>
                 </table>
               </section>
 
@@ -295,10 +380,7 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
                     </dl>
                   </div>
                 </div>
-                <div className="kv-receipt-info-card">
-                  <div className="kv-receipt-info-icon"><i className="ti ti-file-certificate" aria-hidden="true"/></div>
-                  <div><h4>{window.kvT('Receipt Notes')}</h4><p>{window.kvT('No signature required. This is a digital receipt.')}</p></div>
-                </div>
+                {React.createElement(window.kvReceiptAllocationCard, {items: receiptItems, receiptStatus, student: s})}
               </section>
 
               <section className="kv-receipt-confirmation">
@@ -317,7 +399,6 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
       </div>
     );
   }
-
   return (
     <div className="kv-page kv-page--receipts">
       <div className="kv-page-header no-print" style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
@@ -391,7 +472,7 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
                       <td style={{padding:"9px 12px"}}>
                         <div style={{display:"flex",gap:6}}>
                           <Btn small variant="outline" onClick={()=>open(p)}><i className="ti ti-eye" aria-hidden="true"/> {window.kvT('View')}</Btn>
-                          {p.status !== "Voided" && <Btn small variant="outline" onClick={()=>sendWhatsApp(p)} style={{background:"#25D366",color:"#fff",borderColor:"#25D366"}}><i className="ti ti-brand-whatsapp" aria-hidden="true"/></Btn>}
+                          {String(p.status || '').toLowerCase() !== "voided" && <Btn small variant="outline" onClick={()=>sendWhatsApp(p)} style={{background:"#25D366",color:"#fff",borderColor:"#25D366"}}><i className="ti ti-brand-whatsapp" aria-hidden="true"/></Btn>}
                           {canPrintReceipts && <Btn small variant="outline" onClick={()=>{open(p); handlePrint(p, 300);}}><i className="ti ti-printer" aria-hidden="true"/></Btn>}
                         </div>
                       </td>

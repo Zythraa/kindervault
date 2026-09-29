@@ -29,12 +29,46 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
   const [payForm, setPayForm]             = React.useState({ date: new Date().toISOString().split("T")[0], method:"Cash", ref:"", notes:"", amount:"" });
   const [profileReceipt, setProfileReceipt] = React.useState(navigationState.profileReceipt || null);
   const [saving, setSaving]               = React.useState(false);
+  const paymentMutationInFlight = React.useRef(false);
+  const paymentRefreshInFlight = React.useRef(false);
+  const [paymentRefreshError, setPaymentRefreshError] = React.useState(false);
+  const [refreshingPayments, setRefreshingPayments] = React.useState(false);
   const canCreateStudents = canUsePermission(permissions, "students.create", isAdministrator);
   const canUpdateStudents = canUsePermission(permissions, "students.update", isAdministrator);
   const canDeleteStudents = canUsePermission(permissions, "students.delete", isAdministrator);
   const canCreatePayments = canUsePermission(permissions, "payments.create", isAdministrator);
   const canPrintReceipts = canUsePermission(permissions, "receipts.print", isAdministrator);
   const canViewDevelopment = canUsePermission(permissions, "development.view", isAdministrator);
+  const refreshPaymentData = async () => {
+    const latestPayments = await api.get("api/payments.php");
+    if (latestPayments?.error) throw new Error(latestPayments.error);
+    if (!Array.isArray(latestPayments)) throw new Error("Invalid payment data response.");
+    setPayments(latestPayments);
+    setPaymentRefreshError(false);
+    return latestPayments;
+  };
+  const retryPaymentRefresh = async () => {
+    if (paymentRefreshInFlight.current) return;
+    paymentRefreshInFlight.current = true;
+    setRefreshingPayments(true);
+    try {
+      await refreshPaymentData();
+      setFlash({msg:window.kvT("Payment data refreshed successfully."),type:"success"});
+    } catch (error) {
+      setFlash({msg:window.kvT("Unable to refresh payment data. Please try again."),type:"danger"});
+    } finally {
+      paymentRefreshInFlight.current = false;
+      setRefreshingPayments(false);
+    }
+  };
+  const paymentRefreshNotice = paymentRefreshError && (
+    <div role="alert" style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"10px 14px",marginBottom:16,borderRadius:8,border:"1px solid var(--color-border-secondary)",background:"var(--color-background-secondary)",color:"var(--color-text-primary)",fontSize:13}}>
+      <span>{window.kvT("Payment action succeeded, but the latest payment data could not be refreshed. Retry the refresh.")}</span>
+      <Btn small variant="outline" onClick={retryPaymentRefresh} disabled={refreshingPayments || saving}>
+        {refreshingPayments ? <><i className="ti ti-loader" aria-hidden="true"/> {window.kvT("Refreshing...")}</> : window.kvT("Retry refresh")}
+      </Btn>
+    </div>
+  );
   const classByProgrammeAge = Object.fromEntries(
     (classesList || []).filter(item => item && item.age_group).map(item => [String(item.age_group), item.name])
   );
@@ -220,101 +254,20 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
     }
   };
 
-
   // ── Helpers ──────────────────────────────────────────────
   const allocateMonthlyPaidAmounts = (stuPays, fee) => {
-    const paidAmounts = {};
-    stuPays.filter(p => p.type === "Monthly Fee" && (p.status === "Paid" || p.status === "Advance" || p.status === "Partial")).forEach(p => {
-      const months = (p.month || "").split(",").map(m => m.trim()).filter(Boolean);
-      let remaining = parseFloat(p.amount || 0);
-      months.forEach(m => {
-        if (remaining <= 0) return;
-        const already = parseFloat(paidAmounts[m] || 0);
-        const payable = Math.min(Math.max(fee - already, 0), remaining);
-        if (payable > 0) {
-          paidAmounts[m] = already + payable;
-          remaining -= payable;
-        }
-      });
-    });
-    return paidAmounts;
+    return window.kvAllocateMonthlyPaidAmounts(stuPays, fee);
   };
 
   const computeOutstandingItems = (stu) => {
-    const today = new Date();
-    const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-    const currentYear = String(today.getFullYear());
-    const stuPays = (payments || []).filter(p => parseInt(p.student_id) === parseInt(stu.id));
-    const fee = parseFloat(stu.fee || 0);
-    const paidAmounts = allocateMonthlyPaidAmounts(stuPays, fee);
-    let startStr = stu.enrol ? stu.enrol.substring(0,7) : currentMonthStr;
-    // A future enrolment is not yet billable. It should not show as unpaid,
-    // overdue, or carry current-year annual fees before the start month.
-    if (startStr > currentMonthStr) return [];
-    let [sy,sm] = startStr.split("-").map(Number);
-    let [cy,cm] = currentMonthStr.split("-").map(Number);
-    const missingMonths = [];
-    while (sy < cy || (sy === cy && sm <= cm)) {
-      const mStr = `${sy}-${String(sm).padStart(2,'0')}`;
-      const due = Math.max(0, fee - (paidAmounts[mStr] || 0));
-      if (due > 0) missingMonths.push({ month: mStr, due });
-      sm++; if (sm > 12) { sm = 1; sy++; }
-    }
-    const fmt = m => window.kvDate(new Date(m+"-01"), {month:"short",year:"numeric"}, m);
-    const items = [];
-    const annualItems = [
-      {id:"annual_reg", type:"Annual Registration", desc:window.kvT("Registration Fee {year}", {year: currentYear}), amount: parseFloat(annual.registration || 0), include:true},
-      {id:"annual_books", type:"Books / Materials", desc:window.kvT("Books / Activity Materials {year}", {year: currentYear}), amount: parseFloat((annual.books || {})[stu.program_age || "5"] || 0), include:true},
-      {id:"annual_uniform", type:"Uniform", desc:window.kvT("Uniform {year}", {year: currentYear}), amount: parseFloat(annual.uniform || 0), include:!!parseInt(stu.wants_uniform ?? 1)},
-      {id:"annual_sports_uniform", type:"Sports Uniform", desc:window.kvT("Sports Uniform {year}", {year: currentYear}), amount: parseFloat(annual.sports_uniform || 0), include:!!parseInt(stu.wants_sports_uniform ?? 1)},
-      {id:"annual_tudung", type:"Tudung", desc:window.kvT("Tudung {year}", {year: currentYear}), amount: parseFloat(annual.tudung || 0), include:stu.gender === "F" && !!parseInt(stu.wants_tudung ?? 1)},
-      {id:"annual_lawatan", type:"Lawatan", desc:window.kvT("Educational Visit {year}", {year: currentYear}), amount: parseFloat(annual.lawatan || 0), include:true},
-      {id:"annual_sukan", type:"Sukan", desc:window.kvT("Sports Day {year}", {year: currentYear}), amount: parseFloat(annual.sukan || 0), include:true},
-      {id:"annual_hadiah", type:"Penyampaian Hadiah", desc:window.kvT("Awards Ceremony {year}", {year: currentYear}), amount: parseFloat(annual.hadiah || 0), include:true},
-      {id:"annual_gambar", type:"Pakej Gambar", desc:window.kvT("Photo Package {year}", {year: currentYear}), amount: parseFloat(annual.gambar || 0), include:true},
-      {id:"annual_iqra", type:"IQRA Class", desc:window.kvT("IQRA Class {year}", {year: currentYear}), amount: parseFloat(annual.iqra || 0), include:!!parseInt(stu.wants_iqra ?? 0)},
-    ];
-    annualItems.forEach(item => {
-      const received = stuPays.filter(p => p.type === item.type && String(p.month || "") === currentYear && ["Paid", "Advance", "Partial"].includes(p.status)).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-      const remaining = Math.max(0, item.amount - Math.min(item.amount, received));
-      if (item.include && remaining > 0) {
-        items.push({ id:item.id, type:item.type, desc:item.desc, month:currentYear, amount:remaining });
-      }
-    });
-    if (missingMonths.length > 0) {
-      // Group overdue (past) separately from current
-      const overdueMs = missingMonths.filter(m => m.month < currentMonthStr);
-      const currentM  = missingMonths.filter(m => m.month === currentMonthStr);
-      if (overdueMs.length > 0) {
-        items.push({
-          id: "overdue",
-          type: "Monthly Fee",
-          desc: window.kvT("Overdue Monthly Fee ({count} month(s): {months})", {count: overdueMs.length, months: overdueMs.map(item => fmt(item.month)).join(", ")}),
-          month: overdueMs.map(item => item.month).join(","),
-          amount: overdueMs.reduce((sum,item) => sum + item.due, 0),
-          months: overdueMs.map(item => item.month),
-          isOverdue: true
-        });
-      }
-      if (currentM.length > 0) {
-        items.push({
-          id: "current",
-          type: "Monthly Fee",
-          desc: window.kvT("Monthly Fee - {month}", {month: fmt(currentM[0].month)}),
-          month: currentM[0].month,
-          amount: currentM[0].due,
-          months: currentM.map(item => item.month)
-        });
-      }
-    }
-    return items;
+    return window.kvComputeStudentOutstanding(stu, payments, feeConfig, { groupMonthly: true });
   };
 
   // ── Profile view ─────────────────────────────────────────
   if (view === "profile" && selected) {
 
     const outstandingItems = computeOutstandingItems(selected);
-    const stuPaidPayments  = (payments || []).filter(p => parseInt(p.student_id) === parseInt(selected.id) && ["Paid", "Advance", "Partial", "Voided"].includes(p.status));
+    const stuPaidPayments  = (payments || []).filter(p => parseInt(p.student_id) === parseInt(selected.id) && ["paid", "advance", "partial", "voided"].includes(String(p.status || "").toLowerCase()));
     const checkedIds       = Object.keys(selectedItems).filter(k => selectedItems[k]);
     const checkedItems     = outstandingItems.filter(it => checkedIds.includes(it.id));
     const checkedTotal     = checkedItems.reduce((s,it) => s + it.amount, 0);
@@ -336,6 +289,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
     };
 
     const paySelected = async () => {
+      if (saving || paymentMutationInFlight.current) return;
       if (!canCreatePayments) {
         setFlash({msg:window.kvT("Access Denied. You do not have permission to record payments."),type:"danger"});
         return;
@@ -355,6 +309,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
         allocatedItems.push({ type:item.type, amount:Number(amount.toFixed(2)), month:item.month, status: amount + 0.005 < item.amount ? "Partial" : "Paid" });
         remainingAmount -= amount;
       });
+      paymentMutationInFlight.current = true;
       setSaving(true);
       try {
         const payload = {
@@ -376,9 +331,11 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           id: item.id || `receipt-item-${index}`,
           type: item.type,
           month: item.month || "",
-          status: allocatedItems[index]?.status || item.status || "Paid",
+          status: item.status || allocatedItems[index]?.status || "Paid",
           desc: item.desc || window.kvPaymentItemLabel(item.type, item.month),
           amount: parseFloat(item.amount || 0),
+          balance_after: item.balance_after,
+          allocation_json: item.allocation_json,
         }));
         const receiptData = {
           receipt: res.receipt,
@@ -392,14 +349,19 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           outstandingBalance: Math.max(0, Number((checkedTotal - customAmount).toFixed(2))),
           payments: newPays
         };
-        const fresh = await api.get("api/payments.php");
-        if (Array.isArray(fresh) && typeof setPayments === "function") setPayments(fresh);
+        try {
+          await refreshPaymentData();
+        } catch (error) {
+          setPaymentRefreshError(true);
+          setFlash({msg:window.kvT("Payment action succeeded, but the latest payment data could not be refreshed. Retry the refresh."),type:"danger"});
+        }
         setPayModal(false);
         setSelectedItems({});
         navigate({page:"students", state:profileState({profileReceipt:receiptData})});
       } catch(e) {
         setFlash({msg:window.kvT("Network error. Please try again."),type:"danger"});
       } finally {
+        paymentMutationInFlight.current = false;
         setSaving(false);
       }
     };
@@ -419,8 +381,9 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           ref: res.ref || "",
           notes: res.notes || "",
           student: selected,
-          items: [{ id: res.id, type: res.type, month: res.month || "", status: res.status || "Paid", desc: res.type === "Monthly Fee" ? window.kvT("Monthly Fee ({period})", {period: fmtMonthRange(res.month)}) : window.kvT(res.type), amount: parseFloat(res.amount || 0) }],
-          total: parseFloat(res.amount || 0)
+          items: [{ id: res.id, type: res.type, month: res.month || "", status: res.status || "Paid", desc: res.type === "Monthly Fee" ? window.kvT("Monthly Fee ({period})", {period: fmtMonthRange(res.month)}) : window.kvT(res.type), amount: parseFloat(res.amount || 0), balance_after: res.balance_after, allocation_json: res.allocation_json }],
+          total: parseFloat(res.amount || 0),
+          outstandingBalance: res.balance_after === null || res.balance_after === undefined ? null : parseFloat(res.balance_after)
         };
         navigate({page:"students", state:profileState({profileReceipt:receiptPreview})});
       } catch (e) {
@@ -496,22 +459,6 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
       return {label, count:parsed.length};
     };
 
-    const expandAdvanceReceiptMonths = (item, student) => {
-      const explicit = String(item?.month || "").split(",").map(value => value.trim()).filter(Boolean);
-      if (explicit.length !== 1 || item?.type !== "Monthly Fee" || item?.status !== "Advance") return explicit;
-      const start = explicit[0];
-      const monthlyFee = parseFloat(student?.fee || 0);
-      const amount = parseFloat(item?.amount || 0);
-      if (!/^\d{4}-(?:0[1-9]|1[0-2])$/.test(start) || !Number.isFinite(monthlyFee) || monthlyFee <= 0 || !Number.isFinite(amount) || amount <= monthlyFee) return explicit;
-      const count = Math.round(amount / monthlyFee);
-      if (count < 2 || count > 60 || Math.abs(amount - (count * monthlyFee)) > 0.01) return explicit;
-      const [year, month] = start.split("-").map(Number);
-      return Array.from({length:count}, (_, index) => {
-        const date = new Date(year, month - 1 + index, 1);
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-      });
-    };
-
     // ── Receipt preview ──────────────────────────────────────
     if (profileReceipt) {
       const s = profileReceipt.student;
@@ -520,11 +467,15 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
         id: item.id || `receipt-item-${index}`,
         amount: parseFloat(item.amount || 0),
       }));
-      const receiptMonths = [...new Set(receiptItems.filter(item => item.type === "Monthly Fee").flatMap(item => expandAdvanceReceiptMonths(item, s)))];
-      const overallPeriod = formatReceiptPeriod(receiptMonths.join(","));
+      const monthlyItems = receiptItems.filter(item => item.type === "Monthly Fee");
+      const receiptMonths = [...new Set(monthlyItems.flatMap(item => window.kvGetFullySettledReceiptMonths(item)))];
+      const formattedOverallPeriod = formatReceiptPeriod(receiptMonths.join(","));
+      const overallPeriod = monthlyItems.length
+        ? (formattedOverallPeriod.label ? formattedOverallPeriod : {label:window.kvT("No month fully settled"), count:0})
+        : formattedOverallPeriod;
       const receiptTotal = receiptItems.reduce((total, item) => total + item.amount, 0);
-      const receiptStatus = receiptItems.some(item => item.status === "Voided") ? "Voided" : (receiptItems.some(item => item.status === "Partial") ? "Partial" : (receiptItems.some(item => item.status === "Advance") ? "Advance" : "Paid"));
-      const receiptBalance = receiptStatus === "Partial" && Number.isFinite(Number(profileReceipt.outstandingBalance)) ? Math.max(0, Number(profileReceipt.outstandingBalance)) : null;
+      const receiptBalance = Number.isFinite(Number(profileReceipt.outstandingBalance)) ? Math.max(0, Number(profileReceipt.outstandingBalance)) : (receiptItems.length > 0 && receiptItems.every(it => it.balance_after !== null && it.balance_after !== undefined && it.balance_after !== '') ? receiptItems.reduce((sum, it) => sum + parseFloat(it.balance_after || 0), 0) : null);
+      const receiptStatus = receiptItems.some(item => item.status === "Voided") ? "Voided" : ((receiptBalance !== null && receiptBalance > 0.005) || receiptItems.some(item => item.status === "Partial") ? "Partial" : (receiptItems.some(item => item.status === "Advance") ? "Advance" : "Paid"));
       const receiptDate = profileReceipt.date
         ? window.kvDate(profileReceipt.date, {day:"numeric", month:"short", year:"numeric"}, profileReceipt.date)
         : window.kvDate(new Date(), {day:"numeric", month:"short", year:"numeric"});
@@ -547,6 +498,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
             </Btn>}
             <Btn small variant="outline" onClick={()=>goBack({page:"students", state:profileState()})}><i className="ti ti-check" aria-hidden="true"/> {window.kvT("Done")}</Btn>
           </div>
+          {paymentRefreshNotice}
           <div className="print-area kv-receipt-print-area">
             <Card className="kv-receipt-sheet">
               <div className="kv-receipt-top-accent" aria-hidden="true"/>
@@ -584,7 +536,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                 </section>
 
                 {overallPeriod.label && <div className="kv-receipt-period-banner" style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,margin:"16px 0",padding:"14px 18px",borderRadius:12,background:"linear-gradient(135deg, #f3edff 0%, #faf8ff 100%)",border:"1px solid #dfd2f5"}}>
-                  <div><div style={{fontSize:11,fontWeight:700,letterSpacing:".08em",textTransform:"uppercase",color:"#7750a8"}}>{window.kvT("Fee months covered")}</div><div style={{fontSize:17,fontWeight:700,color:"var(--color-text-primary)",marginTop:3}}>{overallPeriod.label}</div></div>
+                  <div><div style={{fontSize:11,fontWeight:700,letterSpacing:".08em",textTransform:"uppercase",color:"#7750a8"}}>{window.kvT(monthlyItems.length ? "Paid Fee Months" : "Fee months covered")}</div><div style={{fontSize:17,fontWeight:700,color:"var(--color-text-primary)",marginTop:3}}>{overallPeriod.label}</div></div>
                   {overallPeriod.count > 1 && <div style={{fontSize:13,fontWeight:600,color:"#7750a8",whiteSpace:"nowrap"}}>{overallPeriod.count} {window.kvT("months")}</div>}
                 </div>}
 
@@ -596,13 +548,13 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                   <table className="kv-receipt-items-table">
                     <thead><tr><th>{window.kvT("Description")}</th><th>{window.kvT("Fee Period")}</th><th>{window.kvT("Amount (RM)")}</th></tr></thead>
                   <tbody>
-                      {receiptItems.map((item, index) => { const itemPeriod = item.type === "Monthly Fee" ? formatReceiptPeriod(item.month) : {label:"", count:0}; return <tr key={item.id || index}>
-                        <td>{item.desc || window.kvPaymentItemLabel(item.type, item.month)}</td>
+                      {receiptItems.map((item, index) => { const formattedItemPeriod = item.type === "Monthly Fee" ? formatReceiptPeriod(window.kvGetFullySettledReceiptMonths(item).join(',')) : {label:"", count:0}; const itemPeriod = item.type === "Monthly Fee" && !formattedItemPeriod.label ? {label:window.kvT("No month fully settled"), count:0} : formattedItemPeriod; return <tr key={item.id || index}>
+                        <td>{item.type === "Monthly Fee" ? window.kvT("Monthly Fee") : (item.desc || window.kvPaymentItemLabel(item.type, item.month))}</td>
                         <td>{itemPeriod.label ? `${itemPeriod.label}${itemPeriod.count > 1 ? ` (${itemPeriod.count} ${window.kvT("months")})` : ""}` : "—"}</td>
                         <td>{item.amount.toFixed(2)}</td>
                       </tr>})}
                   </tbody>
-                    <tfoot><tr><td colSpan="2">{window.kvT(receiptStatus === "Voided" ? "Voided Amount" : "Total Received")}</td><td>RM {receiptTotal.toFixed(2)}</td></tr>{receiptStatus === "Partial" && receiptBalance !== null && <tr><td colSpan="2" style={{color:"#8a5a00"}}>{window.kvT("Outstanding Balance")}</td><td style={{color:"#8a5a00"}}>RM {receiptBalance.toFixed(2)}</td></tr>}</tfoot>
+                    <tfoot><tr><td colSpan="2">{window.kvT(receiptStatus === "Voided" ? "Voided Amount" : "Total Received")}</td><td>RM {receiptTotal.toFixed(2)}</td></tr>{receiptStatus !== "Voided" && receiptBalance !== null && <tr><td colSpan="2" style={{color:receiptBalance > 0 ? "#8a5a00" : C.green}}>{window.kvT("Total Outstanding Balance")}</td><td style={{color:receiptBalance > 0 ? "#8a5a00" : C.green}}>RM {receiptBalance.toFixed(2)}</td></tr>}</tfoot>
                   </table>
                 </section>
 
@@ -618,10 +570,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                       </dl>
                     </div>
                   </div>
-                  <div className="kv-receipt-info-card">
-                    <div className="kv-receipt-info-icon"><i className="ti ti-file-certificate" aria-hidden="true"/></div>
-                    <div><h4>{window.kvT("Receipt Notes")}</h4><p>{window.kvT("No signature required. This is a digital receipt.")}</p></div>
-                  </div>
+                  {React.createElement(window.kvReceiptAllocationCard, {items: receiptItems, receiptStatus, student: s})}
                 </section>
 
                 <section className="kv-receipt-confirmation">
@@ -666,6 +615,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
               <div style={{marginBottom:12}}>
                 <Input label={window.kvT('Amount to Pay (RM) *')} type="number" min="0.01" max={checkedTotal.toFixed(2)} step="0.01" value={payForm.amount} onChange={e=>setPayForm({...payForm,amount:e.target.value})}/>
                 <div style={{fontSize:11,color:"var(--color-text-tertiary)",marginTop:4}}>{window.kvT("Default amount is the selected outstanding balance. You may enter a smaller amount for a partial payment.")}</div>
+                <div style={{display:"flex",justifyContent:"space-between",marginTop:8,padding:"8px 10px",borderRadius:8,background:"var(--color-background-secondary)",fontSize:12}}><span>{window.kvT("Outstanding Balance")}</span><strong style={{color:Math.max(0, checkedTotal - parseFloat(payForm.amount || 0)) > 0 ? "#8a5a00" : C.green}}>RM {Math.max(0, checkedTotal - parseFloat(payForm.amount || 0)).toFixed(2)}</strong></div>
               </div>
               <div className="kv-form-grid-2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
                 <div>
@@ -682,7 +632,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                 <Input label={window.kvT('Notes (optional)')} value={payForm.notes} onChange={e=>setPayForm({...payForm,notes:e.target.value})} placeholder={window.kvT('Any remarks…')}/>
               </div>
               <div style={{display:"flex",gap:8}}>
-                <Btn onClick={paySelected} style={{flex:1,opacity:saving?0.6:1}}>
+                <Btn onClick={paySelected} disabled={saving} style={{flex:1,opacity:saving?0.6:1}}>
                   {saving ? <><i className="ti ti-loader" aria-hidden="true"/> {window.kvT('Saving…')}</> : <><i className="ti ti-receipt" aria-hidden="true"/> {window.kvT('Save & Generate Receipt')}</>}
                 </Btn>
                 <Btn variant="outline" onClick={()=>setPayModal(false)}>{window.kvT('Cancel')}</Btn>
@@ -701,6 +651,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
             {canUpdateStudents && <Btn small onClick={()=>openEdit(selected)}><i className="ti ti-edit" aria-hidden="true"/> {window.kvT("Edit")}</Btn>}
           </div>
         </div>
+        {paymentRefreshNotice}
 
         {/* Student details row */}
         <div className="kv-profile-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
@@ -781,7 +732,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                     <div style={{flex:1}}>
                       <div style={{fontWeight:500,color:"var(--color-text-primary)",fontSize:13,marginBottom:2}}>{window.kvPaymentItemLabel(it.type, it.month, it.desc)}</div>
                       <div style={{fontSize:11,color:it.isOverdue?C.red:"var(--color-text-tertiary)"}}>
-                        {it.isOverdue ? window.kvT("Overdue") : window.kvT("Due this month")}
+                        {it.isOverdue ? window.kvT("Overdue") : (it.status === "Partial" ? window.kvT("Partial") : (it.type === "Monthly Fee" ? window.kvT("Due this month") : window.kvT("Unpaid")))}
                       </div>
                     </div>
                     <div style={{fontWeight:600,fontSize:14,color:it.isOverdue?C.red:"var(--color-text-primary)",flexShrink:0}}>

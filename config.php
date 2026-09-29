@@ -187,6 +187,27 @@ function ensureKinderVaultSchema(PDO $pdo): void {
         }
     }
 
+    // Preserve the exact balance and FIFO month allocation that existed when
+    // each receipt was issued. Existing payment rows remain valid and use the
+    // legacy derived calculation when these fields are NULL.
+    $paymentColumns = $pdo->query('SHOW COLUMNS FROM payments')->fetchAll(PDO::FETCH_COLUMN);
+    $paymentFields = [
+        'balance_after' => "ALTER TABLE payments ADD COLUMN balance_after DECIMAL(12,2) NULL AFTER notes",
+        'allocation_json' => "ALTER TABLE payments ADD COLUMN allocation_json LONGTEXT NULL AFTER balance_after",
+    ];
+    foreach ($paymentFields as $name => $sql) {
+        if (!in_array($name, $paymentColumns, true)) {
+            $pdo->exec($sql);
+        }
+    }
+    $statusCol = $pdo->query("SHOW COLUMNS FROM payments WHERE Field = 'status'")->fetch(PDO::FETCH_ASSOC);
+    if ($statusCol && (stripos($statusCol['Type'] ?? '', 'enum') !== false || ($statusCol['Default'] ?? '') !== 'Unpaid')) {
+        $pdo->exec("ALTER TABLE payments MODIFY COLUMN status VARCHAR(20) NOT NULL DEFAULT 'Unpaid'");
+    }
+    $monthCol = $pdo->query("SHOW COLUMNS FROM payments WHERE Field = 'month'")->fetch(PDO::FETCH_ASSOC);
+    if ($monthCol && preg_match('/varchar\((\d+)\)/i', $monthCol['Type'] ?? '', $m) && (int)$m[1] < 50) {
+        $pdo->exec("ALTER TABLE payments MODIFY COLUMN month VARCHAR(255) NOT NULL DEFAULT ''");
+    }
     // Keep the age-group mapping independent from editable class names.
     // Existing installations are backfilled from the original class names.
     $classColumns = $pdo->query('SHOW COLUMNS FROM classes')->fetchAll(PDO::FETCH_COLUMN);

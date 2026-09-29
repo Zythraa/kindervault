@@ -27,42 +27,20 @@ const DashboardPage = ({students, payments, classesList, devRecords, setPage, op
   })();
 
   const computeVirtualOverduePayments = () => {
-    const paidAmountsByStudent = {};
-
-    payments.forEach(p => {
-      if (p.type !== "Monthly Fee" || (p.status !== "Paid" && p.status !== "Advance" && p.status !== "Partial")) return;
-      const studentId = parseInt(p.student_id);
-      const student = studentById[studentId];
-      if (!student) return;
-
-      const fee = parseFloat(student.fee || 0);
-      if (!paidAmountsByStudent[studentId]) paidAmountsByStudent[studentId] = {};
-      const months = (p.month || "").split(",").map(m => m.trim()).filter(Boolean);
-      let remaining = parseFloat(p.amount || 0);
-
-      months.forEach(m => {
-        if (remaining <= 0) return;
-        const already = parseFloat(paidAmountsByStudent[studentId][m] || 0);
-        const payable = Math.min(Math.max(fee - already, 0), remaining);
-        if (payable > 0) {
-          paidAmountsByStudent[studentId][m] = already + payable;
-          remaining -= payable;
-        }
-      });
-    });
-
     const rows = [];
     activeStudents.forEach(s => {
       const fee = parseFloat(s.fee || 0);
+      const studentPayments = payments.filter(p => parseInt(p.student_id) === parseInt(s.id) && p.type === "Monthly Fee");
+      const paidAmounts = window.kvAllocateMonthlyPaidAmounts(studentPayments, fee);
       const startMonthStr = s.enrol ? s.enrol.substring(0, 7) : thisMonth;
       let [sy, sm] = startMonthStr.split("-").map(Number);
       const [cy, cm] = thisMonth.split("-").map(Number);
-      const paidAmounts = paidAmountsByStudent[s.id] || {};
 
       while (sy < cy || (sy === cy && sm <= cm)) {
         const monthKey = `${sy}-${String(sm).padStart(2, "0")}`;
-        const due = Math.max(0, fee - (paidAmounts[monthKey] || 0));
-        if (due > 0 && monthKey < thisMonth) {
+        const paid = paidAmounts[monthKey] || 0;
+        const due = Math.max(0, fee - paid);
+        if (due > 0.005 && monthKey < thisMonth) {
           rows.push({
             id: `virt_${s.id}_${monthKey}`,
             student_id: s.id,
@@ -70,7 +48,7 @@ const DashboardPage = ({students, payments, classesList, devRecords, setPage, op
             student_class: s.class,
             amount: due,
             month: monthKey,
-            status: "Overdue"
+            status: paid > 0.005 ? "Partial" : "Overdue"
           });
         }
         sm++;
@@ -88,8 +66,9 @@ const DashboardPage = ({students, payments, classesList, devRecords, setPage, op
   const collectedThisMonth = paidThisMonth
     .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
 
+  const nonMonthlyAlerts = payments.filter(p => (p.status === "Unpaid" || p.status === "Overdue") && p.type !== "Monthly Fee");
   const paymentAlerts = [
-    ...payments.filter(p => p.status === "Unpaid" || p.status === "Overdue"),
+    ...nonMonthlyAlerts,
     ...computeVirtualOverduePayments()
   ].sort((a, b) => {
     const rank = {Overdue: 0, Unpaid: 1};

@@ -1,17 +1,25 @@
-// ============================================================
-// pages/payments.jsx  –  PaymentsPage component
+﻿// ============================================================
+// pages/payments.jsx - PaymentsPage component
 // ============================================================
 
 const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, navigationState = {}, navigationKey, navigate, goBack, replaceRouteState, feeConfig, permissions = [], isAdministrator = false}) => {
   const [view, setView]       = React.useState(navigationState.view || "list");
   const [selected, setSelected] = React.useState(null);
-  const [statusF, setStatusF] = React.useState(navigationState.statusF || "");
-  const [typeF, setTypeF]     = React.useState(navigationState.typeF || "");
+  // Payment Records and Outstanding Dues have separate status and type filters.
+  const [recordsStatusF, setRecordsStatusF] = React.useState(navigationState.recordsStatusF || "");
+  const [duesStatusF, setDuesStatusF]       = React.useState(navigationState.duesStatusF || "");
+  const [recordsTypeF, setRecordsTypeF] = React.useState(navigationState.recordsTypeF || (navigationState.activeTab === "outstanding" ? "" : navigationState.typeF) || "");
+  const [duesTypeF, setDuesTypeF] = React.useState(navigationState.duesTypeF || (navigationState.activeTab === "outstanding" ? navigationState.typeF : "") || "");
   const [monthFilter, setMonthFilter] = React.useState(navigationState.monthFilter || navigationState.outstandingMonth || "");
   const [monthFilterOpen, setMonthFilterOpen] = React.useState(false);
   const monthFilterRef = React.useRef(null);
   const [loading, setLoading] = React.useState(false);
+  const paymentMutationInFlight = React.useRef(false);
+  const paymentRefreshInFlight = React.useRef(false);
+  const [paymentRefreshError, setPaymentRefreshError] = React.useState(false);
+  const [refreshingPayments, setRefreshingPayments] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState(navigationState.activeTab || "records");
+
   const blankForm = {
     student_id:"", type:"Monthly Fee", amount:"",
     monthFrom: new Date().toISOString().slice(0,7),
@@ -23,6 +31,30 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
   const canCreatePayments = canUsePermission(permissions, "payments.create", isAdministrator);
   const canUpdatePayments = canUsePermission(permissions, "payments.update", isAdministrator);
   const canDeletePayments = canUsePermission(permissions, "payments.delete", isAdministrator);
+
+  const refreshPaymentData = async () => {
+    const latestPayments = await api.get("api/payments.php");
+    if (latestPayments?.error) throw new Error(latestPayments.error);
+    if (!Array.isArray(latestPayments)) throw new Error("Invalid payment data response.");
+    setPayments(latestPayments);
+    setPaymentRefreshError(false);
+    return latestPayments;
+  };
+
+  const retryPaymentRefresh = async () => {
+    if (paymentRefreshInFlight.current) return;
+    paymentRefreshInFlight.current = true;
+    setRefreshingPayments(true);
+    try {
+      await refreshPaymentData();
+      setFlash({msg:window.kvT("Payment data refreshed successfully."),type:"success"});
+    } catch (error) {
+      setFlash({msg:window.kvT("Unable to refresh payment data. Please try again."),type:"danger"});
+    } finally {
+      paymentRefreshInFlight.current = false;
+      setRefreshingPayments(false);
+    }
+  };
 
   const paymentFormFromRecord = (payment) => {
     const months = payment.month ? payment.month.split(",").map(month => month.trim()).filter(Boolean) : [];
@@ -42,8 +74,10 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
       ? payments.find(payment => String(payment.id) === String(state.paymentId))
       : null;
 
-    setStatusF(state.statusF || "");
-    setTypeF(state.typeF || "");
+    setRecordsStatusF(state.recordsStatusF || "");
+    setDuesStatusF(state.duesStatusF || "");
+    setRecordsTypeF(state.recordsTypeF || (state.activeTab === "outstanding" ? "" : state.typeF) || "");
+    setDuesTypeF(state.duesTypeF || (state.activeTab === "outstanding" ? state.typeF : "") || "");
     setMonthFilter(state.monthFilter || state.outstandingMonth || "");
     setActiveTab(state.activeTab || "records");
     setSelected(selectedPayment || null);
@@ -85,15 +119,52 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
 
   const fmtMonthRange = (monthStr, fallbackDate) => {
     const mStr = monthStr || (fallbackDate ? fallbackDate.substring(0, 7) : "");
-    if (!mStr) return "–";
+    if (!mStr) return "\u2013";
+    if (/^\d{4}$/.test(mStr)) return mStr;
     const months = mStr.split(",").map(m=>m.trim()).filter(Boolean);
-    if (months.length === 0) return "–";
+    if (months.length === 0) return "\u2013";
     const fmt = m => window.kvDate(new Date(m+"-01"), {month:"short",year:"numeric"}, m);
-    return months.length === 1 ? fmt(months[0]) : `${fmt(months[0])} – ${fmt(months[months.length-1])}`;
+    return months.length === 1 ? fmt(months[0]) : `${fmt(months[0])} \u2013 ${fmt(months[months.length-1])}`;
   };
 
   const types   = ["Monthly Fee","Annual Registration","Books / Materials","Uniform","Sports Uniform","Tudung","Lawatan","Sukan","Penyampaian Hadiah","Pakej Gambar","IQRA Class","Others"];
+  const filterTypes = ["Monthly Fee","Annual Registration","Books / Materials","Uniform","Sports Uniform","Tudung","Educational Visit","Sports Day","Awards Ceremony","Photo Package","IQRA Class","Others"];
+  const canonicalPaymentType = value => {
+    const type = String(value || "").trim().toLowerCase();
+    const aliases = {
+      "monthly fee":"Monthly Fee",
+      "annual registration":"Annual Registration",
+      "books / materials":"Books / Materials",
+      "books / activity materials":"Books / Materials",
+      "books":"Books / Materials",
+      "uniform":"Uniform",
+      "sports uniform":"Sports Uniform",
+      "tudung":"Tudung",
+      "educational visit":"Educational Visit",
+      "lawatan":"Educational Visit",
+      "sports day":"Sports Day",
+      "sukan":"Sports Day",
+      "awards ceremony":"Awards Ceremony",
+      "penyampaian hadiah":"Awards Ceremony",
+      "photo package":"Photo Package",
+      "pakej gambar":"Photo Package",
+      "iqra class":"IQRA Class",
+      "kelas iqra":"IQRA Class",
+      "iqra":"IQRA Class",
+      "others":"Others"
+    };
+    return aliases[type] || String(value || "").trim();
+  };
+  const displayPaymentValue = value => {
+    const text = String(value ?? "").trim();
+    const codes = [...text].map(character => character.codePointAt(0)).join(",");
+    return !text || ["226,8364,8220", "226,8364,8221", "226,8364,710,8217"].includes(codes) ? "\u2013" : text;
+  };
   const methods = ["Cash","Bank Transfer","QR DuitNow","Cheque"];
+
+  // Status options per tab are intentionally semantically separated.
+  const recordsStatusOptions = ["Paid","Partial","Advance","Voided"];
+  const duesStatusOptions     = ["Unpaid","Overdue","Partial"];
 
   const formatPhoneForWA = (phone) => {
     if (!phone) return "";
@@ -127,21 +198,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
   };
 
   const allocateMonthlyPaidAmounts = (studentPayments, fee) => {
-    const paidAmounts = {};
-    studentPayments.filter(p => p.type === "Monthly Fee" && (p.status === "Paid" || p.status === "Advance" || p.status === "Partial")).forEach(p => {
-      const months = (p.month || "").split(",").map(m => m.trim()).filter(Boolean);
-      let remaining = parseFloat(p.amount || 0);
-      months.forEach(m => {
-        if (remaining <= 0) return;
-        const already = parseFloat(paidAmounts[m] || 0);
-        const payable = Math.min(Math.max(fee - already, 0), remaining);
-        if (payable > 0) {
-          paidAmounts[m] = already + payable;
-          remaining -= payable;
-        }
-      });
-    });
-    return paidAmounts;
+    return window.kvAllocateMonthlyPaidAmounts(studentPayments, fee);
   };
 
   const getStudentOutstandingDefaults = (studentId) => {
@@ -152,13 +209,13 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
     const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
     const startMonthStr = st.enrol ? st.enrol.substring(0, 7) : currentMonthStr;
     const allMonths = computeMonths(startMonthStr, currentMonthStr);
-    const paidAmounts = allocateMonthlyPaidAmounts(payments.filter(p => parseInt(p.student_id) === parseInt(studentId) && p.type === "Monthly Fee"), fee);
-    const outstandingMonths = allMonths.filter(m => Math.max(0, fee - (paidAmounts[m] || 0)) > 0);
+    const paidAmounts = window.kvAllocateMonthlyPaidAmounts(payments.filter(p => parseInt(p.student_id) === parseInt(studentId) && p.type === "Monthly Fee"), fee);
+    const outstandingMonths = allMonths.filter(m => Math.max(0, fee - (paidAmounts[m] || 0)) > 0.005);
     if (outstandingMonths.length > 0) {
       const amount = outstandingMonths.reduce((sum, m) => sum + Math.max(0, fee - (paidAmounts[m] || 0)), 0);
       return { amount: amount.toFixed(2), monthFrom: outstandingMonths[0], monthTo: outstandingMonths[outstandingMonths.length - 1] };
     }
-    return { amount: fee.toFixed(2), monthFrom: currentMonthStr, monthTo: currentMonthStr };
+    return null;
   };
 
   const computeMonthlyAmount = (studentId, from, to) => {
@@ -166,113 +223,30 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
     const months = computeMonths(from, to);
     const fee = st ? parseFloat(st.fee || 0) : 0;
     if (!st || months.length === 0) return "";
-    const paidAmounts = allocateMonthlyPaidAmounts(payments.filter(p => parseInt(p.student_id) === parseInt(studentId) && p.type === "Monthly Fee"), fee);
+    const paidAmounts = window.kvAllocateMonthlyPaidAmounts(payments.filter(p => parseInt(p.student_id) === parseInt(studentId) && p.type === "Monthly Fee"), fee);
     const due = months.reduce((sum, m) => sum + Math.max(0, fee - (paidAmounts[m] || 0)), 0);
-    return (due > 0 ? due : months.length * fee).toFixed(2);
+    return due.toFixed(2);
   };
 
   const computeVirtualPayments = () => {
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonthStr = `${currentYear}-${String(today.getMonth()+1).padStart(2,'0')}`;
-    const studentById = Object.fromEntries(students.map(s => [s.id, s]));
-
-    const paidAmountsByStudent = {};
-    payments.forEach(p => {
-      if (p.type === "Monthly Fee" && (p.status === "Paid" || p.status === "Advance" || p.status === "Partial")) {
-        const stId = parseInt(p.student_id);
-        const st = studentById[stId];
-        if (!st) return;
-        const fee = parseFloat(st.fee || 0);
-        if (!paidAmountsByStudent[stId]) paidAmountsByStudent[stId] = {};
-        const months = (p.month || "").split(",").map(m => m.trim()).filter(Boolean);
-        let remaining = parseFloat(p.amount || 0);
-        months.forEach(m => {
-          if (remaining <= 0) return;
-          const already = parseFloat(paidAmountsByStudent[stId][m] || 0);
-          const payable = Math.min(Math.max(fee - already, 0), remaining);
-          if (payable > 0) {
-            paidAmountsByStudent[stId][m] = already + payable;
-            remaining -= payable;
-          }
-        });
-      }
-    });
-
     let totalOverdueAmt = 0;
     const outstandingList = [];
-    const virtualRecords = [];
 
     students.filter(s => s.status === "Active").forEach(s => {
-      let startMonthStr = s.enrol ? s.enrol.substring(0, 7) : `${currentYear}-01`;
-      let [sy, sm] = startMonthStr.split("-").map(Number);
-      let [cy, cm] = currentMonthStr.split("-").map(Number);
-      const fee = parseFloat(s.fee || 0);
-      const paidAmounts = paidAmountsByStudent[s.id] || {};
-
-      const missingEntries = [];
-      while (sy < cy || (sy === cy && sm <= cm)) {
-        const mStr = `${sy}-${String(sm).padStart(2,'0')}`;
-        const due = Math.max(0, fee - (paidAmounts[mStr] || 0));
-        if (due > 0) {
-          missingEntries.push({ month: mStr, due });
-        }
-        sm++;
-        if (sm > 12) { sm = 1; sy++; }
-      }
-
-      if (missingEntries.length > 0) {
-        const overdueEntries = missingEntries.filter(m => m.month < currentMonthStr);
-        if (overdueEntries.length > 0) {
-          const amountOwning = overdueEntries.reduce((sum, item) => sum + item.due, 0);
-          totalOverdueAmt += amountOwning;
-          outstandingList.push({
-            student: s,
-            missingMonths: missingEntries.map(item => item.month),
-            overdueMonths: overdueEntries.map(item => item.month),
-            overdueEntries,
-            amountOwning
-          });
-        }
-
-        missingEntries.forEach(item => {
-          const isOverdue = item.month < currentMonthStr;
-          virtualRecords.push({
-            id: "virt_" + s.id + "_" + item.month,
-            student_id: s.id,
-            student_name: s.name,
-            student_class: s.class,
-            type: "Monthly Fee",
-            month: item.month,
-            amount: item.due,
-            date: "",
-            method: "",
-            status: isOverdue ? "Overdue" : "Unpaid",
-            receipt: "",
-            isVirtual: true
-          });
-        });
-      }
+      const studentItems = window.kvComputeStudentOutstanding(s, payments, feeConfig, { groupMonthly: false });
+      studentItems.forEach(item => {
+        if (item.isOverdue) totalOverdueAmt += item.amount;
+        outstandingList.push(item);
+      });
     });
-    return { outstandingList, totalOverdueAmt, virtualRecords };
+
+    return { outstandingList, totalOverdueAmt };
   };
 
-  const { outstandingList, totalOverdueAmt, virtualRecords } = computeVirtualPayments();
-  // Stored Unpaid/Overdue rows are legacy obligation snapshots. The virtual
-  // rows are the authoritative remaining balances, so avoid showing both.
-  const recordedPayments = payments.filter(p => !(p.type === "Monthly Fee" && (p.status === "Unpaid" || p.status === "Overdue")));
-  const allPayments = [...recordedPayments, ...virtualRecords];
-  const displayedOutstandingList = monthFilter
-    ? outstandingList.map(out => {
-        const selectedEntry = out.overdueEntries.find(entry => entry.month === monthFilter);
-        return selectedEntry ? {
-          ...out,
-          overdueMonths: [selectedEntry.month],
-          overdueEntries: [selectedEntry],
-          amountOwning: selectedEntry.due
-        } : null;
-      }).filter(Boolean)
-    : outstandingList;
+  const { outstandingList, totalOverdueAmt } = computeVirtualPayments();
+
+  // Payment Records: actual payment transactions only - Paid, Partial, Advance, Voided
+  const recordedPayments = payments.filter(p => ["paid", "advance", "partial", "voided"].includes(String(p.status || "").toLowerCase()));
 
   const paymentMatchesMonth = payment => {
     if (!monthFilter) return true;
@@ -280,10 +254,34 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
     if (coveredMonths.includes(monthFilter)) return true;
     return coveredMonths.length === 0 && String(payment.date || "").substring(0, 7) === monthFilter;
   };
-  const filtered = allPayments.filter(p => (!statusF || p.status === statusF) && (!typeF || p.type === typeF) && paymentMatchesMonth(p));
-  const totalPaid  = payments.filter(p=>p.status==="Paid" || p.status==="Advance" || p.status==="Partial").reduce((a,p)=>a+parseFloat(p.amount),0);
 
-  const listState = () => ({statusF, typeF, monthFilter, activeTab});
+  // Payment Records filtered by per-tab status (only valid transaction statuses)
+  const filtered = recordedPayments.filter(p =>
+    (!recordsStatusF || String(p.status || "").toLowerCase() === recordsStatusF.toLowerCase()) &&
+    (!recordsTypeF || canonicalPaymentType(p.type) === canonicalPaymentType(recordsTypeF)) &&
+    paymentMatchesMonth(p)
+  );
+  const totalPaid  = payments.filter(p=>["paid","advance","partial"].includes(String(p.status || "").toLowerCase())).reduce((a,p)=>a+parseFloat(p.amount),0);
+
+  // Outstanding Dues: filter by duesStatusF (only Unpaid / Overdue / Partial)
+  const filteredDuesList = outstandingList.filter(item => {
+    if (monthFilter) {
+      const matchMonth = item.month === monthFilter
+        || item.month.split(',').includes(monthFilter)
+        || (/^\d{4}$/.test(item.month) && monthFilter.startsWith(item.month));
+      if (!matchMonth) return false;
+    }
+    if (duesStatusF && item.status.toLowerCase() !== duesStatusF.toLowerCase()) return false;
+    if (duesTypeF && canonicalPaymentType(item.type) !== canonicalPaymentType(duesTypeF)) return false;
+    return true;
+  });
+
+  const displayedOutstandingList = filteredDuesList;
+
+  const listState = () => ({
+    recordsStatusF, duesStatusF, recordsTypeF, duesTypeF, monthFilter, activeTab,
+    typeF: activeTab === "outstanding" ? duesTypeF : recordsTypeF
+  });
   const updateMonthFilter = value => {
     setMonthFilter(value);
     replaceRouteState && replaceRouteState({monthFilter:value, outstandingMonth:""});
@@ -318,7 +316,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
   };
 
   const save = async () => {
-    if (loading) return;
+    if (loading || paymentMutationInFlight.current) return;
     if ((view === "add" && !canCreatePayments) || (view === "edit" && !canUpdatePayments)) {
       setFlash({msg:window.kvT("Access Denied. You do not have permission to save this payment."),type:"danger"});
       return;
@@ -326,26 +324,63 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
     if (!form.student_id || !form.amount) {
       setFlash({msg:window.kvT("Please select a student and enter an amount."),type:"danger"}); return;
     }
+    const paymentAmount = parseFloat(form.amount || 0);
+    if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) {
+      setFlash({msg:window.kvT("Payment amount must be greater than zero and cannot exceed the selected outstanding balance."),type:"danger"}); return;
+    }
     const months = form.type === "Monthly Fee" ? computeMonths(form.monthFrom, form.monthTo) : [];
     if (form.type === "Monthly Fee" && months.length === 0) {
       setFlash({msg:window.kvT("Invalid month range. Make sure 'From' is before or equal to 'To'."),type:"danger"}); return;
     }
-    setLoading(true);
     let finalStatus = form.status;
-    const selectedDue = form.type === "Monthly Fee" ? parseFloat(computeMonthlyAmount(form.student_id, form.monthFrom, form.monthTo) || 0) : 0;
-    if (form.type === "Monthly Fee" && selectedDue > 0 && parseFloat(form.amount || 0) < selectedDue - 0.005) {
-      finalStatus = "Partial";
-    } else if (form.type === "Monthly Fee" && months.length > 1) {
-      finalStatus = "Advance";
-    } else if (form.type === "Monthly Fee" && months.length === 1 && (finalStatus === "Advance" || finalStatus === "Partial")) {
-      finalStatus = "Paid";
+    const selectedDue = form.type === "Monthly Fee"
+      ? parseFloat(computeMonthlyAmount(form.student_id, form.monthFrom, form.monthTo) || 0)
+      : (() => {
+          const st = students.find(x => x.id === +form.student_id);
+          if (!st) return 0;
+          const items = window.kvComputeStudentOutstanding(st, payments, feeConfig, { groupMonthly: false });
+          const match = items.find(it => it.type === form.type);
+          return match ? match.amount : 0;
+        })();
+    if (selectedDue > 0 && paymentAmount > selectedDue + 0.005) {
+      setFlash({msg:window.kvT("Payment amount must be greater than zero and cannot exceed the selected outstanding balance."),type:"danger"}); return;
     }
-    const payload = {...form, month: months.join(","), status: finalStatus};
+    paymentMutationInFlight.current = true;
+    setLoading(true);
+    let paymentMonth = form.month;
+    if (form.type === "Monthly Fee") {
+      paymentMonth = months.join(",");
+      if (selectedDue > 0 && parseFloat(form.amount || 0) < selectedDue - 0.005) {
+        finalStatus = "Partial";
+      } else if (months.length > 1) {
+        finalStatus = "Advance";
+      } else if (months.length === 1 && (finalStatus === "Advance" || finalStatus === "Partial")) {
+        finalStatus = "Paid";
+      }
+    } else {
+      if (!paymentMonth) {
+        paymentMonth = (/^\d{4}/.test(form.monthFrom) ? form.monthFrom.slice(0, 4) : String(new Date().getFullYear()));
+      }
+      if (selectedDue > 0 && parseFloat(form.amount || 0) < selectedDue - 0.005) {
+        finalStatus = "Partial";
+      } else {
+        finalStatus = "Paid";
+      }
+    }
+    const payload = {...form, month: paymentMonth, status: finalStatus};
     try {
       if (view === "add") {
         const res = await api.post('api/payments.php', payload);
         if (res.error) { setFlash({msg:res.error,type:"danger"}); return; }
         setPayments(prev=>[res, ...prev]);
+        try {
+          await refreshPaymentData();
+        } catch (error) {
+          setPaymentRefreshError(true);
+          setFlash({msg:window.kvT("Payment action succeeded, but the latest payment data could not be refreshed. Retry the refresh."),type:"danger"});
+          backToList();
+          return;
+        }
         if (res.receipt) {
           setFlash({msg:window.kvT("Payment recorded. Receipt {receipt} generated.", {receipt: res.receipt}),type:"success"});
           goReceipt(res, {replace:true});
@@ -357,26 +392,48 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
         const res = await api.put(`api/payments.php?id=${selected.id}`, payload);
         if (res.error) { setFlash({msg:res.error,type:"danger"}); return; }
         setPayments(prev=>prev.map(p=>p.id===selected.id?res:p));
+        try {
+          await refreshPaymentData();
+        } catch (error) {
+          setPaymentRefreshError(true);
+          setFlash({msg:window.kvT("Payment action succeeded, but the latest payment data could not be refreshed. Retry the refresh."),type:"danger"});
+          backToList();
+          return;
+        }
         setFlash({msg:window.kvT("Payment updated successfully."),type:"success"});
         backToList();
       }
     } catch(e) {
       setFlash({msg:window.kvT("Network error. Please try again."),type:"danger"});
     } finally {
+      paymentMutationInFlight.current = false;
       setLoading(false);
     }
   };
 
   const del = async (p) => {
+    if (loading || paymentMutationInFlight.current) return;
     if (!canDeletePayments) { setFlash({msg:window.kvT("Access Denied. You do not have permission to delete payments."),type:"danger"}); return; }
     if (!window.confirm(window.kvT("Void this payment? The record and receipt will be retained for audit, but excluded from balances."))) return;
+    paymentMutationInFlight.current = true;
+    setLoading(true);
     try {
       const res = await api.delete(`api/payments.php?id=${p.id}`);
       if (res.error) { setFlash({msg:res.error,type:"danger"}); return; }
       setPayments(prev=>prev.map(x=>x.id===p.id?{...x,status:"Voided"}:x));
+      try {
+        await refreshPaymentData();
+      } catch (error) {
+        setPaymentRefreshError(true);
+        setFlash({msg:window.kvT("Payment action succeeded, but the latest payment data could not be refreshed. Retry the refresh."),type:"danger"});
+        return;
+      }
       setFlash({msg:window.kvT("Payment voided and retained for audit."),type:"success"});
     } catch(e) {
       setFlash({msg:window.kvT("Failed to delete payment."),type:"danger"});
+    } finally {
+      paymentMutationInFlight.current = false;
+      setLoading(false);
     }
   };
 
@@ -387,6 +444,14 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
       const owed = getStudentOutstandingDefaults(val);
       if (owed) {
         nextForm = { ...nextForm, amount: owed.amount, monthFrom: owed.monthFrom, monthTo: owed.monthTo };
+      } else {
+        nextForm = { ...nextForm, amount: "" };
+      }
+    } else if (st && form.type) {
+      const items = window.kvComputeStudentOutstanding(st, payments, feeConfig, { groupMonthly: false });
+      const match = items.find(it => it.type === form.type);
+      if (match) {
+        nextForm = { ...nextForm, amount: match.amount.toFixed(2), month: match.month, monthFrom: match.month, monthTo: match.month };
       }
     }
     setForm(nextForm);
@@ -408,10 +473,18 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
     setForm(newForm);
   };
 
-  // ── Add / Edit form ───────────────────────────────────────
-  const selectedFormDue = form.type === "Monthly Fee" && form.student_id
-    ? parseFloat(computeMonthlyAmount(form.student_id, form.monthFrom, form.monthTo) || 0)
-    : 0;
+  // Add / Edit form
+  const selectedFormDue = (() => {
+    if (!form.student_id) return 0;
+    if (form.type === "Monthly Fee") {
+      return parseFloat(computeMonthlyAmount(form.student_id, form.monthFrom, form.monthTo) || 0);
+    }
+    const st = students.find(x => x.id === +form.student_id);
+    if (!st) return 0;
+    const items = window.kvComputeStudentOutstanding(st, payments, feeConfig, { groupMonthly: false });
+    const match = items.find(it => it.type === form.type);
+    return match ? match.amount : 0;
+  })();
   const isPartialFormPayment = selectedFormDue > 0 && parseFloat(form.amount || 0) < selectedFormDue - 0.005;
   if (view === "add" || view === "edit") return (
     <div className="kv-page kv-page--payment-form">
@@ -428,9 +501,21 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
           <div className="kv-form-grid-2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
             <Select label={window.kvT("Payment Type *")} value={form.type} onChange={e=>{
               const nextType = e.target.value;
-              const nextForm = { ...form, type: nextType };
+              let nextForm = { ...form, type: nextType };
               if (nextType === "Monthly Fee" && form.student_id) {
                 nextForm.amount = computeMonthlyAmount(form.student_id, form.monthFrom, form.monthTo);
+              } else if (form.student_id) {
+                const st = students.find(x=>x.id===+form.student_id);
+                if (st) {
+                  const items = window.kvComputeStudentOutstanding(st, payments, feeConfig, { groupMonthly: false });
+                  const match = items.find(it => it.type === nextType);
+                  if (match) {
+                    nextForm.amount = match.amount.toFixed(2);
+                    nextForm.month = match.month;
+                    nextForm.monthFrom = match.month;
+                    nextForm.monthTo = match.month;
+                  }
+                }
               }
               setForm(nextForm);
             }} options={types.map(t=>({value:t,label:window.kvT(t)}))}/>
@@ -444,19 +529,19 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
                   <div>
                     <div style={{fontSize:11,color:"var(--color-text-tertiary)",marginBottom:3}}>{window.kvT('From')}</div>
                     <input type="month" value={form.monthFrom} onChange={e=>handleMonthChange('monthFrom', e.target.value)}
-                      style={{width:"100%",padding:"7px 10px",fontSize:13,border:"0.5px solid var(--color-border-secondary)",borderRadius:7,background:"var(--color-background-primary)",color:"var(--color-text-primary)",boxSizing:"border-box"}}/>
+                       style={{width:"100%",padding:"7px 10px",fontSize:13,border:"0.5px solid var(--color-border-secondary)",borderRadius:7,background:"var(--color-background-primary)",color:"var(--color-text-primary)",boxSizing:"border-box"}}/>
                   </div>
-                  <div style={{color:"var(--color-text-tertiary)",paddingTop:18,fontSize:18}}>→</div>
+                  <div style={{color:"var(--color-text-tertiary)",paddingTop:18,fontSize:18}}>{"\u2192"}</div>
                   <div>
                     <div style={{fontSize:11,color:"var(--color-text-tertiary)",marginBottom:3}}>{window.kvT('To')}</div>
                     <input type="month" value={form.monthTo} onChange={e=>handleMonthChange('monthTo', e.target.value)}
-                      style={{width:"100%",padding:"7px 10px",fontSize:13,border:"0.5px solid var(--color-border-secondary)",borderRadius:7,background:"var(--color-background-primary)",color:"var(--color-text-primary)",boxSizing:"border-box"}}/>
+                       style={{width:"100%",padding:"7px 10px",fontSize:13,border:"0.5px solid var(--color-border-secondary)",borderRadius:7,background:"var(--color-background-primary)",color:"var(--color-text-primary)",boxSizing:"border-box"}}/>
                   </div>
                 </div>
                 {months.length > 0 ? (
                   <div style={{marginTop:8,padding:"8px 12px",background:"var(--color-background-secondary)",borderRadius:8,fontSize:12,color:C.blue}}>
                     <i className="ti ti-calendar-check" style={{marginRight:5}} aria-hidden="true"/>
-                    <strong>{window.kvT("{count} month(s) selected: {months}", {count: months.length, months: months.map(m=>window.kvDate(new Date(m+"-01"), {month:"short",year:"numeric"}, m)).join(" · ")})}</strong>
+                    <strong>{window.kvT("{count} month(s) selected: {months}", {count: months.length, months: months.map(m=>window.kvDate(new Date(m+"-01"), {month:"short",year:"numeric"}, m)).join(" \u00b7 ")})}</strong>
                   </div>
                 ) : (
                   <div style={{marginTop:8,fontSize:12,color:"var(--color-text-tertiary)"}}><i className="ti ti-alert-circle" style={{marginRight:4}} aria-hidden="true"/>{window.kvT("Invalid range - 'From' must be before or equal to 'To'.")}</div>
@@ -464,12 +549,13 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
               </div>
             );
           })()}
+          {selectedFormDue > 0 && <div style={{display:"flex",justifyContent:"space-between",padding:"10px 12px",marginBottom:12,borderRadius:8,background:"var(--color-background-secondary)",fontSize:13}}><span>{window.kvT("Outstanding Balance")}</span><strong style={{color:C.amber}}>RM {selectedFormDue.toFixed(2)}</strong></div>}
           <div className="kv-form-grid-2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
             <div style={{marginBottom:12}}>
               <div style={{fontSize:12,fontWeight:500,color:"var(--color-text-secondary)",marginBottom:4}}>{window.kvT('Amount (RM) *')}</div>
               <div className="kv-money-input" style={{display:"flex"}}>
                 <span style={{padding:"7px 10px",background:"var(--color-background-secondary)",border:"0.5px solid var(--color-border-secondary)",borderRight:"none",borderRadius:"7px 0 0 7px",fontSize:13,color:"var(--color-text-secondary)"}}>RM</span>
-                <input className="kv-form-control" type="number" value={form.amount} onChange={e=>setForm({...form,amount:e.target.value})} style={{flex:1,padding:"7px 10px",fontSize:13,border:"0.5px solid var(--color-border-secondary)",borderRadius:"0 7px 7px 0",background:"var(--color-background-primary)",color:"var(--color-text-primary)"}}/>
+                <input className="kv-form-control" type="number" min="0.01" max={selectedFormDue > 0 ? selectedFormDue.toFixed(2) : undefined} step="0.01" value={form.amount} onChange={e=>setForm({...form,amount:e.target.value})} style={{flex:1,padding:"7px 10px",fontSize:13,border:"0.5px solid var(--color-border-secondary)",borderRadius:"0 7px 7px 0",background:"var(--color-background-primary)",color:"var(--color-text-primary)"}}/>
               </div>
             </div>
             <Input label={window.kvT('Payment Date')} type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})}/>
@@ -492,13 +578,21 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
     </div>
   );
 
-  // ── List view ─────────────────────────────────────────────
+  // List view
+  const selectStyle = {padding:"6px 10px",fontSize:12,border:"0.5px solid var(--color-border-secondary)",borderRadius:7,background:"var(--color-background-primary)",color:"var(--color-text-secondary)"};
+
   return (
     <div className="kv-page kv-page--payments">
       <div className="kv-page-header" style={{display:"flex",alignItems:"center",marginBottom:16}}>
         <h2 className="kv-page-title"><i className="ti ti-credit-card" style={{marginRight:8}} aria-hidden="true"/>{window.kvT("Payments")}</h2>
         {canCreatePayments && <Btn onClick={openAdd} variant="amber" style={{marginLeft:"auto"}}><i className="ti ti-plus" aria-hidden="true"/> {window.kvT("Record Payment")}</Btn>}
       </div>
+      {paymentRefreshError && <div role="alert" style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"10px 14px",marginBottom:16,borderRadius:8,border:"1px solid var(--color-border-secondary)",background:"var(--color-background-secondary)",color:"var(--color-text-primary)",fontSize:13}}>
+        <span>{window.kvT("Payment action succeeded, but the latest payment data could not be refreshed. Retry the refresh.")}</span>
+        <Btn small variant="outline" onClick={retryPaymentRefresh} disabled={refreshingPayments || loading}>
+          {refreshingPayments ? <><i className="ti ti-loader" aria-hidden="true"/> {window.kvT("Refreshing...")}</> : window.kvT("Retry refresh")}
+        </Btn>
+      </div>}
 
       {/* Summary cards */}
       <div className="kv-payment-summary-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:18}}>
@@ -538,126 +632,151 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
 
       {activeTab === "records" ? (
         <>
-          {/* Filters */}
-      <Card className="kv-filter-card" style={{marginBottom:16}}>
-        <div className="kv-table-toolbar" style={{padding:"10px 14px",display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
-          <select value={statusF} onChange={e=>{const value=e.target.value;setStatusF(value);replaceRouteState && replaceRouteState({statusF:value});}} style={{padding:"6px 10px",fontSize:12,border:"0.5px solid var(--color-border-secondary)",borderRadius:7,background:"var(--color-background-primary)",color:"var(--color-text-secondary)"}}>
-            <option value="">{window.kvT("All Status")}</option>
-            {["Paid","Partial","Unpaid","Overdue","Advance","Voided"].map(s=><option key={s} value={s}>{window.kvT(s)}</option>)}
-          </select>
-          <select value={typeF} onChange={e=>{const value=e.target.value;setTypeF(value);replaceRouteState && replaceRouteState({typeF:value});}} style={{padding:"6px 10px",fontSize:12,border:"0.5px solid var(--color-border-secondary)",borderRadius:7,background:"var(--color-background-primary)",color:"var(--color-text-secondary)"}}>
-            <option value="">{window.kvT("All Types")}</option>
-            {types.map(t=><option key={t} value={t}>{window.kvT(t)}</option>)}
-          </select>
-          {(statusF||typeF)&&<Btn variant="outline" small onClick={()=>{setStatusF("");setTypeF("");replaceRouteState && replaceRouteState({statusF:"",typeF:""});}}>{window.kvT("Clear")}</Btn>}
-        </div>
-      </Card>
+          {/* Payment Records filters */}
+          <Card className="kv-filter-card" style={{marginBottom:16}}>
+            <div className="kv-table-toolbar" style={{padding:"10px 14px",display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+              <select id="records-status-filter" value={recordsStatusF} onChange={e=>{const value=e.target.value;setRecordsStatusF(value);replaceRouteState && replaceRouteState({recordsStatusF:value});}} style={selectStyle} aria-label={window.kvT("Filter by status")}>
+                <option value="">{window.kvT("All Status")}</option>
+                {recordsStatusOptions.map(s=><option key={s} value={s}>{window.kvT(s)}</option>)}
+              </select>
+              <select id="records-type-filter" value={recordsTypeF} onChange={e=>{const value=e.target.value;setRecordsTypeF(value);replaceRouteState && replaceRouteState({recordsTypeF:value,typeF:value});}} style={selectStyle} aria-label={window.kvT("Filter by type")}>
+                <option value="">{window.kvT("All Types")}</option>
+                {filterTypes.map(t=><option key={t} value={t}>{window.kvT(t)}</option>)}
+              </select>
+              {(recordsStatusF||recordsTypeF)&&<Btn variant="outline" small onClick={()=>{setRecordsStatusF("");setRecordsTypeF("");replaceRouteState && replaceRouteState({recordsStatusF:"",recordsTypeF:"",typeF:""});}}>{window.kvT("Clear")}</Btn>}
+            </div>
+          </Card>
 
-      <Card className="kv-table-card print-area kv-payments-print-area">
-        <div className="kv-payments-print-header">
-          <strong>KinderVault</strong>
-          <span>{window.kvT("Payment Records")}{monthFilter ? " - " + fmtMonthRange(monthFilter) : ""}</span>
-        </div>
-        <CardHead><i className="ti ti-table" style={{marginRight:6}} aria-hidden="true"/>{window.kvT("Payment Records")} <span style={{background:"var(--color-background-secondary)",color:"var(--color-text-secondary)",fontSize:11,padding:"1px 7px",borderRadius:10,marginLeft:4}}>{filtered.length}</span></CardHead>
-        {filtered.length ? (
-          <div className="kv-table-scroll" style={{overflowX:"auto"}}>
-            <table className="kv-data-table" style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-              <thead>
-                <tr style={{background:"var(--color-background-secondary)"}}>
-                  {["Student","Type","Month","Amount","Date","Method","Status","Receipt",""].map(h=>(
-                    <th key={h} className={!h?"no-print":""} style={{padding:"8px 12px",textAlign:"left",fontSize:11,textTransform:"uppercase",letterSpacing:.5,color:"var(--color-text-tertiary)",fontWeight:500,borderBottom:"0.5px solid var(--color-border-tertiary)",whiteSpace:"nowrap"}}>{window.kvT(h)}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(p=>{
-                  const s = students.find(x=>x.id===p.student_id||x.id===parseInt(p.student_id));
-                  return (
-                    <tr key={p.id} style={{borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
-                      <td style={{padding:"9px 12px"}}>
-                        <div style={{fontWeight:500,color:"var(--color-text-primary)"}}>{p.student_name||s?.name||"–"}</div>
-                        <div style={{fontSize:10,color:"var(--color-text-tertiary)"}}>{p.student_class||s?.class}</div>
-                      </td>
-                      <td style={{padding:"9px 12px",color:"var(--color-text-secondary)"}}>{window.kvT(p.type)}</td>
-                      <td style={{padding:"9px 12px",color:"var(--color-text-secondary)",fontSize:11,maxWidth:180}}>{fmtMonthRange(p.month, p.date)}</td>
-                      <td style={{padding:"9px 12px",fontWeight:500,color:C.green}}>RM {parseFloat(p.amount).toFixed(2)}</td>
-                      <td style={{padding:"9px 12px",color:"var(--color-text-secondary)",fontSize:11}}>{p.date ? window.kvDate(p.date, {day:'numeric', month:'short', year:'numeric'}, p.date) : "–"}</td>
-                      <td style={{padding:"9px 12px",color:"var(--color-text-secondary)"}}>{window.kvT(p.method||"–")}</td>
-                      <td style={{padding:"9px 12px"}}>{statusBadge(p.status)}</td>
-                      <td style={{padding:"9px 12px",fontFamily:"monospace",fontSize:10,color:"var(--color-text-tertiary)"}}>{p.receipt||"–"}</td>
-                      <td className="no-print" style={{padding:"9px 12px"}}>
-                        {(p.isVirtual || p.status === "Unpaid" || p.status === "Overdue") ? (
-                          <div style={{display:"flex",gap:4}}>
-                            {canCreatePayments && <Btn small style={{background:"#25D366",color:"white",borderColor:"#25D366"}} onClick={()=>sendWhatsApp(p)}><i className="ti ti-brand-whatsapp" aria-hidden="true"/> {window.kvT("Send")}</Btn>}
-                            {canCreatePayments && <Btn small variant="amber" onClick={()=>openAdd({...blankForm, student_id: p.student_id, amount: p.amount.toString(), monthFrom: p.month, monthTo: p.month})}><i className="ti ti-cash" aria-hidden="true"/> {window.kvT("Pay")}</Btn>}
-                          </div>
-                        ) : (
-                          <div style={{display:"flex",gap:4}}>
-                            {p.receipt&&<Btn small variant="outline" onClick={()=>goReceipt(p)}><i className="ti ti-receipt" aria-hidden="true"/> {window.kvT("View")}</Btn>}
-                            {canUpdatePayments && !["Paid", "Advance", "Partial", "Voided"].includes(p.status) && <Btn small variant="outline" onClick={()=>openEdit(p)} title={window.kvT("Edit payment")}><i className="ti ti-edit" aria-hidden="true"/></Btn>}
-                            {canDeletePayments && p.status !== "Voided" && <Btn small variant="danger" onClick={()=>del(p)} title={window.kvT("Void payment")}><i className="ti ti-ban" aria-hidden="true"/></Btn>}
-                          </div>
-                        )}
-                      </td>
+          <Card className="kv-table-card print-area kv-payments-print-area">
+            <div className="kv-payments-print-header">
+              <strong>KinderVault</strong>
+              <span>{window.kvT("Payment Records")}{monthFilter ? " - " + fmtMonthRange(monthFilter) : ""}</span>
+            </div>
+            {/* Context hint for Payment Records */}
+            <div style={{padding:"8px 16px 4px",fontSize:11,color:"var(--color-text-tertiary)",display:"flex",alignItems:"center",gap:5,borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
+              <i className="ti ti-info-circle" aria-hidden="true"/>
+              {window.kvT("Transaction history — actual payments received. A Partial status means the payment only partially settled the obligation.")}
+            </div>
+            <CardHead><i className="ti ti-table" style={{marginRight:6}} aria-hidden="true"/>{window.kvT("Payment Records")} <span style={{background:"var(--color-background-secondary)",color:"var(--color-text-secondary)",fontSize:11,padding:"1px 7px",borderRadius:10,marginLeft:4}}>{filtered.length}</span></CardHead>
+            {filtered.length ? (
+              <div className="kv-table-scroll" style={{overflowX:"auto"}}>
+                <table className="kv-data-table" style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                  <thead>
+                    <tr style={{background:"var(--color-background-secondary)"}}>
+                      {["Student","Payment Type","Period","Amount Paid","Date","Method","Status","Receipt",""].map(h=>(
+                        <th key={h} className={!h?"no-print":""} style={{padding:"8px 12px",textAlign:h==="Amount Paid"?"right":"left",fontSize:11,textTransform:"uppercase",letterSpacing:.5,color:"var(--color-text-tertiary)",fontWeight:500,borderBottom:"0.5px solid var(--color-border-tertiary)",whiteSpace:"nowrap"}}>{window.kvT(h)}</th>
+                      ))}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : <EmptyState icon="credit-card" text={window.kvT("No payment records found.")} action={canCreatePayments ? <Btn onClick={openAdd} variant="amber" style={{marginTop:12}}><i className="ti ti-plus" aria-hidden="true"/> {window.kvT("Record First Payment")}</Btn> : null}/>} 
-      </Card>
-    </>
+                  </thead>
+                  <tbody>
+                    {filtered.map(p=>{
+                      const s = students.find(x=>x.id===p.student_id||x.id===parseInt(p.student_id));
+                      return (
+                        <tr key={p.id} style={{borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
+                          <td style={{padding:"9px 12px"}}>
+                            <div style={{fontWeight:500,color:"var(--color-text-primary)"}}>{displayPaymentValue(p.student_name || s?.name)}</div>
+                            <div style={{fontSize:10,color:"var(--color-text-tertiary)"}}>{p.student_class||s?.class}</div>
+                          </td>
+                          <td style={{padding:"9px 12px",color:"var(--color-text-secondary)"}}>{window.kvT(p.type)}</td>
+                          <td style={{padding:"9px 12px",color:"var(--color-text-secondary)",fontSize:11,maxWidth:180}}>{fmtMonthRange(p.month, p.date)}</td>
+                          <td style={{padding:"9px 12px",textAlign:"right",fontWeight:500,color:p.status==="Voided"?"var(--color-text-tertiary)":C.green}}>
+                            <span style={{textDecoration:p.status==="Voided"?"line-through":undefined}}>RM {parseFloat(p.amount).toFixed(2)}</span>
+                          </td>
+                          <td style={{padding:"9px 12px",color:"var(--color-text-secondary)",fontSize:11}}>{p.date ? window.kvDate(p.date, {day:'numeric', month:'short', year:'numeric'}, p.date) : "\u2013"}</td>
+                          <td style={{padding:"9px 12px",color:"var(--color-text-secondary)"}}>{window.kvT(displayPaymentValue(p.method))}</td>
+                          <td style={{padding:"9px 12px"}}>{statusBadge(p.status)}</td>
+                          <td style={{padding:"9px 12px",fontFamily:"monospace",fontSize:11}}>
+                            {displayPaymentValue(p.receipt) !== "\u2013" ? (
+                              <button type="button" onClick={()=>goReceipt(p)} style={{background:"none",border:"none",padding:0,color:"var(--color-primary, #6b3fa0)",fontFamily:"inherit",fontSize:"inherit",fontWeight:500,cursor:"pointer",textDecoration:"underline"}} title={window.kvT("View Receipt")}>
+                                {displayPaymentValue(p.receipt)}
+                              </button>
+                            ) : (
+                              <span style={{color:"var(--color-text-tertiary)"}}>{"\u2013"}</span>
+                            )}
+                          </td>
+                          <td className="no-print" style={{padding:"9px 12px"}}>
+                            <div style={{display:"flex",gap:4}}>
+                              {p.receipt&&<Btn small variant="outline" onClick={()=>goReceipt(p)}><i className="ti ti-receipt" aria-hidden="true"/> {window.kvT("View")}</Btn>}
+                              {canUpdatePayments && !["Paid","Advance","Partial","Voided"].includes(p.status) && <Btn small variant="outline" onClick={()=>openEdit(p)} title={window.kvT("Edit payment")}><i className="ti ti-edit" aria-hidden="true"/></Btn>}
+                              {canDeletePayments && p.status !== "Voided" && <Btn small variant="danger" onClick={()=>del(p)} title={window.kvT("Void payment")}><i className="ti ti-ban" aria-hidden="true"/></Btn>}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : <EmptyState icon="credit-card" text={window.kvT("No payment records found.")} action={canCreatePayments ? <Btn onClick={openAdd} variant="amber" style={{marginTop:12}}><i className="ti ti-plus" aria-hidden="true"/> {window.kvT("Record First Payment")}</Btn> : null}/>}
+          </Card>
+        </>
       ) : (
         <Card className="kv-table-card print-area kv-payments-print-area">
           <div className="kv-payments-print-header">
             <strong>KinderVault</strong>
             <span>{window.kvT("Outstanding Dues")}{monthFilter ? " - " + fmtMonthRange(monthFilter) : ""}</span>
           </div>
-          <CardHead><i className="ti ti-alert-circle" style={{marginRight:6}} aria-hidden="true"/>{window.kvT("Students with Outstanding Dues")}</CardHead>
+
+          {/* Outstanding Dues filters */}
+          <div className="kv-table-toolbar no-print" style={{padding:"10px 14px",display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
+            <select id="dues-status-filter" value={duesStatusF} onChange={e=>{const value=e.target.value;setDuesStatusF(value);replaceRouteState && replaceRouteState({duesStatusF:value});}} style={selectStyle} aria-label={window.kvT("Filter by status")}>
+              <option value="">{window.kvT("All Status")}</option>
+              {duesStatusOptions.map(s=><option key={s} value={s}>{window.kvT(s)}</option>)}
+            </select>
+            <select id="dues-type-filter" value={duesTypeF} onChange={e=>{const value=e.target.value;setDuesTypeF(value);replaceRouteState && replaceRouteState({duesTypeF:value,typeF:value});}} style={selectStyle} aria-label={window.kvT("Filter by type")}>
+              <option value="">{window.kvT("All Types")}</option>
+              {filterTypes.map(t=><option key={t} value={t}>{window.kvT(t)}</option>)}
+            </select>
+            {(duesStatusF||duesTypeF)&&<Btn variant="outline" small onClick={()=>{setDuesStatusF("");setDuesTypeF("");replaceRouteState && replaceRouteState({duesStatusF:"",duesTypeF:"",typeF:""});}}>{window.kvT("Clear")}</Btn>}
+          </div>
+
+          {/* Context hint for Outstanding Dues */}
+          <div style={{padding:"8px 16px 4px",fontSize:11,color:"var(--color-text-tertiary)",display:"flex",alignItems:"center",gap:5,borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
+            <i className="ti ti-info-circle" aria-hidden="true"/>
+            {window.kvT("Remaining obligations — fees still owed. A Partial status means the obligation has been partially paid and the remaining balance is still outstanding.")}
+          </div>
+
+          <CardHead><i className="ti ti-alert-circle" style={{marginRight:6}} aria-hidden="true"/>{window.kvT("Outstanding Dues")} <span style={{background:"var(--color-background-secondary)",color:"var(--color-text-secondary)",fontSize:11,padding:"1px 7px",borderRadius:10,marginLeft:4}}>{displayedOutstandingList.length}</span></CardHead>
           {displayedOutstandingList.length ? (
             <div className="kv-table-scroll" style={{overflowX:"auto"}}>
               <table className="kv-data-table" style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
                 <thead>
                   <tr style={{background:"var(--color-background-secondary)"}}>
-                    {["Student","Overdue Months","Total Owed",""].map(h=>(
-                      <th key={h} className={!h?"no-print":""} style={{padding:"8px 12px",textAlign:"left",fontSize:11,textTransform:"uppercase",letterSpacing:.5,color:"var(--color-text-tertiary)",fontWeight:500,borderBottom:"0.5px solid var(--color-border-tertiary)",whiteSpace:"nowrap"}}>{window.kvT(h)}</th>
+                    {["Student","Payment Type","Period","Original Due","Paid","Outstanding Balance","Status",""].map(h=>(
+                      <th key={h} className={!h?"no-print":""} style={{padding:"8px 12px",textAlign:h==="Outstanding Balance"||h==="Paid"||h==="Original Due"?"right":"left",fontSize:11,textTransform:"uppercase",letterSpacing:.5,color:"var(--color-text-tertiary)",fontWeight:500,borderBottom:"0.5px solid var(--color-border-tertiary)",whiteSpace:"nowrap"}}>{window.kvT(h)}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {displayedOutstandingList.map(out => {
-                    const fmtM = m => window.kvDate(new Date(m+"-01"), {month:"short",year:"numeric"}, m);
-                    return (
-                      <tr key={out.student.id} style={{borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
-                        <td style={{padding:"9px 12px"}}>
-                          <div style={{fontWeight:500,color:"var(--color-text-primary)"}}>{out.student.name}</div>
-                          <div style={{fontSize:10,color:"var(--color-text-tertiary)"}}>{out.student.class}</div>
-                        </td>
-                        <td style={{padding:"9px 12px",color:C.red}}>
-                          <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                            <span style={{fontWeight:500}}>{window.kvT("{count} month(s)", {count: out.overdueMonths.length})}</span>
-                            <span style={{fontSize:11,opacity:.8}}>{out.overdueMonths.map(fmtM).join(", ")}</span>
-                          </div>
-                        </td>
-                        <td style={{padding:"9px 12px",fontWeight:500,color:C.red}}>RM {out.amountOwning.toFixed(2)}</td>
-                        <td className="no-print" style={{padding:"9px 12px",textAlign:"right"}}>
-                          <Btn small variant="outline" onClick={()=>{
-                            const overdueFrom = out.overdueMonths[0];
-                            const overdueTo = out.overdueMonths[out.overdueMonths.length - 1];
-                            openAdd({...blankForm, student_id: out.student.id, amount: out.amountOwning.toFixed(2), monthFrom: overdueFrom, monthTo: overdueTo});
-                          }}><i className="ti ti-cash" aria-hidden="true"/> {window.kvT("Pay")}</Btn>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {displayedOutstandingList.map(out => (
+                    <tr key={`${out.student_id}-${out.id}`} style={{borderBottom:"0.5px solid var(--color-border-tertiary)",background:out.status==="Overdue"?"rgba(220,50,50,0.03)":out.status==="Partial"?"rgba(245,160,0,0.03)":undefined}}>
+                      <td style={{padding:"9px 12px"}}>
+                        <div style={{fontWeight:500,color:"var(--color-text-primary)"}}>{out.student_name}</div>
+                        <div style={{fontSize:10,color:"var(--color-text-tertiary)"}}>{out.student_class}</div>
+                      </td>
+                      <td style={{padding:"9px 12px",color:"var(--color-text-secondary)"}}>{window.kvT(out.type)}</td>
+                      <td style={{padding:"9px 12px",color:"var(--color-text-secondary)",fontSize:11}}>{fmtMonthRange(out.month)}</td>
+                      <td style={{padding:"9px 12px",textAlign:"right",color:"var(--color-text-secondary)"}}>RM {out.originalDue.toFixed(2)}</td>
+                      <td style={{padding:"9px 12px",textAlign:"right",fontWeight:500,color:C.green}}>RM {out.paidAmount.toFixed(2)}</td>
+                      <td style={{padding:"9px 12px",textAlign:"right",fontWeight:600,color:out.status==="Partial"?C.amber:out.status==="Overdue"?C.red:"var(--color-text-primary)"}}>RM {out.amount.toFixed(2)}</td>
+                      <td style={{padding:"9px 12px"}}>{statusBadge(out.status)}</td>
+                      <td className="no-print" style={{padding:"9px 12px",textAlign:"right"}}>
+                        <div style={{display:"flex",gap:4,justifyContent:"flex-end"}}>
+                          {canCreatePayments && <Btn small style={{background:"#25D366",color:"white",borderColor:"#25D366"}} onClick={()=>sendWhatsApp(out)}><i className="ti ti-brand-whatsapp" aria-hidden="true"/> {window.kvT("Send")}</Btn>}
+                          {canCreatePayments && <Btn small variant="amber" onClick={()=>openAdd({...blankForm, student_id: out.student_id, type: out.type, amount: out.amount.toFixed(2), month: out.month, monthFrom: out.month, monthTo: out.month, target_payment_id: out.target_payment_id || undefined})}><i className="ti ti-cash" aria-hidden="true"/> {window.kvT("Pay")}</Btn>}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           ) : (
             <div style={{padding:40,textAlign:"center",color:"var(--color-text-tertiary)"}}>
               <i className="ti ti-check" style={{fontSize:32,color:C.green,marginBottom:8}} aria-hidden="true"/><br/>
-              {window.kvT("No outstanding dues! All active students have paid up to date.")}
+              {duesTypeF
+                ? window.kvT("No outstanding dues found for the selected payment type.")
+                : (duesStatusF ? window.kvT("No outstanding dues found.") : window.kvT("No outstanding dues! All active students have paid up to date."))}
             </div>
           )}
         </Card>

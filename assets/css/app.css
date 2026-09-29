@@ -5853,6 +5853,60 @@ button[disabled] {
   font-weight: 750;
 }
 
+.kv-receipt-allocation-content {
+  min-width: 0;
+}
+
+.kv-receipt-allocation-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(100px, auto);
+  align-items: start;
+  gap: 5px 12px;
+  padding: 5px 0;
+  border-top: 1px solid #eee9f2;
+  font-size: 9.5px;
+}
+
+.kv-receipt-allocation-label {
+  color: #514761;
+  overflow-wrap: anywhere;
+}
+
+.kv-receipt-allocation-label span {
+  color: #857b92;
+}
+
+.kv-receipt-allocation-values {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  color: #302540;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.kv-receipt-allocation-values small {
+  color: #756c81;
+  font-size: 8.5px;
+}
+
+.kv-receipt-allocation-month {
+  color: #514761;
+  overflow-wrap: anywhere;
+}
+
+.kv-receipt-allocation-notice {
+  margin: 0 0 5px !important;
+  color: #8a5a00 !important;
+}
+
+.kv-receipt-info-card .kv-receipt-digital-note {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px dashed #ded6e6;
+  font-size: 8.5px;
+}
+
 .kv-receipt-confirmation {
   display: grid;
   grid-template-columns: 46px minmax(0, 1fr) auto;
@@ -7346,8 +7400,8 @@ button[disabled] {
     border: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
+    break-inside: auto;
+    page-break-inside: auto;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -7367,6 +7421,161 @@ button[disabled] {
   .kv-receipt-footer {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+}
+
+@page kv-receipt {
+  size: A4 portrait;
+  margin: 10mm;
+}
+
+@media print {
+  html:has(.kv-receipt-print-area),
+  body:has(.kv-receipt-print-area) {
+    width: 190mm !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  body:has(.kv-receipt-print-area) #root,
+  body:has(.kv-receipt-print-area) .kv-app-shell,
+  body:has(.kv-receipt-print-area) .kv-app-content,
+  body:has(.kv-receipt-print-area) .kv-main-scroll,
+  body:has(.kv-receipt-print-area) .kv-page--receipt-preview {
+    display: block !important;
+    width: 190mm !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .kv-receipt-print-area {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    width: 190mm !important;
+    max-width: 190mm !important;
+    height: auto !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    page: kv-receipt;
+  }
+
+  .kv-receipt-sheet {
+    width: 190mm !important;
+    max-width: 190mm !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 auto !important;
+    overflow: visible !important;
+  }
+
+  .kv-receipt-sheet::after {
+    right: 0 !important;
+  }
+
+  .kv-receipt-layout {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding-top: 9mm !important;
+    padding-bottom: 2mm !important;
+  }
+
+  .kv-receipt-header {
+    margin-bottom: 16px !important;
+  }
+
+  .kv-receipt-school-name {
+    font-size: 19px !important;
+  }
+
+  .kv-receipt-student-card {
+    margin-bottom: 16px !important;
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
+  }
+
+  .kv-receipt-period-banner {
+    margin: 8px 0 !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .kv-receipt-payment-section {
+    margin-bottom: 14px !important;
+  }
+
+  .kv-receipt-section-heading {
+    margin-bottom: 10px !important;
+  }
+
+  .kv-receipt-items-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  .kv-receipt-items-table th,
+  .kv-receipt-items-table td {
+    overflow-wrap: anywhere;
+  }
+
+  .kv-receipt-items-table th:first-child,
+  .kv-receipt-items-table td:first-child {
+    width: 36%;
+  }
+
+  .kv-receipt-items-table th:nth-child(2),
+  .kv-receipt-items-table td:nth-child(2) {
+    width: 46%;
+  }
+
+  .kv-receipt-items-table th:last-child,
+  .kv-receipt-items-table td:last-child {
+    width: 18%;
+  }
+
+  .kv-receipt-items-table th {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .kv-receipt-items-table tbody td {
+    padding-top: 9px !important;
+    padding-bottom: 9px !important;
+  }
+
+  .kv-receipt-items-table tfoot td {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .kv-receipt-confirmation {
+    margin-top: 12px !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+
+  .kv-receipt-footer {
+    margin-top: 12px !important;
+    padding-top: 10px !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  .kv-receipt-layout,
+  .kv-receipt-confirmation,
+  .kv-receipt-footer {
+    break-inside: auto;
+    page-break-inside: auto;
   }
 }
 
