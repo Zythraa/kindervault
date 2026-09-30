@@ -5377,8 +5377,66 @@ button[disabled] {
   border-radius: 11px !important;
 }
 
+.kv-payments-filter-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 12px;
+}
+
+.kv-payments-filter-search {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.kv-payments-filter-search input,
+.kv-payments-filter-select {
+  box-sizing: border-box;
+  height: 38px;
+}
+
+.kv-payments-filter-search input {
+  width: 100%;
+}
+
+.kv-payments-filter-select {
+  flex: 0 0 170px;
+  width: 170px;
+}
+
 .kv-filter-card input {
   padding-left: 34px !important;
+}
+
+@media (min-width: 681px) and (max-width: 980px) {
+  .kv-payments-filter-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .kv-payments-filter-search {
+    flex: 1 1 100%;
+  }
+
+  .kv-payments-filter-select {
+    flex: 1 1 170px;
+  }
+}
+
+@media (max-width: 680px) {
+  .kv-payments-filter-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .kv-payments-filter-search,
+  .kv-payments-filter-select {
+    flex: 1 1 auto;
+    width: 100%;
+  }
 }
 
 .kv-form-card-body {

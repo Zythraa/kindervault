@@ -173,7 +173,7 @@ const historyEntry = (route, hasInternalPrevious, scrollTop = 0) => ({
   scrollTop,
 });
 
-const SearchPage = ({query, students, payments, devRecords, readingRecords = [], classesList, goReceipt, openDevelopmentRecord}) => {
+const SearchPage = ({query, students, payments, devRecords, readingRecords = [], classesList, goReceipt, openStudentProfile, openDevelopmentRecord, openClass}) => {
   const q = (query || "").trim().toLowerCase();
 
   const parseSearchIntent = (text) => {
@@ -338,7 +338,7 @@ const SearchPage = ({query, students, payments, devRecords, readingRecords = [],
                 <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
                   <thead>
                     <tr style={{background:"var(--color-background-secondary)"}}>
-                      {['Name','IC','Class','Parent','Phone','Fee','Status','Enrol'].map(h => (
+                      {['Name','IC','Class','Parent','Phone','Fee','Status','Enrol','Action'].map(h => (
                         <th key={h} style={{padding:'8px 12px',textAlign:'left',fontSize:11,textTransform:'uppercase',letterSpacing:.5,color:'var(--color-text-tertiary)',fontWeight:500,borderBottom:'0.5px solid var(--color-border-tertiary)'}}>{window.kvT(h)}</th>
                       ))}
                     </tr>
@@ -354,6 +354,7 @@ const SearchPage = ({query, students, payments, devRecords, readingRecords = [],
                         <td style={{padding:'10px 12px',color:C.green,fontWeight:700}}>{highlightText(s.fee ? `RM ${parseFloat(s.fee).toFixed(2)}` : '–')}</td>
                         <td style={{padding:'10px 12px'}}>{highlightText(window.kvT(s.status||'–'))}</td>
                         <td style={{padding:'10px 12px'}}>{highlightText(formatDate(s.enrol))}</td>
+                        <td style={{padding:'10px 12px'}}><Btn small variant="outline" onClick={()=>openStudentProfile(s)}>{window.kvT("View Details")}</Btn></td>
                       </tr>
                     ))}
                   </tbody>
@@ -388,7 +389,7 @@ const SearchPage = ({query, students, payments, devRecords, readingRecords = [],
                           <td style={{padding:'10px 12px'}}>{highlightText(window.kvT(p.method||'–'))}</td>
                           <td style={{padding:'10px 12px'}}>{highlightText(window.kvT(p.status||'–'))}</td>
                           <td style={{padding:'10px 12px',maxWidth:220,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={p.notes||''}>{highlightText(p.notes||'–')}</td>
-                          <td style={{padding:'10px 12px'}}>{p.receipt ? <Btn small variant="outline" onClick={()=>goReceipt(p)}>{window.kvT("View")}</Btn> : '–'}</td>
+                          <td style={{padding:'10px 12px'}}>{p.receipt ? <Btn small variant="outline" onClick={()=>goReceipt(p)}>{window.kvT("View Receipt")}</Btn> : '–'}</td>
                         </tr>
                       );
                     })}
@@ -419,7 +420,7 @@ const SearchPage = ({query, students, payments, devRecords, readingRecords = [],
                           <td style={{padding:'10px 12px'}}>{highlightText(window.kvT(d.type||'–'))}</td>
                           <td style={{padding:'10px 12px'}}>{highlightText(formatDate(d.date))}</td>
                           <td style={{padding:'10px 12px',maxWidth:260,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={d.notes||''}>{highlightText(d.notes||'–')}</td>
-                          <td style={{padding:'10px 12px'}}>{openDevelopmentRecord ? <Btn small variant="outline" onClick={()=>openDevelopmentRecord(d)}>{window.kvT("Open")}</Btn> : '–'}</td>
+                          <td style={{padding:'10px 12px'}}>{openDevelopmentRecord ? <Btn small variant="outline" onClick={()=>openDevelopmentRecord(d)}>{window.kvT("View Record")}</Btn> : '–'}</td>
                         </tr>
                       );
                     })}
@@ -436,7 +437,7 @@ const SearchPage = ({query, students, payments, devRecords, readingRecords = [],
                 <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
                   <thead>
                     <tr style={{background:"var(--color-background-secondary)"}}>
-                      {['Class Name'].map(h => (
+                      {['Class Name','Action'].map(h => (
                         <th key={h} style={{padding:'8px 12px',textAlign:'left',fontSize:11,textTransform:'uppercase',letterSpacing:.5,color:'var(--color-text-tertiary)',fontWeight:500,borderBottom:'0.5px solid var(--color-border-tertiary)'}}>{window.kvT(h)}</th>
                       ))}
                     </tr>
@@ -445,6 +446,7 @@ const SearchPage = ({query, students, payments, devRecords, readingRecords = [],
                     {classMatches.map(c => (
                       <tr key={c.id} style={{borderBottom:'0.5px solid var(--color-border-tertiary)'}}>
                         <td style={{padding:'10px 12px',fontWeight:600,color:'var(--color-text-primary)'}}>{highlightText(c.name)}</td>
+                        <td style={{padding:'10px 12px'}}><Btn small variant="outline" onClick={()=>openClass(c)}>{window.kvT("View Class")}</Btn></td>
                       </tr>
                     ))}
                   </tbody>
@@ -888,6 +890,24 @@ function App() {
     }, options);
   };
 
+  const openStudentProfile = (student) => {
+    if (!canAccessPage("students")) {
+      setFlash({msg:window.kvT("Access Denied. You do not have permission to access this section."),type:"danger"});
+      return;
+    }
+    if (!student?.id) return;
+    navigate({page:"students", state:{view:"profile", studentId:student.id}});
+  };
+
+  const openSearchClass = (classInfo) => {
+    if (!canAccessPage("classes")) {
+      setFlash({msg:window.kvT("Access Denied. You do not have permission to access this section."),type:"danger"});
+      return;
+    }
+    if (!classInfo?.id) return;
+    navigate({page:"classes", state:{classId:classInfo.id}});
+  };
+
   const openDevelopmentRecord = (record) => {
     if (!canAccessPage("development")) {
       setFlash({msg:window.kvT("Access Denied. You do not have permission to access this section."),type:"danger"});
@@ -1003,10 +1023,10 @@ function App() {
             </div>
           )}
           {!canAccessPage(page) ? <AccessDeniedPage/> : <>
-            {page==="search"      && <SearchPage       query={routeState.query || ""} students={students} payments={payments} devRecords={devRecs} readingRecords={readingRecs} classesList={classesList} goReceipt={goReceipt} openDevelopmentRecord={openDevelopmentRecord}/>}
+            {page==="search"      && <SearchPage       query={routeState.query || ""} students={students} payments={payments} devRecords={devRecs} readingRecords={readingRecs} classesList={classesList} goReceipt={goReceipt} openStudentProfile={openStudentProfile} openDevelopmentRecord={openDevelopmentRecord} openClass={openSearchClass}/>}
             {page==="dashboard"   && <DashboardPage   students={students} payments={payments} classesList={classesList} devRecords={devRecs} setPage={navigateToPage} openAddStudent={openAddStudent} openBackupSettings={openBackupSettings} permissions={permissions} isAdministrator={isAdministrator}/>}
             {page==="students"    && <StudentsPage     students={students} classesList={classesList} setStudents={setStudents} setPage={navigateToPage} setFlash={setFlash} payments={payments} setPayments={setPayments} goReceipt={goReceipt} navigationState={routeState} navigationKey={route.entryId} navigate={navigate} goBack={goBack} replaceRouteState={replaceRouteState} feeConfig={feeConfig} permissions={permissions} isAdministrator={isAdministrator} scannerEnabled={window.KV_SCANNER_ENABLED !== false}/>}
-            {page==="classes"     && <ClassesPage      classesList={classesList} setClassesList={setClassesList} students={students} setFlash={setFlash}/>}
+            {page==="classes"     && <ClassesPage      classesList={classesList} setClassesList={setClassesList} students={students} setFlash={setFlash} navigationState={routeState}/>}
             {page==="payments"    && <PaymentsPage     students={students} payments={payments} setPayments={setPayments} setFlash={setFlash} goReceipt={goReceipt} navigationState={routeState} navigationKey={route.entryId} navigate={navigate} goBack={goBack} replaceRouteState={replaceRouteState} feeConfig={feeConfig} permissions={permissions} isAdministrator={isAdministrator}/>}
             {page==="receipts"    && <ReceiptsPage     students={students} payments={payments} feeConfig={feeConfig} selectedReceipt={selectedReceipt} openReceipt={goReceipt} goBack={goBack} navigationState={routeState} navigationKey={route.entryId} replaceRouteState={replaceRouteState} permissions={permissions} isAdministrator={isAdministrator}/>}
             {page==="development" && <PageErrorBoundary><DevPage students={students} devRecords={devRecs} setDevRecords={setDevRecs} readingRecords={readingRecs} setReadingRecords={setReadingRecs} currentUser={currentUser} setFlash={setFlash} navigationState={routeState} navigationKey={route.entryId} navigate={navigate} replaceRouteState={replaceRouteState} permissions={permissions} isAdministrator={isAdministrator}/></PageErrorBoundary>}

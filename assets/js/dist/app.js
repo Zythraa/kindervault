@@ -206,7 +206,9 @@ const SearchPage = ({
   readingRecords = [],
   classesList,
   goReceipt,
-  openDevelopmentRecord
+  openStudentProfile,
+  openDevelopmentRecord,
+  openClass
 }) => {
   const q = (query || "").trim().toLowerCase();
   const parseSearchIntent = text => {
@@ -411,7 +413,7 @@ const SearchPage = ({
     style: {
       background: "var(--color-background-secondary)"
     }
-  }, ['Name', 'IC', 'Class', 'Parent', 'Phone', 'Fee', 'Status', 'Enrol'].map(h => React.createElement("th", {
+  }, ['Name', 'IC', 'Class', 'Parent', 'Phone', 'Fee', 'Status', 'Enrol', 'Action'].map(h => React.createElement("th", {
     key: h,
     style: {
       padding: '8px 12px',
@@ -465,7 +467,15 @@ const SearchPage = ({
     style: {
       padding: '10px 12px'
     }
-  }, highlightText(formatDate(s.enrol))))))))), paymentMatches.length > 0 && React.createElement(Card, {
+  }, highlightText(formatDate(s.enrol))), React.createElement("td", {
+    style: {
+      padding: '10px 12px'
+    }
+  }, React.createElement(Btn, {
+    small: true,
+    variant: "outline",
+    onClick: () => openStudentProfile(s)
+  }, window.kvT("View Details"))))))))), paymentMatches.length > 0 && React.createElement(Card, {
     style: {
       marginBottom: 20
     }
@@ -562,7 +572,7 @@ const SearchPage = ({
       small: true,
       variant: "outline",
       onClick: () => goReceipt(p)
-    }, window.kvT("View")) : '–'));
+    }, window.kvT("View Receipt")) : '–'));
   }))))), devMatches.length > 0 && React.createElement(Card, {
     style: {
       marginBottom: 20
@@ -635,7 +645,7 @@ const SearchPage = ({
       small: true,
       variant: "outline",
       onClick: () => openDevelopmentRecord(d)
-    }, window.kvT("Open")) : '–'));
+    }, window.kvT("View Record")) : '–'));
   }))))), classMatches.length > 0 && React.createElement(Card, null, React.createElement(CardHead, null, React.createElement("i", {
     className: "ti ti-chalkboard",
     style: {
@@ -656,7 +666,7 @@ const SearchPage = ({
     style: {
       background: "var(--color-background-secondary)"
     }
-  }, ['Class Name'].map(h => React.createElement("th", {
+  }, ['Class Name', 'Action'].map(h => React.createElement("th", {
     key: h,
     style: {
       padding: '8px 12px',
@@ -679,7 +689,15 @@ const SearchPage = ({
       fontWeight: 600,
       color: 'var(--color-text-primary)'
     }
-  }, highlightText(c.name))))))))) : React.createElement(EmptyState, {
+  }, highlightText(c.name)), React.createElement("td", {
+    style: {
+      padding: '10px 12px'
+    }
+  }, React.createElement(Btn, {
+    small: true,
+    variant: "outline",
+    onClick: () => openClass(c)
+  }, window.kvT("View Class")))))))))) : React.createElement(EmptyState, {
     icon: "search",
     text: window.kvT('No matches found for "{query}". Try another name, receipt, phone number or class.', {
       query
@@ -1135,6 +1153,39 @@ function App() {
       }
     }, options);
   };
+  const openStudentProfile = student => {
+    if (!canAccessPage("students")) {
+      setFlash({
+        msg: window.kvT("Access Denied. You do not have permission to access this section."),
+        type: "danger"
+      });
+      return;
+    }
+    if (!student?.id) return;
+    navigate({
+      page: "students",
+      state: {
+        view: "profile",
+        studentId: student.id
+      }
+    });
+  };
+  const openSearchClass = classInfo => {
+    if (!canAccessPage("classes")) {
+      setFlash({
+        msg: window.kvT("Access Denied. You do not have permission to access this section."),
+        type: "danger"
+      });
+      return;
+    }
+    if (!classInfo?.id) return;
+    navigate({
+      page: "classes",
+      state: {
+        classId: classInfo.id
+      }
+    });
+  };
   const openDevelopmentRecord = record => {
     if (!canAccessPage("development")) {
       setFlash({
@@ -1415,7 +1466,9 @@ function App() {
     readingRecords: readingRecs,
     classesList: classesList,
     goReceipt: goReceipt,
-    openDevelopmentRecord: openDevelopmentRecord
+    openStudentProfile: openStudentProfile,
+    openDevelopmentRecord: openDevelopmentRecord,
+    openClass: openSearchClass
   }), page === "dashboard" && React.createElement(DashboardPage, {
     students: students,
     payments: payments,
@@ -1448,7 +1501,8 @@ function App() {
     classesList: classesList,
     setClassesList: setClassesList,
     students: students,
-    setFlash: setFlash
+    setFlash: setFlash,
+    navigationState: routeState
   }), page === "payments" && React.createElement(PaymentsPage, {
     students: students,
     payments: payments,

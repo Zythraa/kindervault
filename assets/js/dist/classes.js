@@ -62,7 +62,8 @@ const ClassRosterModal = ({
 };
 const ClassesPage = ({
   classesList,
-  students = []
+  students = [],
+  navigationState = {}
 }) => {
   const fixedClasses = (classesList || []).length ? [...classesList].sort((left, right) => Number(left.age_group || 99) - Number(right.age_group || 99) || String(left.name).localeCompare(String(right.name))) : [{
     name: "Permata",
@@ -78,6 +79,15 @@ const ClassesPage = ({
     age: "6 years old"
   }];
   const [rosterClass, setRosterClass] = React.useState(null);
+  const openedClassId = React.useRef(null);
+  React.useEffect(() => {
+    const classId = navigationState.classId;
+    if (classId == null || String(openedClassId.current) === String(classId)) return;
+    const targetClass = (classesList || []).find(item => String(item.id) === String(classId));
+    if (!targetClass) return;
+    openedClassId.current = classId;
+    setRosterClass(targetClass);
+  }, [classesList, navigationState.classId]);
   const studentsInClass = className => students.filter(student => student.class === className).slice().sort((left, right) => String(left.name || "").localeCompare(String(right.name || "")));
   const rosterStudents = rosterClass ? studentsInClass(rosterClass.name) : [];
   return React.createElement("div", {

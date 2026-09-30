@@ -11,6 +11,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
   const [recordsTypeF, setRecordsTypeF] = React.useState(navigationState.recordsTypeF || (navigationState.activeTab === "outstanding" ? "" : navigationState.typeF) || "");
   const [duesTypeF, setDuesTypeF] = React.useState(navigationState.duesTypeF || (navigationState.activeTab === "outstanding" ? navigationState.typeF : "") || "");
   const [monthFilter, setMonthFilter] = React.useState(navigationState.monthFilter || navigationState.outstandingMonth || "");
+  const [paymentSearch, setPaymentSearch] = React.useState(navigationState.paymentSearch || "");
   const [monthFilterOpen, setMonthFilterOpen] = React.useState(false);
   const monthFilterRef = React.useRef(null);
   const [loading, setLoading] = React.useState(false);
@@ -79,6 +80,7 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
     setRecordsTypeF(state.recordsTypeF || (state.activeTab === "outstanding" ? "" : state.typeF) || "");
     setDuesTypeF(state.duesTypeF || (state.activeTab === "outstanding" ? state.typeF : "") || "");
     setMonthFilter(state.monthFilter || state.outstandingMonth || "");
+    setPaymentSearch(state.paymentSearch || "");
     setActiveTab(state.activeTab || "records");
     setSelected(selectedPayment || null);
     if (nextView === "edit" && selectedPayment) setForm(paymentFormFromRecord(selectedPayment));
@@ -255,11 +257,26 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
     return coveredMonths.length === 0 && String(payment.date || "").substring(0, 7) === monthFilter;
   };
 
+  const matchesStudentSearch = (studentId, studentName, receipt = "") => {
+    const query = paymentSearch.trim().toLocaleLowerCase();
+    if (!query) return true;
+    const student = students.find(item => String(item.id) === String(studentId)) || {};
+    const searchableValues = [
+      studentName,
+      student.name,
+      student.code,
+      student.id,
+      receipt,
+    ];
+    return searchableValues.some(value => String(value ?? "").toLocaleLowerCase().includes(query));
+  };
+
   // Payment Records filtered by per-tab status (only valid transaction statuses)
   const filtered = recordedPayments.filter(p =>
     (!recordsStatusF || String(p.status || "").toLowerCase() === recordsStatusF.toLowerCase()) &&
     (!recordsTypeF || canonicalPaymentType(p.type) === canonicalPaymentType(recordsTypeF)) &&
-    paymentMatchesMonth(p)
+    paymentMatchesMonth(p) &&
+    matchesStudentSearch(p.student_id, p.student_name, p.receipt)
   );
   const totalPaid  = payments.filter(p=>["paid","advance","partial"].includes(String(p.status || "").toLowerCase())).reduce((a,p)=>a+parseFloat(p.amount),0);
 
@@ -273,13 +290,14 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
     }
     if (duesStatusF && item.status.toLowerCase() !== duesStatusF.toLowerCase()) return false;
     if (duesTypeF && canonicalPaymentType(item.type) !== canonicalPaymentType(duesTypeF)) return false;
+    if (!matchesStudentSearch(item.student_id, item.student_name)) return false;
     return true;
   });
 
   const displayedOutstandingList = filteredDuesList;
 
   const listState = () => ({
-    recordsStatusF, duesStatusF, recordsTypeF, duesTypeF, monthFilter, activeTab,
+    recordsStatusF, duesStatusF, recordsTypeF, duesTypeF, monthFilter, activeTab, paymentSearch,
     typeF: activeTab === "outstanding" ? duesTypeF : recordsTypeF
   });
   const updateMonthFilter = value => {
@@ -630,23 +648,81 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
         </div>
       </div>
 
+      <div className="kv-payments-filter-toolbar no-print">
+          <div className="kv-payments-filter-search">
+            <i className="ti ti-search" aria-hidden="true" style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"var(--color-text-tertiary)",pointerEvents:"none"}}/>
+            <input
+              type="search"
+              value={paymentSearch}
+              onChange={event=>setPaymentSearch(event.target.value)}
+              placeholder={window.kvT("Search student name or ID...")}
+              aria-label={window.kvT("Search student name or ID...")}
+              style={{width:"100%",boxSizing:"border-box",padding:"8px 36px 8px 34px",fontSize:13,border:"0.5px solid var(--color-border-secondary)",borderRadius:7,background:"var(--color-background-primary)",color:"var(--color-text-primary)"}}
+            />
+            {paymentSearch && <button
+              type="button"
+              onClick={()=>setPaymentSearch("")}
+              aria-label={window.kvT("Clear")}
+              title={window.kvT("Clear")}
+              style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",border:0,background:"transparent",color:"var(--color-text-tertiary)",cursor:"pointer",padding:4,lineHeight:1}}
+            ><i className="ti ti-x" aria-hidden="true"/></button>}
+          </div>
+          <select
+            id={activeTab === "records" ? "records-status-filter" : "dues-status-filter"}
+            className="kv-payments-filter-select"
+            value={activeTab === "records" ? recordsStatusF : duesStatusF}
+            onChange={event=>{
+              const value=event.target.value;
+              if (activeTab === "records") {
+                setRecordsStatusF(value);
+                replaceRouteState && replaceRouteState({recordsStatusF:value});
+              } else {
+                setDuesStatusF(value);
+                replaceRouteState && replaceRouteState({duesStatusF:value});
+              }
+            }}
+            style={selectStyle}
+            aria-label={window.kvT("Filter by status")}
+          >
+            <option value="">{window.kvT("All Status")}</option>
+            {(activeTab === "records" ? recordsStatusOptions : duesStatusOptions).map(status=><option key={status} value={status}>{window.kvT(status)}</option>)}
+          </select>
+          <select
+            id={activeTab === "records" ? "records-type-filter" : "dues-type-filter"}
+            className="kv-payments-filter-select"
+            value={activeTab === "records" ? recordsTypeF : duesTypeF}
+            onChange={event=>{
+              const value=event.target.value;
+              if (activeTab === "records") {
+                setRecordsTypeF(value);
+                replaceRouteState && replaceRouteState({recordsTypeF:value,typeF:value});
+              } else {
+                setDuesTypeF(value);
+                replaceRouteState && replaceRouteState({duesTypeF:value,typeF:value});
+              }
+            }}
+            style={selectStyle}
+            aria-label={window.kvT("Filter by type")}
+          >
+            <option value="">{window.kvT("All Types")}</option>
+            {filterTypes.map(type=><option key={type} value={type}>{window.kvT(type)}</option>)}
+          </select>
+          {((activeTab === "records" && (recordsStatusF || recordsTypeF)) || (activeTab === "outstanding" && (duesStatusF || duesTypeF))) &&
+            <Btn variant="outline" small onClick={()=>{
+              if (activeTab === "records") {
+                setRecordsStatusF("");
+                setRecordsTypeF("");
+                replaceRouteState && replaceRouteState({recordsStatusF:"",recordsTypeF:"",typeF:""});
+              } else {
+                setDuesStatusF("");
+                setDuesTypeF("");
+                replaceRouteState && replaceRouteState({duesStatusF:"",duesTypeF:"",typeF:""});
+              }
+            }}>{window.kvT("Clear")}</Btn>}
+      </div>
+
       {activeTab === "records" ? (
         <>
-          {/* Payment Records filters */}
-          <Card className="kv-filter-card" style={{marginBottom:16}}>
-            <div className="kv-table-toolbar" style={{padding:"10px 14px",display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
-              <select id="records-status-filter" value={recordsStatusF} onChange={e=>{const value=e.target.value;setRecordsStatusF(value);replaceRouteState && replaceRouteState({recordsStatusF:value});}} style={selectStyle} aria-label={window.kvT("Filter by status")}>
-                <option value="">{window.kvT("All Status")}</option>
-                {recordsStatusOptions.map(s=><option key={s} value={s}>{window.kvT(s)}</option>)}
-              </select>
-              <select id="records-type-filter" value={recordsTypeF} onChange={e=>{const value=e.target.value;setRecordsTypeF(value);replaceRouteState && replaceRouteState({recordsTypeF:value,typeF:value});}} style={selectStyle} aria-label={window.kvT("Filter by type")}>
-                <option value="">{window.kvT("All Types")}</option>
-                {filterTypes.map(t=><option key={t} value={t}>{window.kvT(t)}</option>)}
-              </select>
-              {(recordsStatusF||recordsTypeF)&&<Btn variant="outline" small onClick={()=>{setRecordsStatusF("");setRecordsTypeF("");replaceRouteState && replaceRouteState({recordsStatusF:"",recordsTypeF:"",typeF:""});}}>{window.kvT("Clear")}</Btn>}
-            </div>
-          </Card>
-
           <Card className="kv-table-card print-area kv-payments-print-area">
             <div className="kv-payments-print-header">
               <strong>KinderVault</strong>
@@ -707,7 +783,9 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
                   </tbody>
                 </table>
               </div>
-            ) : <EmptyState icon="credit-card" text={window.kvT("No payment records found.")} action={canCreatePayments ? <Btn onClick={openAdd} variant="amber" style={{marginTop:12}}><i className="ti ti-plus" aria-hidden="true"/> {window.kvT("Record First Payment")}</Btn> : null}/>}
+            ) : paymentSearch.trim()
+              ? <EmptyState icon="search" text={window.kvT("No matching payment records found.")}/>
+              : <EmptyState icon="credit-card" text={window.kvT("No payment records found.")} action={canCreatePayments ? <Btn onClick={openAdd} variant="amber" style={{marginTop:12}}><i className="ti ti-plus" aria-hidden="true"/> {window.kvT("Record First Payment")}</Btn> : null}/>}
           </Card>
         </>
       ) : (
@@ -715,19 +793,6 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
           <div className="kv-payments-print-header">
             <strong>KinderVault</strong>
             <span>{window.kvT("Outstanding Dues")}{monthFilter ? " - " + fmtMonthRange(monthFilter) : ""}</span>
-          </div>
-
-          {/* Outstanding Dues filters */}
-          <div className="kv-table-toolbar no-print" style={{padding:"10px 14px",display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
-            <select id="dues-status-filter" value={duesStatusF} onChange={e=>{const value=e.target.value;setDuesStatusF(value);replaceRouteState && replaceRouteState({duesStatusF:value});}} style={selectStyle} aria-label={window.kvT("Filter by status")}>
-              <option value="">{window.kvT("All Status")}</option>
-              {duesStatusOptions.map(s=><option key={s} value={s}>{window.kvT(s)}</option>)}
-            </select>
-            <select id="dues-type-filter" value={duesTypeF} onChange={e=>{const value=e.target.value;setDuesTypeF(value);replaceRouteState && replaceRouteState({duesTypeF:value,typeF:value});}} style={selectStyle} aria-label={window.kvT("Filter by type")}>
-              <option value="">{window.kvT("All Types")}</option>
-              {filterTypes.map(t=><option key={t} value={t}>{window.kvT(t)}</option>)}
-            </select>
-            {(duesStatusF||duesTypeF)&&<Btn variant="outline" small onClick={()=>{setDuesStatusF("");setDuesTypeF("");replaceRouteState && replaceRouteState({duesStatusF:"",duesTypeF:"",typeF:""});}}>{window.kvT("Clear")}</Btn>}
           </div>
 
           {/* Context hint for Outstanding Dues */}
@@ -770,6 +835,11 @@ const PaymentsPage = ({students, payments, setPayments, setFlash, goReceipt, nav
                   ))}
                 </tbody>
               </table>
+            </div>
+          ) : paymentSearch.trim() ? (
+            <div style={{padding:40,textAlign:"center",color:"var(--color-text-tertiary)"}}>
+              <i className="ti ti-search" style={{fontSize:32,marginBottom:8}} aria-hidden="true"/><br/>
+              {window.kvT("No matching outstanding dues found.")}
             </div>
           ) : (
             <div style={{padding:40,textAlign:"center",color:"var(--color-text-tertiary)"}}>

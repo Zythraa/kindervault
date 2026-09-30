@@ -38,7 +38,7 @@ $description = $locale === 'ms'
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- App CSS -->
-  <link rel="stylesheet" href="assets/css/app.css?v=60">
+  <link rel="stylesheet" href="assets/css/app.css?v=61">
 
   <!-- React 18 production runtime -->
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>

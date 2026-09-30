@@ -345,6 +345,13 @@ const TRANSLATIONS = {
 // Canonical Malaysian Bahasa Melayu terms. New visible UI text must be added here
 // with its English source text kept as the lookup key.
 Object.assign(TRANSLATIONS.ms, {
+  "Search student name or ID...": "Cari nama atau ID murid...",
+  "No matching payment records found.": "Tiada rekod bayaran yang sepadan ditemui.",
+  "No matching outstanding dues found.": "Tiada tunggakan yang sepadan ditemui.",
+  "View Details": "Lihat Butiran",
+  "View Receipt": "Lihat Resit",
+  "View Record": "Lihat Rekod",
+  "View Class": "Lihat Kelas",
   "Dashboard": "Papan Pemuka",
   "Students": "Murid",
   "students": "murid",
