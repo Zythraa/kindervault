@@ -18,6 +18,7 @@ function envFlag(string $name, bool $default): bool {
 define('APP_ENV',    (string)(getenv('APP_ENV')  ?: 'local'));   // 'local' | 'production'
 define('APP_DEBUG',  envFlag('APP_DEBUG', APP_ENV !== 'production'));
 define('SCANNER_ENABLED', envFlag('SCANNER_ENABLED', true)); // false on Render, true locally
+define('KINDERVAULT_DEMO_MODE', envFlag('KINDERVAULT_DEMO_MODE', false));
 
 // ── Database ──────────────────────────────────────────────
 define('DB_HOST',    (string)(getenv('DB_HOST')     ?: 'localhost'));

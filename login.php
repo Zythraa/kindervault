@@ -199,7 +199,7 @@ if ($redirectAfterLogin) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/app.css?v=28">
+  <link rel="stylesheet" href="assets/css/app.css?v=29">
   <script>
     const t = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', t);
@@ -279,6 +279,26 @@ if ($redirectAfterLogin) {
         <i class="ti ti-lock-open" style="margin-right:6px;"></i> <?= htmlspecialchars(loginT('Login to KinderVault', 'Log Masuk ke KinderVault'), ENT_QUOTES, 'UTF-8') ?>
       </button>
     </form>
+
+    <?php if (KINDERVAULT_DEMO_MODE): ?>
+    <aside class="kv-demo-account" aria-labelledby="kv-demo-account-title">
+      <div class="kv-demo-account-heading">
+        <i class="ti ti-info-circle" aria-hidden="true"></i>
+        <h2 id="kv-demo-account-title">Demo Account</h2>
+      </div>
+      <dl class="kv-demo-account-credentials">
+        <div>
+          <dt>Username</dt>
+          <dd>admin</dd>
+        </div>
+        <div>
+          <dt>Password</dt>
+          <dd>password</dd>
+        </div>
+      </dl>
+      <p>For demonstration purposes only.</p>
+    </aside>
+    <?php endif; ?>
 
     <div class="kv-login-note" style="text-align:center;font-size:11px;color:var(--color-text-tertiary);margin-top:14px;">
       <?= htmlspecialchars(loginT('Secure access for authorized KinderVault staff.', 'Akses selamat untuk kakitangan KinderVault yang diberi kuasa.'), ENT_QUOTES, 'UTF-8') ?>
