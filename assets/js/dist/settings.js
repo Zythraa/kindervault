@@ -648,7 +648,10 @@ const SettingsPage = ({
   const [pass, setPass] = React.useState("");
   const [conf, setConf] = React.useState("");
   const [generalSaving, setGeneralSaving] = React.useState(false);
-  const [localFeeConfig, setLocalFeeConfig] = React.useState(feeConfig || {});
+  const [localFeeConfig, setLocalFeeConfig] = React.useState({
+    ...(feeConfig || {}),
+    monthly_iqra: feeConfig?.monthly_iqra ?? feeConfig?.annual?.iqra ?? 30
+  });
   const [classNames, setClassNames] = React.useState([]);
   const [classSaving, setClassSaving] = React.useState(false);
   const [users, setUsers] = React.useState([]);
@@ -731,7 +734,10 @@ const SettingsPage = ({
     setName(currentUser?.full_name || "");
   }, [currentUser?.full_name]);
   React.useEffect(() => {
-    setLocalFeeConfig(feeConfig || {});
+    setLocalFeeConfig({
+      ...(feeConfig || {}),
+      monthly_iqra: feeConfig?.monthly_iqra ?? feeConfig?.annual?.iqra ?? 30
+    });
   }, [feeConfig]);
   React.useEffect(() => {
     setClassNames((classesList || []).slice().sort((left, right) => Number(left.age_group || 99) - Number(right.age_group || 99)));
@@ -1515,14 +1521,14 @@ const SettingsPage = ({
     age: 5
   }), ["annual", "books", "5"]), moneyInput(window.kvT("Books / Materials - {age} years", {
     age: 6
-  }), ["annual", "books", "6"])), React.createElement("div", null, moneyInput("Uniform", ["annual", "uniform"]), moneyInput("Sports Uniform", ["annual", "sports_uniform"]), moneyInput("Tudung", ["annual", "tudung"]), moneyInput("Lawatan", ["annual", "lawatan"])), React.createElement("div", null, moneyInput("Sukan", ["annual", "sukan"]), moneyInput("Penyampaian Hadiah", ["annual", "hadiah"]), moneyInput("Pakej Gambar", ["annual", "gambar"]), moneyInput("Kelas IQRA", ["annual", "iqra"]))), React.createElement("div", {
+  }), ["annual", "books", "6"])), React.createElement("div", null, moneyInput("Uniform", ["annual", "uniform"]), moneyInput("Sports Uniform", ["annual", "sports_uniform"]), moneyInput("Tudung", ["annual", "tudung"]), moneyInput("Lawatan", ["annual", "lawatan"])), React.createElement("div", null, moneyInput("Sukan", ["annual", "sukan"]), moneyInput("Penyampaian Hadiah", ["annual", "hadiah"]), moneyInput("Pakej Gambar", ["annual", "gambar"]))), React.createElement("div", {
     className: "kv-settings-section-label",
     style: {
       marginTop: 8
     }
   }, window.kvT("Monthly Fees")), React.createElement("div", {
     className: "kv-form-grid-3"
-  }, ["A", "B", "C"].map(code => React.createElement("div", {
+  }, React.createElement("div", null, moneyInput(localFeeConfig?.monthly_packages?.A?.label || "Package A", ["monthly_packages", "A", "amount"]), moneyInput("IQRA Class", ["monthly_iqra"])), ["B", "C"].map(code => React.createElement("div", {
     key: code
   }, moneyInput(localFeeConfig?.monthly_packages?.[code]?.label || `Package ${code}`, ["monthly_packages", code, "amount"])))))), isAdministrator && React.createElement(Card, null, React.createElement(CardHead, null, React.createElement("i", {
     className: "ti ti-chalkboard",

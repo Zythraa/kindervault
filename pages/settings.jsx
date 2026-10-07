@@ -349,7 +349,10 @@ const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeC
   const [pass, setPass] = React.useState("");
   const [conf, setConf] = React.useState("");
   const [generalSaving, setGeneralSaving] = React.useState(false);
-  const [localFeeConfig, setLocalFeeConfig] = React.useState(feeConfig || {});
+  const [localFeeConfig, setLocalFeeConfig] = React.useState({
+    ...(feeConfig || {}),
+    monthly_iqra: feeConfig?.monthly_iqra ?? feeConfig?.annual?.iqra ?? 30,
+  });
   const [classNames, setClassNames] = React.useState([]);
   const [classSaving, setClassSaving] = React.useState(false);
   const [users, setUsers] = React.useState([]);
@@ -402,7 +405,10 @@ const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeC
   }, [currentUser?.full_name]);
 
   React.useEffect(() => {
-    setLocalFeeConfig(feeConfig || {});
+    setLocalFeeConfig({
+      ...(feeConfig || {}),
+      monthly_iqra: feeConfig?.monthly_iqra ?? feeConfig?.annual?.iqra ?? 30,
+    });
   }, [feeConfig]);
 
   React.useEffect(() => {
@@ -921,11 +927,12 @@ const SettingsPage = ({setFlash, currentUser, setCurrentUser, feeConfig, setFeeC
         <div className="kv-form-grid-3">
           <div>{moneyInput("Registration",["annual","registration"])}{moneyInput(window.kvT("Books / Materials - {age} years", {age:4}),["annual","books","4"])}{moneyInput(window.kvT("Books / Materials - {age} years", {age:5}),["annual","books","5"])}{moneyInput(window.kvT("Books / Materials - {age} years", {age:6}),["annual","books","6"])}</div>
           <div>{moneyInput("Uniform",["annual","uniform"])}{moneyInput("Sports Uniform",["annual","sports_uniform"])}{moneyInput("Tudung",["annual","tudung"])}{moneyInput("Lawatan",["annual","lawatan"])}</div>
-          <div>{moneyInput("Sukan",["annual","sukan"])}{moneyInput("Penyampaian Hadiah",["annual","hadiah"])}{moneyInput("Pakej Gambar",["annual","gambar"])}{moneyInput("Kelas IQRA",["annual","iqra"])}</div>
+          <div>{moneyInput("Sukan",["annual","sukan"])}{moneyInput("Penyampaian Hadiah",["annual","hadiah"])}{moneyInput("Pakej Gambar",["annual","gambar"])}</div>
         </div>
         <div className="kv-settings-section-label" style={{marginTop:8}}>{window.kvT("Monthly Fees")}</div>
         <div className="kv-form-grid-3">
-          {["A","B","C"].map(code => <div key={code}>{moneyInput(localFeeConfig?.monthly_packages?.[code]?.label || `Package ${code}`,["monthly_packages",code,"amount"])}</div>)}
+          <div>{moneyInput(localFeeConfig?.monthly_packages?.A?.label || "Package A",["monthly_packages","A","amount"])}{moneyInput("IQRA Class",["monthly_iqra"])}</div>
+          {["B","C"].map(code => <div key={code}>{moneyInput(localFeeConfig?.monthly_packages?.[code]?.label || `Package ${code}`,["monthly_packages",code,"amount"])}</div>)}
         </div>
       </div>
     </Card>}

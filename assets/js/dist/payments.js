@@ -221,7 +221,7 @@ const PaymentsPage = ({
   const getStudentOutstandingDefaults = studentId => {
     const st = students.find(x => x.id === +studentId);
     if (!st) return null;
-    const fee = parseFloat(st.fee || 0);
+    const fee = window.kvStudentMonthlyFee(st, feeConfig);
     const today = new Date();
     const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
     const startMonthStr = st.enrol ? st.enrol.substring(0, 7) : currentMonthStr;
@@ -241,7 +241,7 @@ const PaymentsPage = ({
   const computeMonthlyAmount = (studentId, from, to) => {
     const st = students.find(x => x.id === +studentId);
     const months = computeMonths(from, to);
-    const fee = st ? parseFloat(st.fee || 0) : 0;
+    const fee = st ? window.kvStudentMonthlyFee(st, feeConfig) : 0;
     if (!st || months.length === 0) return "";
     const paidAmounts = window.kvAllocateMonthlyPaidAmounts(payments.filter(p => parseInt(p.student_id) === parseInt(studentId) && p.type === "Monthly Fee"), fee);
     const due = months.reduce((sum, m) => sum + Math.max(0, fee - (paidAmounts[m] || 0)), 0);

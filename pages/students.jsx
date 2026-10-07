@@ -659,7 +659,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
           <Card>
             <CardHead><i className="ti ti-id-badge" style={{marginRight:6}} aria-hidden="true"/>{window.kvT("Student Details")}</CardHead>
             <div style={{padding:"12px 16px"}}>
-              {[["Student Code",<code style={{fontSize:12}}>{selected.code}</code>],["IC / Birth Cert",selected.ic||"–"],["Gender",formatGender(selected)],["Date of Birth",selected.dob ? window.kvDate(selected.dob, {day:'numeric', month:'short', year:'numeric'}, selected.dob) : "–"],["Class",<span style={{background:C.blueBg,color:C.blueTx,fontSize:11,padding:"2px 8px",borderRadius:10}}>{selected.class}</span>],["Enrolment",selected.enrol ? window.kvDate(selected.enrol, {day:'numeric', month:'short', year:'numeric'}, selected.enrol) : "–"],["Monthly Fee",<span style={{fontWeight:500,color:C.green}}>RM {parseFloat(selected.fee).toFixed(2)}</span>]].map(([l,v])=>(
+              {[["Student Code",<code style={{fontSize:12}}>{selected.code}</code>],["IC / Birth Cert",selected.ic||"–"],["Gender",formatGender(selected)],["Date of Birth",selected.dob ? window.kvDate(selected.dob, {day:'numeric', month:'short', year:'numeric'}, selected.dob) : "–"],["Class",<span style={{background:C.blueBg,color:C.blueTx,fontSize:11,padding:"2px 8px",borderRadius:10}}>{selected.class}</span>],["Enrolment",selected.enrol ? window.kvDate(selected.enrol, {day:'numeric', month:'short', year:'numeric'}, selected.enrol) : "–"],["Monthly Fee",<span style={{fontWeight:500,color:C.green}}>RM {window.kvStudentMonthlyFee(selected, feeConfig).toFixed(2)}</span>]].map(([l,v])=>(
                 <div key={l} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"0.5px solid var(--color-border-tertiary)",fontSize:13}}>
                   <span style={{color:"var(--color-text-tertiary)"}}>{window.kvT(l)}</span>
                   <span style={{color:"var(--color-text-primary)"}}>{v}</span>
@@ -811,7 +811,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                   <div><dt>{window.kvT("Date of Birth")}</dt><dd>{selected.dob ? window.kvDate(selected.dob, {day:"numeric", month:"short", year:"numeric"}, selected.dob) : "-"}</dd></div>
                   <div><dt>{window.kvT("Class")}</dt><dd>{selected.class || "-"}</dd></div>
                   <div><dt>{window.kvT("Enrolment")}</dt><dd>{selected.enrol ? window.kvDate(selected.enrol, {day:"numeric", month:"short", year:"numeric"}, selected.enrol) : "-"}</dd></div>
-                  <div><dt>{window.kvT("Monthly Fee")}</dt><dd>RM {parseFloat(selected.fee || 0).toFixed(2)}</dd></div>
+                  <div><dt>{window.kvT("Monthly Fee")}</dt><dd>RM {window.kvStudentMonthlyFee(selected, feeConfig).toFixed(2)}</dd></div>
                 </dl>
               </section>
               <section className="kv-profile-print-section">
@@ -913,10 +913,21 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                   ))}
                 </select>
                 <div className="kv-student-fee-field">
-                  <div className="kv-field-label">{window.kvT('Monthly Fee (RM)')}</div>
+                  <div className="kv-field-label">{window.kvT('Class Monthly Fee (RM)')}</div>
                   <div className="kv-money-input">
                     <span>RM</span>
                     <input className="kv-form-control" type="number" value={form.fee} disabled/>
+                  </div>
+                </div>
+                <label style={{display:"flex",alignItems:"center",gap:8,marginTop:12,fontSize:13}}>
+                  <input type="checkbox" checked={!!form.wants_iqra} onChange={event=>setForm({...form,wants_iqra:event.target.checked ? 1 : 0})}/>
+                  {window.kvT("Join Iqra class")} (+ RM {window.kvMonthlyIqraAmount(feeConfig).toFixed(2)} / {window.kvT("month")})
+                </label>
+                <div className="kv-student-fee-field">
+                  <div className="kv-field-label">{window.kvT('Total Monthly Fee (RM)')}</div>
+                  <div className="kv-money-input">
+                    <span>RM</span>
+                    <input className="kv-form-control" type="number" value={window.kvStudentMonthlyFee(form, feeConfig).toFixed(2)} disabled/>
                   </div>
                 </div>
               </div>
@@ -928,8 +939,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                 {[
                   ["wants_uniform","Uniform"],
                   ["wants_sports_uniform","Baju Sukan"],
-                  ["wants_tudung","Tudung"],
-                  ["wants_iqra","Kelas IQRA"]
+                  ["wants_tudung","Tudung"]
                 ].map(([key,label])=>(
                   <label key={key}>
                     <input type="checkbox" checked={!!form[key]} onChange={e=>setForm({...form,[key]:e.target.checked ? 1 : 0})}/>
@@ -1058,7 +1068,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                     <td style={{padding:"9px 12px",color:"var(--color-text-secondary)"}}>{formatGender(s)}</td>
                     <td style={{padding:"9px 12px",color:"var(--color-text-secondary)"}}>{s.parent}</td>
                     <td style={{padding:"9px 12px",color:"var(--color-text-secondary)"}}>{s.phone||"–"}</td>
-                    <td style={{padding:"9px 12px",fontWeight:500,color:C.green}}>RM {parseFloat(s.fee).toFixed(2)}</td>
+                    <td style={{padding:"9px 12px",fontWeight:500,color:C.green}}>RM {window.kvStudentMonthlyFee(s, feeConfig).toFixed(2)}</td>
                     <td style={{padding:"9px 12px"}}>{statusBadge(s.status)}</td>
                     <td style={{padding:"9px 12px"}}>
                       <div style={{display:"flex",gap:4}}>
@@ -1099,7 +1109,7 @@ const StudentsPage = ({students, classesList, setStudents, setPage, setFlash, pa
                   <td>{formatGender(student)}</td>
                   <td>{student.parent || "-"}</td>
                   <td>{student.phone || "-"}</td>
-                  <td>RM {parseFloat(student.fee || 0).toFixed(2)}</td>
+                  <td>RM {window.kvStudentMonthlyFee(student, feeConfig).toFixed(2)}</td>
                   <td>{window.kvT(student.status || "-")}</td>
                 </tr>
               ))}</tbody>

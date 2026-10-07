@@ -1218,7 +1218,7 @@ const StudentsPage = ({
         fontWeight: 500,
         color: C.green
       }
-    }, "RM ", parseFloat(selected.fee).toFixed(2))]].map(([l, v]) => React.createElement("div", {
+    }, "RM ", window.kvStudentMonthlyFee(selected, feeConfig).toFixed(2))]].map(([l, v]) => React.createElement("div", {
       key: l,
       style: {
         display: "flex",
@@ -1553,7 +1553,7 @@ const StudentsPage = ({
       day: "numeric",
       month: "short",
       year: "numeric"
-    }, selected.enrol) : "-")), React.createElement("div", null, React.createElement("dt", null, window.kvT("Monthly Fee")), React.createElement("dd", null, "RM ", parseFloat(selected.fee || 0).toFixed(2))))), React.createElement("section", {
+    }, selected.enrol) : "-")), React.createElement("div", null, React.createElement("dt", null, window.kvT("Monthly Fee")), React.createElement("dd", null, "RM ", window.kvStudentMonthlyFee(selected, feeConfig).toFixed(2))))), React.createElement("section", {
       className: "kv-profile-print-section"
     }, React.createElement("h2", null, window.kvT("Parent / Guardian")), React.createElement("dl", null, React.createElement("div", null, React.createElement("dt", null, window.kvT("Father")), React.createElement("dd", null, selected.father_name || "-")), React.createElement("div", null, React.createElement("dt", null, window.kvT("Father Phone")), React.createElement("dd", null, selected.father_phone || "-")), React.createElement("div", null, React.createElement("dt", null, window.kvT("Mother")), React.createElement("dd", null, selected.mother_name || "-")), React.createElement("div", null, React.createElement("dt", null, window.kvT("Mother Phone")), React.createElement("dd", null, selected.mother_phone || "-")), React.createElement("div", null, React.createElement("dt", null, window.kvT("Address")), React.createElement("dd", null, selected.father_address || selected.mother_address || selected.address || "-"))))), React.createElement("section", {
       className: "kv-profile-print-section kv-profile-print-summary"
@@ -1722,12 +1722,38 @@ const StudentsPage = ({
     className: "kv-student-fee-field"
   }, React.createElement("div", {
     className: "kv-field-label"
-  }, window.kvT('Monthly Fee (RM)')), React.createElement("div", {
+  }, window.kvT('Class Monthly Fee (RM)')), React.createElement("div", {
     className: "kv-money-input"
   }, React.createElement("span", null, "RM"), React.createElement("input", {
     className: "kv-form-control",
     type: "number",
     value: form.fee,
+    disabled: true
+  }))), React.createElement("label", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      marginTop: 12,
+      fontSize: 13
+    }
+  }, React.createElement("input", {
+    type: "checkbox",
+    checked: !!form.wants_iqra,
+    onChange: event => setForm({
+      ...form,
+      wants_iqra: event.target.checked ? 1 : 0
+    })
+  }), window.kvT("Join Iqra class"), " (+ RM ", window.kvMonthlyIqraAmount(feeConfig).toFixed(2), " / ", window.kvT("month"), ")"), React.createElement("div", {
+    className: "kv-student-fee-field"
+  }, React.createElement("div", {
+    className: "kv-field-label"
+  }, window.kvT('Total Monthly Fee (RM)')), React.createElement("div", {
+    className: "kv-money-input"
+  }, React.createElement("span", null, "RM"), React.createElement("input", {
+    className: "kv-form-control",
+    type: "number",
+    value: window.kvStudentMonthlyFee(form, feeConfig).toFixed(2),
     disabled: true
   }))))), React.createElement("div", {
     className: "kv-field kv-student-annual-field"
@@ -1735,7 +1761,7 @@ const StudentsPage = ({
     className: "kv-field-label"
   }, window.kvT("Annual Fee Options")), React.createElement("div", {
     className: "kv-student-annual-options"
-  }, [["wants_uniform", "Uniform"], ["wants_sports_uniform", "Baju Sukan"], ["wants_tudung", "Tudung"], ["wants_iqra", "Kelas IQRA"]].map(([key, label]) => React.createElement("label", {
+  }, [["wants_uniform", "Uniform"], ["wants_sports_uniform", "Baju Sukan"], ["wants_tudung", "Tudung"]].map(([key, label]) => React.createElement("label", {
     key: key
   }, React.createElement("input", {
     type: "checkbox",
@@ -2147,7 +2173,7 @@ const StudentsPage = ({
       fontWeight: 500,
       color: C.green
     }
-  }, "RM ", parseFloat(s.fee).toFixed(2)), React.createElement("td", {
+  }, "RM ", window.kvStudentMonthlyFee(s, feeConfig).toFixed(2)), React.createElement("td", {
     style: {
       padding: "9px 12px"
     }
@@ -2209,7 +2235,7 @@ const StudentsPage = ({
     key: label
   }, window.kvT(label))))), React.createElement("tbody", null, filtered.map((student, index) => React.createElement("tr", {
     key: student.id
-  }, React.createElement("td", null, index + 1), React.createElement("td", null, React.createElement("strong", null, student.name || "-")), React.createElement("td", null, student.code || "-"), React.createElement("td", null, student.ic || "-"), React.createElement("td", null, student.class || "-"), React.createElement("td", null, formatGender(student)), React.createElement("td", null, student.parent || "-"), React.createElement("td", null, student.phone || "-"), React.createElement("td", null, "RM ", parseFloat(student.fee || 0).toFixed(2)), React.createElement("td", null, window.kvT(student.status || "-")))))) : React.createElement("p", {
+  }, React.createElement("td", null, index + 1), React.createElement("td", null, React.createElement("strong", null, student.name || "-")), React.createElement("td", null, student.code || "-"), React.createElement("td", null, student.ic || "-"), React.createElement("td", null, student.class || "-"), React.createElement("td", null, formatGender(student)), React.createElement("td", null, student.parent || "-"), React.createElement("td", null, student.phone || "-"), React.createElement("td", null, "RM ", window.kvStudentMonthlyFee(student, feeConfig).toFixed(2)), React.createElement("td", null, window.kvT(student.status || "-")))))) : React.createElement("p", {
     className: "kv-list-print-empty"
   }, window.kvT("No students yet.")))));
 };

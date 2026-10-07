@@ -231,8 +231,8 @@ function ensureKinderVaultSchema(PDO $pdo): void {
             'sukan' => 60,
             'hadiah' => 100,
             'gambar' => 90,
-            'iqra' => 30,
         ],
+        'monthly_iqra' => 30,
         'monthly_packages' => [
             'A' => ['label' => 'Tadika Sahaja', 'amount' => 230],
             'B' => ['label' => 'Tadika + Half Daycare', 'amount' => 320],

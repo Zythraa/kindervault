@@ -2,7 +2,7 @@
 // pages/dashboard.jsx - DashboardPage component
 // ============================================================
 
-const DashboardPage = ({students, payments, classesList, devRecords, setPage, openAddStudent, openBackupSettings, permissions = [], isAdministrator = false}) => {
+const DashboardPage = ({students, payments, classesList, devRecords, setPage, openAddStudent, openBackupSettings, feeConfig, permissions = [], isAdministrator = false}) => {
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
   const thisMonth = today.toISOString().slice(0, 7);
@@ -29,7 +29,7 @@ const DashboardPage = ({students, payments, classesList, devRecords, setPage, op
   const computeVirtualOverduePayments = () => {
     const rows = [];
     activeStudents.forEach(s => {
-      const fee = parseFloat(s.fee || 0);
+      const fee = window.kvStudentMonthlyFee(s, feeConfig);
       const studentPayments = payments.filter(p => parseInt(p.student_id) === parseInt(s.id) && p.type === "Monthly Fee");
       const paidAmounts = window.kvAllocateMonthlyPaidAmounts(studentPayments, fee);
       const startMonthStr = s.enrol ? s.enrol.substring(0, 7) : thisMonth;

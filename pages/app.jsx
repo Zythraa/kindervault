@@ -16,8 +16,8 @@ const DEFAULT_FEE_CONFIG = {
     sukan: 60,
     hadiah: 100,
     gambar: 90,
-    iqra: 30,
   },
+  monthly_iqra: 30,
   monthly_packages: {
     A: {label: "Tadika Sahaja", amount: 230},
     B: {label: "Tadika + Half Daycare", amount: 320},
@@ -351,7 +351,7 @@ const SearchPage = ({query, students, payments, devRecords, readingRecords = [],
                         <td style={{padding:'10px 12px'}}>{highlightText(s.class||'–')}</td>
                         <td style={{padding:'10px 12px'}}>{highlightText(s.parent||'–')}</td>
                         <td style={{padding:'10px 12px'}}>{highlightText(s.phone||'–')}</td>
-                        <td style={{padding:'10px 12px',color:C.green,fontWeight:700}}>{highlightText(s.fee ? `RM ${parseFloat(s.fee).toFixed(2)}` : '–')}</td>
+                        <td style={{padding:'10px 12px',color:C.green,fontWeight:700}}>{highlightText(s.fee ? `RM ${window.kvStudentMonthlyFee(s, feeConfig).toFixed(2)}` : '–')}</td>
                         <td style={{padding:'10px 12px'}}>{highlightText(window.kvT(s.status||'–'))}</td>
                         <td style={{padding:'10px 12px'}}>{highlightText(formatDate(s.enrol))}</td>
                         <td style={{padding:'10px 12px'}}><Btn small variant="outline" onClick={()=>openStudentProfile(s)}>{window.kvT("View Details")}</Btn></td>
@@ -1024,7 +1024,7 @@ function App() {
           )}
           {!canAccessPage(page) ? <AccessDeniedPage/> : <>
             {page==="search"      && <SearchPage       query={routeState.query || ""} students={students} payments={payments} devRecords={devRecs} readingRecords={readingRecs} classesList={classesList} goReceipt={goReceipt} openStudentProfile={openStudentProfile} openDevelopmentRecord={openDevelopmentRecord} openClass={openSearchClass}/>}
-            {page==="dashboard"   && <DashboardPage   students={students} payments={payments} classesList={classesList} devRecords={devRecs} setPage={navigateToPage} openAddStudent={openAddStudent} openBackupSettings={openBackupSettings} permissions={permissions} isAdministrator={isAdministrator}/>}
+            {page==="dashboard"   && <DashboardPage   students={students} payments={payments} classesList={classesList} devRecords={devRecs} setPage={navigateToPage} openAddStudent={openAddStudent} openBackupSettings={openBackupSettings} feeConfig={feeConfig} permissions={permissions} isAdministrator={isAdministrator}/>}
             {page==="students"    && <StudentsPage     students={students} classesList={classesList} setStudents={setStudents} setPage={navigateToPage} setFlash={setFlash} payments={payments} setPayments={setPayments} goReceipt={goReceipt} navigationState={routeState} navigationKey={route.entryId} navigate={navigate} goBack={goBack} replaceRouteState={replaceRouteState} feeConfig={feeConfig} permissions={permissions} isAdministrator={isAdministrator} scannerEnabled={window.KV_SCANNER_ENABLED !== false}/>}
             {page==="classes"     && <ClassesPage      classesList={classesList} setClassesList={setClassesList} students={students} setFlash={setFlash} navigationState={routeState}/>}
             {page==="payments"    && <PaymentsPage     students={students} payments={payments} setPayments={setPayments} setFlash={setFlash} goReceipt={goReceipt} navigationState={routeState} navigationKey={route.entryId} navigate={navigate} goBack={goBack} replaceRouteState={replaceRouteState} feeConfig={feeConfig} permissions={permissions} isAdministrator={isAdministrator}/>}

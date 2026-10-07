@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/payment_logic.php';
 
 if (!chatbotFeatureAvailable()) {
     jsonResponse(['error' => 'Not found', 'code' => 'FEATURE_UNAVAILABLE'], 404);
@@ -507,9 +508,10 @@ function chatbotMonthLabel(string $month, string $language): string {
  */
 function chatbotMonthlyOutstandingRows(?string $onlyMonth = null, bool $pastOnly = false): array {
     $currentMonth = date('Y-m');
-    $students = db()->query("SELECT id, name, class, fee, enrol FROM students WHERE status = 'Active' ORDER BY name")->fetchAll();
+    $students = db()->query("SELECT id, name, class, fee, wants_iqra, enrol FROM students WHERE status = 'Active' ORDER BY name")->fetchAll();
     if (!$students) return [];
 
+    $feeConfig = paymentFeeConfig();
     $studentById = [];
     foreach ($students as $student) $studentById[(int)$student['id']] = $student;
 
@@ -518,7 +520,7 @@ function chatbotMonthlyOutstandingRows(?string $onlyMonth = null, bool $pastOnly
     foreach ($payments as $payment) {
         $studentId = (int)$payment['student_id'];
         if (!isset($studentById[$studentId])) continue;
-        $fee = max(0.0, (float)$studentById[$studentId]['fee']);
+        $fee = max(0.0, kvStudentMonthlyFee($studentById[$studentId], $feeConfig));
         $remaining = max(0.0, (float)$payment['amount']);
         foreach (array_filter(array_map('trim', explode(',', (string)$payment['month']))) as $month) {
             if ($remaining <= 0 || !preg_match('/^\d{4}-(?:0[1-9]|1[0-2])$/', $month)) continue;
@@ -535,7 +537,7 @@ function chatbotMonthlyOutstandingRows(?string $onlyMonth = null, bool $pastOnly
     [$currentYear, $currentMonthNumber] = array_map('intval', explode('-', $currentMonth));
     foreach ($students as $student) {
         $studentId = (int)$student['id'];
-        $fee = max(0.0, (float)$student['fee']);
+        $fee = max(0.0, kvStudentMonthlyFee($student, $feeConfig));
         if ($fee <= 0) continue;
 
         $startMonth = substr((string)$student['enrol'], 0, 7);
@@ -960,16 +962,17 @@ function chatbotHandle(array $classification, string $normalized, string $langua
         $currentMonth = date('Y-m');
         $outstanding = chatbotMonthlyOutstandingRows($currentMonth);
         $outstandingIds = array_fill_keys(array_map(static fn(array $row): int => (int)$row['student_id'], $outstanding), true);
-        $stmt = db()->prepare("SELECT id, name, class, fee FROM students WHERE status = 'Active' AND fee > 0 AND LEFT(enrol, 7) <= ? ORDER BY name");
+        $stmt = db()->prepare("SELECT id, name, class, fee, wants_iqra FROM students WHERE status = 'Active' AND fee > 0 AND LEFT(enrol, 7) <= ? ORDER BY name");
         $stmt->execute([$currentMonth]);
         $paidStudents = array_values(array_filter($stmt->fetchAll(), static fn(array $row): bool => !isset($outstandingIds[(int)$row['id']])));
         $count = count($paidStudents);
-        $total = array_reduce($paidStudents, static fn(float $sum, array $row): float => $sum + (float)$row['fee'], 0.0);
+        $feeConfig = paymentFeeConfig();
+        $total = array_reduce($paidStudents, static fn(float $sum, array $row): float => $sum + kvStudentMonthlyFee($row, $feeConfig), 0.0);
         $monthLabel = chatbotMonthLabel($currentMonth, $language);
         $reply = $count === 0
             ? chatbotText("No active student is fully paid for {$monthLabel} yet.", "Belum ada murid aktif yang membayar penuh bagi {$monthLabel}.", $language)
             : chatbotText("{$count} active student(s) are fully paid for {$monthLabel}, covering RM " . number_format($total, 2) . ' in monthly fees.', "{$count} murid aktif telah membayar penuh bagi {$monthLabel}, meliputi RM " . number_format($total, 2) . ' yuran bulanan.', $language);
-        $lines = array_map(static fn(array $row, int $index): string => ($index + 1) . '. ' . $row['name'] . ' - ' . ($row['class'] ?: '-') . ' - RM ' . number_format((float)$row['fee'], 2), array_slice($paidStudents, 0, 10), array_keys(array_slice($paidStudents, 0, 10)));
+        $lines = array_map(static fn(array $row, int $index): string => ($index + 1) . '. ' . $row['name'] . ' - ' . ($row['class'] ?: '-') . ' - RM ' . number_format(kvStudentMonthlyFee($row, $feeConfig), 2), array_slice($paidStudents, 0, 10), array_keys(array_slice($paidStudents, 0, 10)));
         if ($lines) $reply .= "\n\n" . implode("\n", $lines) . ($count > 10 ? chatbotText("\n…and " . ($count - 10) . ' more.', "\n…dan " . ($count - 10) . ' lagi.', $language) : '');
         return ['intent' => $intent, 'reply' => chatbotFriendlyReply($reply, $language), 'result_count' => $count, 'action' => chatbotAction('payments', 'Open Payments')];
     }

@@ -51,7 +51,7 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
     const explicit = String(item?.month || '').split(',').map(value => value.trim()).filter(Boolean);
     if (explicit.length !== 1 || item?.type !== 'Monthly Fee' || item?.status !== 'Advance') return explicit;
     const start = explicit[0];
-    const monthlyFee = parseFloat(student?.fee || 0);
+    const monthlyFee = window.kvStudentMonthlyFee(student, feeConfig);
     const amount = parseFloat(item?.amount || 0);
     if (!/^\d{4}-(?:0[1-9]|1[0-2])$/.test(start) || !Number.isFinite(monthlyFee) || monthlyFee <= 0 || !Number.isFinite(amount) || amount <= monthlyFee) return explicit;
     const count = Math.round(amount / monthlyFee);
@@ -65,7 +65,7 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
   const collectReceiptMonths = (items, student) => [...new Set(items.filter(item => item?.type === 'Monthly Fee').flatMap(item => expandAdvanceMonths(item, student)))];
   const calculateReceiptBalance = (items, student) => {
     const months = collectReceiptMonths(items, student);
-    const fee = parseFloat(student?.fee || 0);
+    const fee = window.kvStudentMonthlyFee(student, feeConfig);
     if (!months.length || !Number.isFinite(fee) || fee <= 0) return null;
     const target = new Set(months);
     const paid = {};
@@ -272,7 +272,7 @@ const ReceiptsPage = ({students, payments, feeConfig = {}, selectedReceipt, open
       : { label: receiptItems[0]?.month || '—', count: 1 };
 
     const receiptTotal = receiptItems.reduce((total, item) => total + parseFloat(item.amount || 0), 0);
-    const annualDueByType = {'Annual Registration': parseFloat(feeConfig?.annual?.registration || 0), 'Books / Materials': parseFloat((feeConfig?.annual?.books || {})[s?.program_age || '5'] || 0), 'Uniform': parseFloat(feeConfig?.annual?.uniform || 0), 'Sports Uniform': parseFloat(feeConfig?.annual?.sports_uniform || 0), 'Tudung': parseFloat(feeConfig?.annual?.tudung || 0), 'Lawatan': parseFloat(feeConfig?.annual?.lawatan || 0), 'Sukan': parseFloat(feeConfig?.annual?.sukan || 0), 'Penyampaian Hadiah': parseFloat(feeConfig?.annual?.hadiah || 0), 'Pakej Gambar': parseFloat(feeConfig?.annual?.gambar || 0), 'IQRA Class': parseFloat(feeConfig?.annual?.iqra || 0)};
+    const annualDueByType = {'Annual Registration': parseFloat(feeConfig?.annual?.registration || 0), 'Books / Materials': parseFloat((feeConfig?.annual?.books || {})[s?.program_age || '5'] || 0), 'Uniform': parseFloat(feeConfig?.annual?.uniform || 0), 'Sports Uniform': parseFloat(feeConfig?.annual?.sports_uniform || 0), 'Tudung': parseFloat(feeConfig?.annual?.tudung || 0), 'Lawatan': parseFloat(feeConfig?.annual?.lawatan || 0), 'Sukan': parseFloat(feeConfig?.annual?.sukan || 0), 'Penyampaian Hadiah': parseFloat(feeConfig?.annual?.hadiah || 0), 'Pakej Gambar': parseFloat(feeConfig?.annual?.gambar || 0)};
 
     const hasStoredBalances = receiptItems.length > 0 && receiptItems.every(item => item.balance_after !== null && item.balance_after !== undefined && item.balance_after !== '');
     const storedBalance = hasStoredBalances ? receiptItems.reduce((sum, item) => sum + parseFloat(item.balance_after || 0), 0) : null;

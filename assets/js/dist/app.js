@@ -21,9 +21,9 @@ const DEFAULT_FEE_CONFIG = {
     lawatan: 100,
     sukan: 60,
     hadiah: 100,
-    gambar: 90,
-    iqra: 30
+    gambar: 90
   },
+  monthly_iqra: 30,
   monthly_packages: {
     A: {
       label: "Tadika Sahaja",
@@ -459,7 +459,7 @@ const SearchPage = ({
       color: C.green,
       fontWeight: 700
     }
-  }, highlightText(s.fee ? `RM ${parseFloat(s.fee).toFixed(2)}` : '–')), React.createElement("td", {
+  }, highlightText(s.fee ? `RM ${window.kvStudentMonthlyFee(s, feeConfig).toFixed(2)}` : '–')), React.createElement("td", {
     style: {
       padding: '10px 12px'
     }
@@ -1477,6 +1477,7 @@ function App() {
     setPage: navigateToPage,
     openAddStudent: openAddStudent,
     openBackupSettings: openBackupSettings,
+    feeConfig: feeConfig,
     permissions: permissions,
     isAdministrator: isAdministrator
   }), page === "students" && React.createElement(StudentsPage, {

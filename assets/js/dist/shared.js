@@ -280,6 +280,9 @@ const TRANSLATIONS = {
     "012-3456789": "012-3456789",
     "Address": "Alamat",
     "Monthly Fee (RM)": "Yuran Bulanan (RM)",
+    "Class Monthly Fee (RM)": "Yuran Bulanan Kelas (RM)",
+    "Total Monthly Fee (RM)": "Jumlah Yuran Bulanan (RM)",
+    "Join Iqra class": "Sertai kelas Iqra",
     "Status": "Status",
     "Active": "Aktif",
     "Inactive": "Tidak Aktif",
@@ -1447,6 +1450,15 @@ window.kvPaymentItemLabel = (type, month = '', fallback = '') => {
   }
   return window.kvT(rawType || fallback);
 };
+window.kvMonthlyIqraAmount = feeConfig => {
+  const configured = feeConfig?.monthly_iqra ?? feeConfig?.annual?.iqra ?? 30;
+  const amount = parseFloat(configured);
+  return Number.isFinite(amount) ? amount : 30;
+};
+window.kvStudentMonthlyFee = (student, feeConfig) => {
+  const classFee = parseFloat(student?.fee || 0);
+  return parseFloat((classFee + (parseInt(student?.wants_iqra ?? 0) ? window.kvMonthlyIqraAmount(feeConfig) : 0)).toFixed(2));
+};
 window.kvParseAllocationJson = value => {
   if (Array.isArray(value)) return value;
   if (typeof value === 'string' && value.trim()) {
@@ -1682,7 +1694,7 @@ window.kvComputeStudentOutstanding = (student, payments, feeConfig, options = {}
   const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   const currentYear = String(today.getFullYear());
   const stuPays = (payments || []).filter(p => parseInt(p.student_id) === parseInt(student.id));
-  const fee = parseFloat(student.fee || 0);
+  const fee = window.kvStudentMonthlyFee(student, feeConfig);
   const paidAmounts = window.kvAllocateMonthlyPaidAmounts(stuPays, fee);
   let startStr = student.enrol ? student.enrol.substring(0, 7) : currentMonthStr;
   if (startStr > currentMonthStr) return [];
@@ -1764,14 +1776,6 @@ window.kvComputeStudentOutstanding = (student, payments, feeConfig, options = {}
     }),
     amount: parseFloat(annual.gambar || 0),
     include: true
-  }, {
-    id: "annual_iqra",
-    type: "IQRA Class",
-    desc: window.kvT("IQRA Class {year}", {
-      year: currentYear
-    }),
-    amount: parseFloat(annual.iqra || 0),
-    include: !!parseInt(student.wants_iqra ?? 0)
   }];
   annualItems.forEach(item => {
     const received = stuPays.filter(p => p.type === item.type && (String(p.month || "") === currentYear || !p.month && String(p.date || "").substring(0, 4) === currentYear) && ["paid", "advance", "partial"].includes(String(p.status || "").toLowerCase())).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);

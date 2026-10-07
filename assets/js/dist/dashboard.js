@@ -6,6 +6,7 @@ const DashboardPage = ({
   setPage,
   openAddStudent,
   openBackupSettings,
+  feeConfig,
   permissions = [],
   isAdministrator = false
 }) => {
@@ -34,7 +35,7 @@ const DashboardPage = ({
   const computeVirtualOverduePayments = () => {
     const rows = [];
     activeStudents.forEach(s => {
-      const fee = parseFloat(s.fee || 0);
+      const fee = window.kvStudentMonthlyFee(s, feeConfig);
       const studentPayments = payments.filter(p => parseInt(p.student_id) === parseInt(s.id) && p.type === "Monthly Fee");
       const paidAmounts = window.kvAllocateMonthlyPaidAmounts(studentPayments, fee);
       const startMonthStr = s.enrol ? s.enrol.substring(0, 7) : thisMonth;

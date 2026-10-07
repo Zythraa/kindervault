@@ -20,11 +20,25 @@ function paymentFeeConfig(): array {
             'sukan' => 60,
             'hadiah' => 100,
             'gambar' => 90,
-            'iqra' => 30,
         ],
+        'monthly_iqra' => 30,
     ];
     $stored = appSetting('fee_config', $defaults);
-    return is_array($stored) ? array_replace_recursive($defaults, $stored) : $defaults;
+    $config = is_array($stored) ? array_replace_recursive($defaults, $stored) : $defaults;
+    if (is_array($stored) && !array_key_exists('monthly_iqra', $stored) && isset($stored['annual']['iqra'])) {
+        $config['monthly_iqra'] = $stored['annual']['iqra'];
+    }
+    return $config;
+}
+
+function kvStudentMonthlyFee(array $student, ?array $feeConfig = null): float {
+    $feeConfig = $feeConfig ?? paymentFeeConfig();
+    $monthlyFee = (float)($student['fee'] ?? 0);
+    if (!empty($student['wants_iqra'])) {
+        $iqraFee = $feeConfig['monthly_iqra'] ?? $feeConfig['annual']['iqra'] ?? 30;
+        $monthlyFee += (float)$iqraFee;
+    }
+    return round($monthlyFee, 2);
 }
 
 function validatePaymentInput(array $data, bool $validateStudent = true): void {
@@ -199,7 +213,6 @@ function kvAnnualFeeAmount(array $student, array $feeConfig, string $type): ?flo
         'Sukan' => $annual['sukan'] ?? null,
         'Penyampaian Hadiah' => $annual['hadiah'] ?? null,
         'Pakej Gambar' => $annual['gambar'] ?? null,
-        'IQRA Class' => !empty($student['wants_iqra']) ? ($annual['iqra'] ?? null) : 0,
     ];
     if ($type === 'Books / Materials') {
         $age = (string)($student['program_age'] ?? '5');
@@ -241,7 +254,7 @@ function prepareSettlement(array $data, array $student, array $payments): array 
         if ($months === []) {
             throw new InvalidArgumentException('Please select at least one valid monthly fee period.');
         }
-        $allocation = kvAllocateMonthlyPayment($payments, (float)$student['fee'], $months, $amount);
+        $allocation = kvAllocateMonthlyPayment($payments, kvStudentMonthlyFee($student), $months, $amount);
         $allocatesFutureMonth = false;
         foreach ($allocation['allocations'] as $al) {
             if (($al['amount'] ?? 0) > 0.005 && ($al['month'] ?? '') > date('Y-m')) {
