@@ -173,7 +173,7 @@ const historyEntry = (route, hasInternalPrevious, scrollTop = 0) => ({
   scrollTop,
 });
 
-const SearchPage = ({query, students, payments, devRecords, readingRecords = [], classesList, goReceipt, openStudentProfile, openDevelopmentRecord, openClass}) => {
+const SearchPage = ({query, students, payments, devRecords, readingRecords = [], classesList, feeConfig = DEFAULT_FEE_CONFIG, goReceipt, openStudentProfile, openDevelopmentRecord, openClass}) => {
   const q = (query || "").trim().toLowerCase();
 
   const parseSearchIntent = (text) => {
@@ -1023,7 +1023,7 @@ function App() {
             </div>
           )}
           {!canAccessPage(page) ? <AccessDeniedPage/> : <>
-            {page==="search"      && <SearchPage       query={routeState.query || ""} students={students} payments={payments} devRecords={devRecs} readingRecords={readingRecs} classesList={classesList} goReceipt={goReceipt} openStudentProfile={openStudentProfile} openDevelopmentRecord={openDevelopmentRecord} openClass={openSearchClass}/>}
+            {page==="search"      && <SearchPage       query={routeState.query || ""} students={students} payments={payments} devRecords={devRecs} readingRecords={readingRecs} classesList={classesList} feeConfig={feeConfig} goReceipt={goReceipt} openStudentProfile={openStudentProfile} openDevelopmentRecord={openDevelopmentRecord} openClass={openSearchClass}/>}
             {page==="dashboard"   && <DashboardPage   students={students} payments={payments} classesList={classesList} devRecords={devRecs} setPage={navigateToPage} openAddStudent={openAddStudent} openBackupSettings={openBackupSettings} feeConfig={feeConfig} permissions={permissions} isAdministrator={isAdministrator}/>}
             {page==="students"    && <StudentsPage     students={students} classesList={classesList} setStudents={setStudents} setPage={navigateToPage} setFlash={setFlash} payments={payments} setPayments={setPayments} goReceipt={goReceipt} navigationState={routeState} navigationKey={route.entryId} navigate={navigate} goBack={goBack} replaceRouteState={replaceRouteState} feeConfig={feeConfig} permissions={permissions} isAdministrator={isAdministrator} scannerEnabled={window.KV_SCANNER_ENABLED !== false}/>}
             {page==="classes"     && <ClassesPage      classesList={classesList} setClassesList={setClassesList} students={students} setFlash={setFlash} navigationState={routeState}/>}
