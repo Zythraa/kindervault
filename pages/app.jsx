@@ -787,13 +787,16 @@ function App() {
       const required = requiredDataForRoute(page, routeState);
       const missing = required.some(key => !dataLoadedRef.current.has(key));
       if (!missing) return;
-      setLoading(true);
+      // Keep the topbar mounted while Search loads its extra datasets so
+      // typing does not lose focus or discard characters on slower hosts.
+      const keepShellVisible = page === 'search';
+      if (!keepShellVisible) setLoading(true);
       try {
         await loadDataForRoute(page, routeState);
       } catch (error) {
         if (active) setFlash({msg:window.kvT("Failed to load data from server. Check your database connection."),type:"danger"});
       } finally {
-        if (active) setLoading(false);
+        if (active && !keepShellVisible) setLoading(false);
       }
     };
     ensureRouteData();
